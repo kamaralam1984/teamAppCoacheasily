@@ -11,7 +11,7 @@ import {
   type DailyCode,
 } from "@/hooks/useDailyCode";
 import { useMyProfile } from "@/hooks/useMyProfile";
-import { DEPARTMENTS } from "@/lib/warriors";
+import { useDepartmentNames } from "@/hooks/useDepartments";
 
 export const Route = createFileRoute("/_authenticated/daily-codes")({
   head: () => ({
