@@ -326,3 +326,66 @@
     }
   }
 }
+
+@layer components {
+  /* ── Ambient flame layer ──────────────────────────────────
+     Fixed, behind everything, never interactive. Colours come from the
+     active theme's tokens so a festival changes the embers automatically. */
+  .ce-ambient {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .ce-flame {
+    position: absolute;
+    bottom: -8vh;
+    display: block;
+    border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+    filter: blur(0.4px);
+    animation-name: ce-flame-rise;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.5, 1);
+    animation-iteration-count: infinite;
+  }
+
+  @keyframes ce-flame-rise {
+    0% {
+      transform: translate3d(0, 0, 0) rotate(0deg) scale(0.7);
+      opacity: 0;
+    }
+    12% {
+      opacity: 1;
+    }
+    100% {
+      transform: translate3d(var(--ce-drift, 0px), -108vh, 0) rotate(14deg) scale(1.35);
+      opacity: 0;
+    }
+  }
+
+  /* The mark breathes upward in the top bar. The path is never redrawn. */
+  @keyframes ce-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-4px);
+    }
+  }
+
+  .ce-float {
+    animation: ce-float 3.2s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ce-ambient {
+      display: none;
+    }
+
+    .ce-float {
+      animation: none;
+    }
+  }
+}
