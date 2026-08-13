@@ -1,28 +1,57 @@
-import { useState, type ReactNode } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bell, LogOut } from "lucide-react";
+import { Bell, ChevronDown, KeyRound, LogOut } from "lucide-react";
 
 import { Mark } from "@/components/Mark";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { supabase } from "@/integrations/supabase/client";
+import { roleLabel } from "@/lib/warriors";
 
-const TABS = [
-  { label: "Home", to: "/dashboard" },
-  { label: "Directory", to: "/dashboard" },
-  { label: "Attendance", to: "/dashboard" },
-  { label: "Leaves", to: "/dashboard" },
-  { label: "Goals", to: "/dashboard" },
-  { label: "Recognition", to: "/dashboard" },
-  { label: "People & Culture", to: "/dashboard" },
-  { label: "Change password", to: "/change-password" },
+const BASE_TABS = [
+  { label: "Dashboard", to: "/dashboard" },
+  { label: "Calendar", to: "/calendar" },
+  { label: "Tasks", to: "/tasks" },
+  { label: "Goals", to: "/goals" },
+  { label: "Culture", to: "/culture" },
+  { label: "Leave", to: "/leave" },
+  { label: "Warriors", to: "/warriors" },
 ] as const;
+
+const LEAD_TABS = [
+  { label: "Team", to: "/team" },
+  { label: "Approvals", to: "/approvals" },
+] as const;
+
+const HR_TABS = [{ label: "Reports", to: "/reports" }] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { data, isLoading } = useMyProfile();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [signingOut, setSigningOut] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navRef = useRef<HTMLDivElement | null>(null);
+
+  const profile = data?.profile ?? null;
+  const role = profile?.role ?? "member";
+
+  const tabs = [
+    ...BASE_TABS,
+    ...(role === "manager" || role === "hr" || role === "admin" ? LEAD_TABS : []),
+    ...(role === "hr" || role === "admin" ? HR_TABS : []),
+  ];
+
+  useEffect(() => {
+    const active = navRef.current?.querySelector<HTMLElement>("[data-active='true']");
+    active?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+  }, [pathname, tabs.length]);
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -32,7 +61,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     navigate({ to: "/auth", replace: true });
   }
 
-  const profile = data?.profile ?? null;
+  const label = roleLabel(profile?.role);
 
   return (
     <div className="min-h-screen bg-pearl">
@@ -58,51 +87,69 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Bell size={20} />
             </button>
 
-            <Link
-              to="/change-password"
-              title="Change password"
-              className="hidden max-w-[11rem] flex-col items-end leading-tight sm:flex"
-            >
-              <span className="max-w-[11rem] truncate text-sm font-semibold text-white">
-                {isLoading ? "…" : (profile?.full_name ?? data?.user?.email ?? "")}
-              </span>
-              {profile?.role ? (
-                <span className="text-[10px] font-bold tracking-[0.18em] text-goldL uppercase">
-                  {profile.role}
-                </span>
-              ) : null}
-            </Link>
-
-            <button
-              type="button"
-              onClick={handleSignOut}
-              disabled={signingOut}
-              aria-label="Sign out"
-              className="flex h-11 min-w-11 items-center justify-center gap-2 rounded-lg px-3 text-sm font-bold text-mist transition-colors hover:bg-night2 hover:text-goldL disabled:opacity-60"
-            >
-              <LogOut size={18} />
-              <span className="hidden sm:inline">Sign out</span>
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex h-11 items-center gap-2 rounded-lg px-2 text-left transition-colors hover:bg-night2"
+                >
+                  <span className="hidden max-w-[11rem] flex-col items-end leading-tight sm:flex">
+                    <span className="max-w-[11rem] truncate text-sm font-semibold text-white">
+                      {isLoading ? "…" : (profile?.full_name ?? data?.user?.email ?? "")}
+                    </span>
+                    {label ? (
+                      <span className="text-[10px] font-bold tracking-[0.18em] text-goldL uppercase">
+                        {label}
+                      </span>
+                    ) : null}
+                  </span>
+                  <ChevronDown size={16} className="text-mist" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuItem asChild>
+                  <Link to="/change-password" className="flex items-center gap-2">
+                    <KeyRound size={16} /> Change password
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => {
+                    void handleSignOut();
+                  }}
+                  disabled={signingOut}
+                  className="flex items-center gap-2"
+                >
+                  <LogOut size={16} /> Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
         <nav className="no-scrollbar overflow-x-auto border-t border-night2 bg-night2">
-          <div className="mx-auto flex max-w-6xl items-center gap-1 px-2">
-            {TABS.map((tab) => (
-              <Link
-                key={tab.label}
-                to={tab.to}
-                className="shrink-0 rounded-md px-3 py-3 text-sm font-semibold whitespace-nowrap text-mist transition-colors hover:text-goldL"
-                activeProps={{ className: "text-goldL" }}
-              >
-                {tab.label}
-              </Link>
-            ))}
+          <div ref={navRef} className="mx-auto flex max-w-6xl items-center gap-1 px-2 py-2">
+            {tabs.map((tab) => {
+              const active = pathname === tab.to;
+              return (
+                <Link
+                  key={tab.label}
+                  to={tab.to}
+                  data-active={active}
+                  className={
+                    active
+                      ? "shrink-0 rounded-full bg-night px-4 py-2.5 text-sm font-bold whitespace-nowrap text-goldL"
+                      : "shrink-0 rounded-full px-4 py-2.5 text-sm font-semibold whitespace-nowrap text-mist transition-colors hover:text-goldL"
+                  }
+                >
+                  {tab.label}
+                </Link>
+              );
+            })}
           </div>
         </nav>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl px-4 pt-5 pb-20">
+      <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-20">
         {isLoading ? (
           <div className="ce-card p-6 text-sm text-soft">Loading your workspace…</div>
         ) : profile ? (

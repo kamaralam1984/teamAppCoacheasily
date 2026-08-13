@@ -1,0 +1,222 @@
+import type { Tables } from "@/integrations/supabase/types";
+
+export type Profile = Tables<"profiles">;
+
+export const DEPARTMENTS = [
+  "Leadership",
+  "People & Culture",
+  "Operations",
+  "Coaching",
+  "Community",
+  "Customer Experience",
+  "Sales",
+  "Tele-calling",
+  "Content",
+  "Technology",
+  "Finance",
+] as const;
+
+export const WEEKLY_OFFS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Based on work",
+] as const;
+
+export type Role = "member" | "manager" | "hr" | "admin";
+
+export const ACCESS_LEVELS: { value: Role; label: string; blurb: string }[] = [
+  {
+    value: "member",
+    label: "Warrior",
+    blurb:
+      "Sees the team directory and their own goals, attendance and leave — nobody else's private details.",
+  },
+  {
+    value: "manager",
+    label: "Manager",
+    blurb:
+      "Everything a Warrior sees, plus the goals, attendance and leave of everyone in their reporting line, and their approvals.",
+  },
+  {
+    value: "hr",
+    label: "People & Culture",
+    blurb:
+      "Sees and edits every warrior's profile, goals, attendance and leave, invites new warriors, runs exits and reports.",
+  },
+  {
+    value: "admin",
+    label: "Admin",
+    blurb:
+      "Full access to everything People & Culture can do, plus access levels, company settings and all reports.",
+  },
+];
+
+export function roleLabel(role: string | null | undefined): string | null {
+  switch (role) {
+    case "manager":
+      return "Manager";
+    case "hr":
+      return "People & Culture";
+    case "admin":
+      return "Admin";
+    default:
+      return null;
+  }
+}
+
+export function accessBlurb(role: string): string {
+  return ACCESS_LEVELS.find((l) => l.value === role)?.blurb ?? "";
+}
+
+export function isPrivileged(role: string | null | undefined) {
+  return role === "hr" || role === "admin";
+}
+
+export function initials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const first = parts[0]?.[0] ?? "";
+  const second = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
+  return (first + second).toUpperCase();
+}
+
+export function daysSince(dateStr: string | null | undefined): number | null {
+  if (!dateStr) return null;
+  const then = new Date(`${dateStr}T00:00:00Z`).getTime();
+  if (Number.isNaN(then)) return null;
+  return Math.floor((Date.now() - then) / 86_400_000);
+}
+
+export function isNewWarrior(p: Profile): boolean {
+  if (p.new_badge === "on") return true;
+  if (p.new_badge === "off") return false;
+  const d = daysSince(p.joined_on);
+  return d !== null && d >= 0 && d < 90;
+}
+
+/** Days until the next anniversary of joined_on, or null. */
+export function daysToAnniversary(joinedOn: string | null): number | null {
+  if (!joinedOn) return null;
+  const joined = new Date(`${joinedOn}T00:00:00Z`);
+  if (Number.isNaN(joined.getTime())) return null;
+  const now = new Date();
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  let next = Date.UTC(now.getUTCFullYear(), joined.getUTCMonth(), joined.getUTCDate());
+  if (next < today) next = Date.UTC(now.getUTCFullYear() + 1, joined.getUTCMonth(), joined.getUTCDate());
+  return Math.round((next - today) / 86_400_000);
+}
+
+export function yearsAt(joinedOn: string | null): number {
+  if (!joinedOn) return 0;
+  const joined = new Date(`${joinedOn}T00:00:00Z`);
+  const now = new Date();
+  let years = now.getUTCFullYear() - joined.getUTCFullYear();
+  const before =
+    now.getUTCMonth() < joined.getUTCMonth() ||
+    (now.getUTCMonth() === joined.getUTCMonth() && now.getUTCDate() < joined.getUTCDate());
+  if (before) years -= 1;
+  return Math.max(years, 0);
+}
+
+const WEEKDAYS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+] as const;
+
+export function todayName() {
+  return WEEKDAYS[new Date().getDay()]!;
+}
+
+export function isOffToday(p: Profile) {
+  return p.weekly_off === todayName();
+}
+
+export interface TreeNode {
+  profile: Profile;
+  children: TreeNode[];
+}
+
+/** Cycle-safe tree build: every profile is placed at most once. */
+export function buildTree(profiles: Profile[]): TreeNode[] {
+  const byId = new Map(profiles.map((p) => [p.id, p]));
+  const childrenOf = new Map<string, Profile[]>();
+  const roots: Profile[] = [];
+
+  for (const p of profiles) {
+    const parentId = p.manager_id && p.manager_id !== p.id ? p.manager_id : null;
+    if (parentId && byId.has(parentId)) {
+      const list = childrenOf.get(parentId) ?? [];
+      list.push(p);
+      childrenOf.set(parentId, list);
+    } else {
+      roots.push(p);
+    }
+  }
+
+  const visited = new Set<string>();
+  const build = (p: Profile): TreeNode => {
+    visited.add(p.id);
+    const kids = (childrenOf.get(p.id) ?? [])
+      .filter((c) => !visited.has(c.id))
+      .sort((a, b) => a.full_name.localeCompare(b.full_name));
+    kids.forEach((k) => visited.add(k.id));
+    return { profile: p, children: kids.map(build) };
+  };
+
+  const tree = roots
+    .filter((r) => !visited.has(r.id))
+    .sort((a, b) => a.full_name.localeCompare(b.full_name))
+    .map(build);
+
+  // Orphans stranded by a cycle still get rendered, never dropped.
+  for (const p of profiles) {
+    if (!visited.has(p.id)) tree.push(build(p));
+  }
+  return tree;
+}
+
+/** Everyone below `rootId`, cycle-safe. Excludes the root itself. */
+export function downlineIds(profiles: Profile[], rootId: string): Set<string> {
+  const childrenOf = new Map<string, string[]>();
+  for (const p of profiles) {
+    if (!p.manager_id || p.manager_id === p.id) continue;
+    const list = childrenOf.get(p.manager_id) ?? [];
+    list.push(p.id);
+    childrenOf.set(p.manager_id, list);
+  }
+  const out = new Set<string>();
+  const stack = [...(childrenOf.get(rootId) ?? [])];
+  while (stack.length) {
+    const id = stack.pop()!;
+    if (out.has(id)) continue;
+    out.add(id);
+    stack.push(...(childrenOf.get(id) ?? []));
+  }
+  return out;
+}
+
+/** Is `viewerId` anywhere up the manager chain of `targetId`? Cycle-safe. */
+export function isInManagerChain(
+  profiles: Profile[],
+  targetId: string,
+  viewerId: string,
+): boolean {
+  const byId = new Map(profiles.map((p) => [p.id, p]));
+  const seen = new Set<string>();
+  let current = byId.get(targetId)?.manager_id ?? null;
+  while (current && !seen.has(current)) {
+    if (current === viewerId) return true;
+    seen.add(current);
+    current = byId.get(current)?.manager_id ?? null;
+  }
+  return false;
+}
