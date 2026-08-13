@@ -298,7 +298,7 @@ export function cleanName(leftover: string, opts: { type: string; recurring: boo
   const originals = leftover.replace(/[,:;–—“”"()]+/g, " ").split(/\s+/).filter(Boolean);
   let words = s.split(/\s+/).filter(Boolean).map((w) => {
     const hit = originals.find((o) => o.replace(/[^A-Za-z0-9:&./-]/g, "").toLowerCase() === w);
-    return (hit ?? w).replace(/[^A-Za-z0-9:&./'-]+$/g, "");
+    return (hit ?? w).replace(/[^A-Za-z0-9&']+$/g, "");
   });
 
   // trim stray connectors and stop-words from both ends
