@@ -143,6 +143,102 @@ export type Database = {
           },
         ]
       }
+      leave_requests: {
+        Row: {
+          approver_id: string | null
+          created_at: string
+          days: number
+          decided_at: string | null
+          decided_by: string | null
+          from_date: string
+          half_day: boolean
+          handover_to: string | null
+          id: string
+          org_id: string
+          profile_id: string
+          reason: string | null
+          reminded_at: string | null
+          status: string
+          to_date: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          approver_id?: string | null
+          created_at?: string
+          days?: number
+          decided_at?: string | null
+          decided_by?: string | null
+          from_date: string
+          half_day?: boolean
+          handover_to?: string | null
+          id?: string
+          org_id: string
+          profile_id: string
+          reason?: string | null
+          reminded_at?: string | null
+          status?: string
+          to_date: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          approver_id?: string | null
+          created_at?: string
+          days?: number
+          decided_at?: string | null
+          decided_by?: string | null
+          from_date?: string
+          half_day?: boolean
+          handover_to?: string | null
+          id?: string
+          org_id?: string
+          profile_id?: string
+          reason?: string | null
+          reminded_at?: string | null
+          status?: string
+          to_date?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_requests_approver_id_fkey"
+            columns: ["approver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_requests_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_requests_handover_to_fkey"
+            columns: ["handover_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_requests_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
@@ -308,6 +404,28 @@ export type Database = {
     }
     Functions: {
       attendance_summary: { Args: { p_profile_id?: string }; Returns: Json }
+      leave_approver_for: { Args: { p_profile_id: string }; Returns: string }
+      leave_balances: { Args: { p_profile_id?: string }; Returns: Json }
+      leave_check: {
+        Args: {
+          p_from: string
+          p_half?: boolean
+          p_profile_id?: string
+          p_to: string
+          p_type: string
+        }
+        Returns: Json
+      }
+      leave_remind_approvers: { Args: never; Returns: number }
+      leave_sandwich_conflict: {
+        Args: {
+          p_exclude?: string
+          p_from: string
+          p_profile_id: string
+          p_to: string
+        }
+        Returns: string
+      }
       manages: { Args: { target_id: string }; Returns: boolean }
       my_org: { Args: never; Returns: string }
       my_profile_id: { Args: never; Returns: string }
