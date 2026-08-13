@@ -72,8 +72,9 @@ export function EnergyCheckIn({ me, style }: { me: Profile; style?: React.CSSPro
           <p className="ce-label">Your last 7 check-ins</p>
           <div className="mt-3 flex items-end gap-2">
             {(logs ?? []).map((l) => (
-              <div key={l.id} className="flex flex-1 flex-col items-center gap-1">
+              <div key={l.id} className="flex max-w-14 flex-1 flex-col items-center gap-1">
                 <span className="text-[14px]">
+
                   {ENERGY_LEVELS.find((e) => e.score === l.score)?.emoji}
                 </span>
                 <div
