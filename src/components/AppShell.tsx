@@ -15,6 +15,7 @@ const TABS = [
   { label: "Goals", to: "/dashboard" },
   { label: "Recognition", to: "/dashboard" },
   { label: "People & Culture", to: "/dashboard" },
+  { label: "Change password", to: "/change-password" },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -57,9 +58,20 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Bell size={20} />
             </button>
 
-            <span className="hidden max-w-[9rem] truncate text-sm font-semibold text-white sm:block">
-              {isLoading ? "…" : (profile?.full_name ?? data?.user?.email ?? "")}
-            </span>
+            <Link
+              to="/change-password"
+              title="Change password"
+              className="hidden max-w-[11rem] flex-col items-end leading-tight sm:flex"
+            >
+              <span className="max-w-[11rem] truncate text-sm font-semibold text-white">
+                {isLoading ? "…" : (profile?.full_name ?? data?.user?.email ?? "")}
+              </span>
+              {profile?.role ? (
+                <span className="text-[10px] font-bold tracking-[0.18em] text-goldL uppercase">
+                  {profile.role}
+                </span>
+              ) : null}
+            </Link>
 
             <button
               type="button"
