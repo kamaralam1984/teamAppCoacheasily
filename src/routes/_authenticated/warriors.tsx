@@ -2,10 +2,12 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
+import { PresenceBoard } from "@/components/PresenceBoard";
 import { ExitDialog } from "@/components/warriors/ExitDialog";
 import { OrgTree } from "@/components/warriors/OrgTree";
 import { ProfileModal } from "@/components/warriors/ProfileModal";
 import { WarriorForm } from "@/components/warriors/WarriorForm";
+import { usePresenceToday } from "@/hooks/useDailyCode";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useWarriors } from "@/hooks/useWarriors";
 import {
