@@ -3,6 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
 import { Celebrate } from "@/components/Celebrate";
+import { DailyCodeModal } from "@/components/DailyCodeModal";
+import { PresenceBoard } from "@/components/PresenceBoard";
 import { DailyNumbers } from "@/components/goals/DailyNumbers";
 import { Mark } from "@/components/Mark";
 import { WorkMeter } from "@/components/WorkMeter";
@@ -11,6 +13,7 @@ import {
   useAttendanceSummary,
   useMarkAttendance,
 } from "@/hooks/useAttendance";
+import { usePresenceToday, useTodayCode } from "@/hooks/useDailyCode";
 import { useCycles, useEveningNudge, useGoalsFor } from "@/hooks/useGoals";
 import { usePendingApprovals } from "@/hooks/useLeave";
 import { useMyProfile } from "@/hooks/useMyProfile";
@@ -64,6 +67,9 @@ function Dashboard() {
   const mark = useMarkAttendance(profile?.id ?? null, profile?.org_id ?? null);
 
   const [celebration, setCelebration] = useState<string | null>(null);
+  const [codeOpen, setCodeOpen] = useState(false);
+  const { data: todayCode, isLoading: codeLoading } = useTodayCode(Boolean(profile));
+  const { data: presence } = usePresenceToday(Boolean(profile));
   const { weekday, date } = todayParts();
 
   const canReview =
@@ -79,9 +85,11 @@ function Dashboard() {
   useEveningNudge(Boolean(profile) && marked);
 
 
-  const onMark = () => {
-    mark.mutate(undefined, {
+  const onMark = (focus: string) => {
+    mark.mutate(focus, {
+      onError: () => undefined,
       onSuccess: (res) => {
+        setCodeOpen(false);
         if (res.compOffReason) {
           setCelebration(`⚖️ You worked on ${res.compOffReason} — 1 comp-off is yours.`);
         } else if (res.milestone) {
@@ -125,10 +133,10 @@ function Dashboard() {
               <button
                 type="button"
                 className="btn3d w-full sm:w-auto"
-                onClick={onMark}
+                onClick={() => setCodeOpen(true)}
                 disabled={mark.isPending || !profile}
               >
-                {mark.isPending ? "Marking…" : "Mark attendance (11:00 AM)"}
+                Mark attendance (11:00 AM)
               </button>
             )}
 
@@ -160,6 +168,8 @@ function Dashboard() {
 
         <WorkMeter summary={summary} style={{ animationDelay: "80ms" }} />
 
+        <PresenceBoard rows={presence ?? []} style={{ animationDelay: "120ms" }} />
+
 
 
         {/* ── Recent attendance, newest first ────────────────── */}
@@ -184,6 +194,17 @@ function Dashboard() {
           </section>
         ) : null}
       </div>
+
+      {codeOpen ? (
+        <DailyCodeModal
+          code={todayCode ?? null}
+          loading={codeLoading}
+          pending={mark.isPending}
+          error={mark.isError}
+          onClose={() => setCodeOpen(false)}
+          onPledge={onMark}
+        />
+      ) : null}
 
       {celebration ? (
         <Celebrate message={celebration} onDone={() => setCelebration(null)} />

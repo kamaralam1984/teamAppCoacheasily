@@ -243,8 +243,22 @@ function LeavePage() {
                 ))}
               </select>
               <p className="mt-1 text-[12px] text-soft">
-                Your open tasks will move to them once tasks arrive in the app.
+                Once this leave is approved, your open tasks due in these dates move to them.
               </p>
+              {windowTasks && windowTasks.length > 0 ? (
+                <div className="mt-3 rounded-[12px] border border-line bg-pearl p-3.5">
+                  <p className="text-[11px] font-bold tracking-wider text-goldD uppercase">
+                    {windowTasks.length} task{windowTasks.length === 1 ? "" : "s"} fall in these dates
+                  </p>
+                  <ul className="mt-2 space-y-1.5">
+                    {windowTasks.map((t) => (
+                      <li key={t.id} className="text-[13px] text-soft">
+                        {shortDate(t.due_date!)} · {t.title}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </div>
 
             <div>
