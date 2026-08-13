@@ -52,6 +52,8 @@ export function WarriorForm({
     manager_id: editing?.manager_id ?? "",
     role: (editing?.role ?? "member") as Role,
     weekly_off: editing?.weekly_off ?? "Sunday",
+    sort_order: String(editing?.sort_order ?? 100),
+
     joined_on: editing?.joined_on ?? "",
     birthday: editing?.birthday ?? "",
     wedding_anniversary: editing?.wedding_anniversary ?? "",
@@ -88,6 +90,10 @@ export function WarriorForm({
         manager_id: form.manager_id || null,
         role: form.role,
         weekly_off: form.weekly_off,
+        sort_order: Number.isFinite(Number(form.sort_order)) && form.sort_order.trim() !== ""
+          ? Math.trunc(Number(form.sort_order))
+          : 100,
+
         joined_on: form.joined_on || null,
         birthday: form.birthday || null,
         wedding_anniversary: form.wedding_anniversary || null,
@@ -220,6 +226,23 @@ export function WarriorForm({
               ))}
             </select>
           </label>
+
+          <label>
+            <Label>Display order</Label>
+            <input
+              type="number"
+              step={10}
+              className="ce-input"
+              value={form.sort_order}
+              onChange={(e) => set("sort_order", e.target.value)}
+            />
+            <span className="mt-2 block text-[13px] leading-relaxed text-soft">
+              Lower numbers appear higher among people with the same manager. Leadership sits
+              above everyone regardless. Leave at 100 if you don't mind.
+            </span>
+          </label>
+
+
 
           <label className="sm:col-span-2">
             <Label>Access level</Label>

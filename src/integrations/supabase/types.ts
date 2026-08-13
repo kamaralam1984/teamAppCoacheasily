@@ -104,6 +104,7 @@ export type Database = {
           org_id: string
           responsibilities: string | null
           role: string
+          sort_order: number
           status: string
           title: string | null
           wedding_anniversary: string | null
@@ -126,6 +127,7 @@ export type Database = {
           org_id: string
           responsibilities?: string | null
           role?: string
+          sort_order?: number
           status?: string
           title?: string | null
           wedding_anniversary?: string | null
@@ -148,6 +150,7 @@ export type Database = {
           org_id?: string
           responsibilities?: string | null
           role?: string
+          sort_order?: number
           status?: string
           title?: string | null
           wedding_anniversary?: string | null

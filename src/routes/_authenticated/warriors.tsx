@@ -196,7 +196,17 @@ function WarriorsPage() {
             ) : error ? (
               <p className="text-sm text-red">The team couldn't be loaded. Please refresh.</p>
             ) : (
-              <OrgTree tree={tree} onOpen={setSelected} />
+              <OrgTree
+                tree={tree}
+                onOpen={setSelected}
+                canManage={canManage}
+                onEdit={(p) => {
+                  setEditing(p);
+                  setFormOpen(true);
+                }}
+                onExit={(p) => setExiting(p)}
+              />
+
             )}
           </div>
         </section>
