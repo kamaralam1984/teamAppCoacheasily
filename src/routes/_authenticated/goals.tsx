@@ -208,6 +208,7 @@ function Page() {
         <ReviewMode
           cycle={active}
           slides={review === "mine" ? mySlides : teamSlides}
+          showSummary={review === "team"}
           onClose={() => setReview(null)}
         />
       ) : null}
