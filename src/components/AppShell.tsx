@@ -27,9 +27,8 @@ const BASE_TABS = [
 const LEAD_TABS = [
   { label: "Team", to: "/team" },
   { label: "Approvals", to: "/approvals" },
+  { label: "Reports", to: "/reports" },
 ] as const;
-
-const HR_TABS = [{ label: "Reports", to: "/reports" }] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { data, isLoading } = useMyProfile();
@@ -45,7 +44,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const tabs = [
     ...BASE_TABS,
     ...(role === "manager" || role === "hr" || role === "admin" ? LEAD_TABS : []),
-    ...(role === "hr" || role === "admin" ? HR_TABS : []),
   ];
 
   useEffect(() => {

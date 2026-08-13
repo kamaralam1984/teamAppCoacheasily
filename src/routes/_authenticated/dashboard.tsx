@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
 import { Celebrate } from "@/components/Celebrate";
 import { DailyCodeModal } from "@/components/DailyCodeModal";
 import { PresenceBoard } from "@/components/PresenceBoard";
+import { PunctualityCard } from "@/components/Punctuality";
 import { DailyNumbers } from "@/components/goals/DailyNumbers";
 import { Mark } from "@/components/Mark";
 import { WorkMeter } from "@/components/WorkMeter";
@@ -17,6 +18,12 @@ import { usePresenceToday, useTodayCode } from "@/hooks/useDailyCode";
 import { useCycles, useEveningNudge, useGoalsFor } from "@/hooks/useGoals";
 import { usePendingApprovals } from "@/hooks/useLeave";
 import { useMyProfile } from "@/hooks/useMyProfile";
+import { useOrgSettings, usePunctualityMe } from "@/hooks/useOrg";
+import {
+  DEFAULT_MEETING_TIME,
+  prettyTime,
+  punchMessage,
+} from "@/lib/punctuality";
 import { shortDate } from "@/lib/warriors";
 
 
@@ -66,7 +73,12 @@ function Dashboard() {
   const { data: history } = useAttendanceHistory(profile?.id ?? null, 7);
   const mark = useMarkAttendance(profile?.id ?? null, profile?.org_id ?? null);
 
-  const [celebration, setCelebration] = useState<string | null>(null);
+  interface Cheer {
+    message: string;
+    action?: { label: string; href: string } | null;
+    quiet?: boolean;
+  }
+  const [celebration, setCelebration] = useState<Cheer | null>(null);
   const [codeOpen, setCodeOpen] = useState(false);
   const { data: todayCode, isLoading: codeLoading } = useTodayCode(Boolean(profile));
   const { data: presence } = usePresenceToday(Boolean(profile));
@@ -79,6 +91,18 @@ function Dashboard() {
 
   const marked = summary?.marked_today ?? false;
 
+  const { data: org } = useOrgSettings(Boolean(profile));
+  const { data: punc } = usePunctualityMe(Boolean(profile));
+  const meetingTime = org?.daily_meeting_time || DEFAULT_MEETING_TIME;
+  const meetingUrl = org?.daily_meeting_url ?? "";
+  const mondayKey = `ce-monday-review-${summary?.today ?? "today"}`;
+  const [mondayDone, setMondayDone] = useState(false);
+  useEffect(() => {
+    setMondayDone(window.localStorage.getItem(mondayKey) === "1");
+  }, [mondayKey]);
+  const isMonday =
+    new Date().toLocaleDateString("en-GB", { weekday: "long", timeZone: IST }) === "Monday";
+
   const { data: cycles } = useCycles();
   const activeCycle = useMemo(() => cycles?.find((c) => c.status === "active") ?? null, [cycles]);
   const { data: myGoals } = useGoalsFor(profile ? undefined : null, activeCycle?.id ?? null);
@@ -90,15 +114,20 @@ function Dashboard() {
       onError: () => undefined,
       onSuccess: (res) => {
         setCodeOpen(false);
+        const earlyCount = (punc?.early ?? 0) + (res.onTime ? 1 : 0);
+        const lines = [punchMessage(res.onTime, res.at, earlyCount)];
         if (res.compOffReason) {
-          setCelebration(`⚖️ You worked on ${res.compOffReason} — 1 comp-off is yours.`);
+          lines.push(`⚖️ You worked on ${res.compOffReason} — 1 comp-off is yours.`);
         } else if (res.milestone) {
-          setCelebration(
-            `🔥 ${res.daysMarked} days worked — you have just earned another paid leave.`,
-          );
-        } else {
-          setCelebration(`Attendance marked for ${shortDate(res.date)}. Have a strong day.`);
+          lines.push(`${res.daysMarked} days worked — you have just earned another paid leave.`);
         }
+        setCelebration({
+          message: lines.join(" "),
+          quiet: !res.onTime,
+          action: meetingUrl
+            ? { label: `Join the ${prettyTime(meetingTime)} standup →`, href: meetingUrl }
+            : null,
+        });
       },
     });
   };
@@ -136,9 +165,20 @@ function Dashboard() {
                 onClick={() => setCodeOpen(true)}
                 disabled={mark.isPending || !profile}
               >
-                Mark attendance (11:00 AM)
+                Mark attendance ({prettyTime(meetingTime)})
               </button>
             )}
+
+            {marked && meetingUrl ? (
+              <a
+                href={meetingUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-goldL px-4 text-[13px] font-bold text-night sm:w-auto"
+              >
+                Join the {prettyTime(meetingTime)} standup →
+              </a>
+            ) : null}
 
             {canReview ? (
               <a
@@ -150,6 +190,12 @@ function Dashboard() {
             ) : null}
           </div>
 
+          {!marked ? (
+            <p className="mt-4 text-[13px] leading-relaxed text-mist">
+              The standup room opens for you the moment you mark attendance.
+            </p>
+          ) : null}
+
           {mark.isError ? (
             <p className="mt-4 text-[13px] font-semibold text-goldL">
               That didn't go through. Please try again.
@@ -159,11 +205,37 @@ function Dashboard() {
 
         {/* ── Work meter (no leave balances here — we celebrate work) ─ */}
         {/* ── The twenty-second habit, high up ───────────────── */}
+        {isMonday && !mondayDone ? (
+          <a
+            href="/goals?review=1"
+            onClick={() => {
+              window.localStorage.setItem(mondayKey, "1");
+              setMondayDone(true);
+            }}
+            className="ce-rise ce-card block p-6"
+            style={{ animationDelay: "40ms" }}
+          >
+            <p className="ce-label">Monday</p>
+            <h2 className="mt-1 font-display text-2xl text-ink">
+              It's Monday — review your goals before the {prettyTime(meetingTime)} standup
+            </h2>
+            <p className="mt-1 text-[13px] text-soft">
+              Big type, one goal at a time. Ready to share on the call. →
+            </p>
+          </a>
+        ) : null}
+
         <DailyNumbers
           cycle={activeCycle}
           goals={myGoals ?? []}
-          onCelebrate={setCelebration}
+          onCelebrate={(m: string) => setCelebration({ message: m })}
           style={{ animationDelay: "60ms" }}
+        />
+
+        <PunctualityCard
+          me={punc}
+          meetingTime={prettyTime(meetingTime)}
+          style={{ animationDelay: "70ms" }}
         />
 
         <WorkMeter summary={summary} style={{ animationDelay: "80ms" }} />
@@ -207,7 +279,12 @@ function Dashboard() {
       ) : null}
 
       {celebration ? (
-        <Celebrate message={celebration} onDone={() => setCelebration(null)} />
+        <Celebrate
+          message={celebration.message}
+          action={celebration.action ?? null}
+          quiet={celebration.quiet ?? false}
+          onDone={() => setCelebration(null)}
+        />
       ) : null}
     </AppShell>
   );

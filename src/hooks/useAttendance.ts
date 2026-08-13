@@ -50,6 +50,9 @@ export function useAttendanceHistory(profileId?: string | null, limit = 14) {
 
 export interface MarkResult {
   date: string;
+  /** exactly when the punch landed, in Mumbai time (HH:MM) */
+  at: string;
+  onTime: boolean;
   compOffReason: string | null;
   milestone: boolean;
   daysMarked: number;
@@ -64,7 +67,7 @@ export function useMarkAttendance(profileId?: string | null, orgId?: string | nu
       const { data: row, error } = await supabase
         .from("attendance")
         .insert({ profile_id: profileId, org_id: orgId, focus: focus?.trim() || null })
-        .select("date")
+        .select("date, marked_at, on_time")
         .single();
       if (error) throw error;
 
@@ -81,6 +84,13 @@ export function useMarkAttendance(profileId?: string | null, orgId?: string | nu
 
       return {
         date: row.date,
+        at: new Date(row.marked_at).toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+          timeZone: "Asia/Kolkata",
+        }),
+        onTime: row.on_time ?? true,
         compOffReason: credit?.reason ?? null,
         milestone: days > 0 && days % 20 === 0,
         daysMarked: days,
@@ -90,6 +100,8 @@ export function useMarkAttendance(profileId?: string | null, orgId?: string | nu
       void qc.invalidateQueries({ queryKey: ["attendance-summary"] });
       void qc.invalidateQueries({ queryKey: ["attendance-history"] });
       void qc.invalidateQueries({ queryKey: ["presence-today"] });
+      void qc.invalidateQueries({ queryKey: ["punctuality-me"] });
+      void qc.invalidateQueries({ queryKey: ["punctuality-rows"] });
     },
   });
 }

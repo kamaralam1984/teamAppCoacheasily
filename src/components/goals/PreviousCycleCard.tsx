@@ -67,7 +67,7 @@ export function PreviousCycleCard({
                 })
               }
             >
-              Carry forward →
+              Use this again next cycle →
             </button>
           </li>
         ))}

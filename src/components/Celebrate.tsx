@@ -33,6 +33,10 @@ export interface CelebrateProps {
   onDone: () => void;
   /** milliseconds before it dismisses itself */
   duration?: number;
+  /** one thing they can do from here — e.g. join the 11 AM standup */
+  action?: { label: string; href: string } | null;
+  /** confetti is for the early mornings; a gentle nudge gets none */
+  quiet?: boolean;
 }
 
 function prefersReducedMotion() {
@@ -40,14 +44,21 @@ function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function Celebrate({ message, cheer, onDone, duration = 4000 }: CelebrateProps) {
+export function Celebrate({
+  message,
+  cheer,
+  onDone,
+  duration = 4000,
+  action = null,
+  quiet = false,
+}: CelebrateProps) {
   const reduced = useMemo(prefersReducedMotion, []);
   const [factIndex, setFactIndex] = useState(() => Math.floor(Math.random() * FACTS.length));
   const line = useMemo(() => cheer ?? CHEERS[Math.floor(Math.random() * CHEERS.length)]!, [cheer]);
 
   const pieces = useMemo(
     () =>
-      reduced
+      reduced || quiet
         ? []
         : Array.from({ length: 36 }, (_, i) => ({
             id: i,
@@ -59,17 +70,18 @@ export function Celebrate({ message, cheer, onDone, duration = 4000 }: Celebrate
             colour: CONFETTI_COLOURS[i % CONFETTI_COLOURS.length]!,
             round: i % 3 === 0,
           })),
-    [reduced],
+    [reduced, quiet],
   );
 
   useEffect(() => {
-    const dismiss = window.setTimeout(onDone, duration);
+    // When there is something to do here, we wait for them.
+    const dismiss = action ? undefined : window.setTimeout(onDone, duration);
     const rotate = window.setInterval(() => setFactIndex((i) => (i + 1) % FACTS.length), 2000);
     return () => {
-      window.clearTimeout(dismiss);
+      if (dismiss !== undefined) window.clearTimeout(dismiss);
       window.clearInterval(rotate);
     };
-  }, [duration, onDone]);
+  }, [action, duration, onDone]);
 
   return (
     <div
@@ -98,6 +110,27 @@ export function Celebrate({ message, cheer, onDone, duration = 4000 }: Celebrate
       <div className="ce-rise ce-card relative w-full max-w-sm p-6 text-center">
         <p className="font-display text-3xl leading-tight text-ink">{line}</p>
         <p className="mt-2 text-[15px] leading-relaxed font-semibold text-ink">{message}</p>
+        {action ? (
+          <div className="mt-5 flex flex-col gap-2">
+            <a
+              href={action.href}
+              target="_blank"
+              rel="noreferrer"
+              className="btn3d inline-flex min-h-12 w-full items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {action.label}
+            </a>
+            <button
+              type="button"
+              className="min-h-11 text-[13px] font-bold text-soft underline"
+              onClick={onDone}
+            >
+              Not now
+            </button>
+          </div>
+        ) : null}
+
         <div className="mt-5 border-t border-line pt-4">
           <p className="text-[10px] font-bold tracking-[0.14em] text-goldD uppercase">
             Interesting fact
