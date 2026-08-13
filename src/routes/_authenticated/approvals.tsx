@@ -8,7 +8,9 @@ import {
   usePendingApprovals,
   type PendingRequest,
 } from "@/hooks/useLeave";
+import { useHostConflicts } from "@/hooks/useCalendar";
 import { useMyProfile } from "@/hooks/useMyProfile";
+import { rangeLabel } from "@/lib/calendar";
 import { shortDate } from "@/lib/warriors";
 
 export const Route = createFileRoute("/_authenticated/approvals")({
@@ -59,6 +61,24 @@ function BalanceContext({ profileId, type }: { profileId: string; type: string }
   );
 }
 
+function HostWarning({ request }: { request: PendingRequest }) {
+  const { data } = useHostConflicts(request.profile_id, request.from_date, request.to_date);
+  if (!data || data.length === 0) return null;
+  return (
+    <div className="mt-3 space-y-2">
+      {data.map((c) => (
+        <p
+          key={c.program_id}
+          className="rounded-lg border border-red/30 bg-red/10 p-3 text-[13px] leading-relaxed font-semibold text-red"
+        >
+          ⚠️ Approving this leaves {c.name} without a host on{" "}
+          {rangeLabel(c.overlap_from, c.overlap_to)}.
+        </p>
+      ))}
+    </div>
+  );
+}
+
 function RequestCard({
   request,
   index,
@@ -98,6 +118,8 @@ function RequestCard({
       {request.reason ? (
         <p className="mt-1 text-[13px] leading-relaxed text-soft">“{request.reason}”</p>
       ) : null}
+
+      <HostWarning request={request} />
 
       <div className="mt-3 border-t border-line pt-3">
         <BalanceContext profileId={request.profile_id} type={request.type} />
