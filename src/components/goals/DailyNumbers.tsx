@@ -142,13 +142,65 @@ function GoalRow({
 
   const gaps = missingDays(entries ?? [], cycleStart, 7);
 
-  const save = () => {
-    const raw = stages.map((_, i) => valueFor(i).trim());
-    if (raw.every((r) => r === "")) return;
+  /* ── the honesty check ──────────────────────────────────────
+     Quiet by default. It speaks only when something looks unusual,
+     and it always says why. It never tells anyone else.          */
+
+  /** this person's own 14-day average for a stage, from their own entries */
+  const avgFor = (i: number): number | null => {
+    const rows = (entries ?? []).slice(0, 14);
+    const nums = rows
+      .map((e) => (goal.kind === "funnel" ? (e.counts?.[i] ?? null) : e.value))
+      .filter((v): v is number => v !== null && v !== undefined);
+    if (nums.length < 3) return null;
+    return nums.reduce((a, b) => a + b, 0) / nums.length;
+  };
+
+  const backfilled = useMemo(
+    () => missingDays(entries ?? [], cycleStart, 14).length,
+    [entries, cycleStart],
+  );
+
+  const raw = () => stages.map((_, i) => valueFor(i).trim());
+
+  const blocker = (): string | null => {
+    if (goal.kind !== "funnel") return null;
+    const nums = raw().map((r) => (r === "" ? null : Number(r)));
+    for (let i = 1; i < nums.length; i += 1) {
+      const prev = nums[i - 1];
+      const cur = nums[i];
+      if (prev !== null && cur !== null && cur > prev) {
+        return `${stages[i]} can't be more than ${stages[i - 1]}.`;
+      }
+    }
+    return null;
+  };
+
+  const unusual = (): string | null => {
+    const nums = raw();
+    for (let i = 0; i < nums.length; i += 1) {
+      const v = nums[i] === "" ? null : Number(nums[i]);
+      const a = avgFor(i);
+      if (v !== null && a !== null && a > 0 && v > a * 3) {
+        return `That's well above your usual ${fmt(Math.round(a * 10) / 10)} for ${stages[i]}. Confirm it's right?`;
+      }
+    }
+    if (date !== istToday() && backfilled > 3) {
+      return "Filling several days at once — take a moment to make sure each day is accurate.";
+    }
+    return null;
+  };
+
+  const [confirmMsg, setConfirmMsg] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  const write = () => {
+    const rows = raw();
+    if (rows.every((r) => r === "")) return;
     const payload =
       goal.kind === "funnel"
-        ? { counts: raw.map((r) => Number(r || 0)) }
-        : { value: Number(raw[0] || 0) };
+        ? { counts: rows.map((r) => Number(r || 0)) }
+        : { value: Number(rows[0] || 0) };
 
     log.mutate(
       { goalId: goal.id, date, note: note || null, ...payload },
@@ -156,15 +208,31 @@ function GoalRow({
         onSuccess: () => {
           setDraft({});
           setNote("");
+          setConfirmMsg(null);
+          setSaved(true);
           onCelebrate(
             date === istToday()
-              ? `${goal.name} logged. Small numbers, every day — that is how it compounds.`
+              ? `${goal.name} logged. Honest numbers are how you actually improve.`
               : `${goal.name} logged for ${dayLabel(date)}. Gap filled.`,
           );
         },
       },
     );
   };
+
+  const block = blocker();
+
+  const save = () => {
+    if (raw().every((r) => r === "")) return;
+    if (block) return;
+    const ask = unusual();
+    if (ask) {
+      setConfirmMsg(ask);
+      return;
+    }
+    write();
+  };
+
 
   const line = weekLine(goal, progress);
 
