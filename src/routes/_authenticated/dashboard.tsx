@@ -10,6 +10,7 @@ import {
   useAttendanceSummary,
   useMarkAttendance,
 } from "@/hooks/useAttendance";
+import { usePendingApprovals } from "@/hooks/useLeave";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { shortDate } from "@/lib/warriors";
 
@@ -64,7 +65,8 @@ function Dashboard() {
 
   const canReview =
     profile?.role === "manager" || profile?.role === "hr" || profile?.role === "admin";
-  const pendingLeave: number = 0; // leave requests land in a later screen
+  const { data: pending } = usePendingApprovals(Boolean(profile) && canReview);
+  const pendingLeave = pending?.length ?? 0;
 
   const marked = summary?.marked_today ?? false;
 
