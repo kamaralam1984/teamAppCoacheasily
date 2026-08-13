@@ -25,20 +25,24 @@ function rollUps(rows: TeamGoalRow[]) {
     }),
   );
   return [...map.values()]
-    .filter((r) => r.people >= 2 && r.totals[0] > 0)
+    .filter((r) => r.people >= 2 && (r.totals[0] ?? 0) > 0)
     .map((r) => {
       const n = r.stages.length;
-      const headline = (r.totals[n - 1] / r.totals[0]) * 100;
+      const first = r.totals[0] ?? 0;
+      const headline = first > 0 ? ((r.totals[n - 1] ?? 0) / first) * 100 : 0;
       let weakest: { from: string; to: string; rate: number } | null = null;
       for (let i = 0; i < n - 1; i += 1) {
-        if (!r.totals[i]) continue;
-        const rate = (r.totals[i + 1] / r.totals[i]) * 100;
+        const from = r.totals[i] ?? 0;
+        const to = r.totals[i + 1] ?? 0;
+        if (from <= 0) continue;
+        const rate = (to / from) * 100;
         if (!weakest || rate < weakest.rate) {
-          weakest = { from: r.stages[i], to: r.stages[i + 1], rate };
+          weakest = { from: r.stages[i] ?? "", to: r.stages[i + 1] ?? "", rate };
         }
       }
       return { ...r, headline, weakest };
     });
+
 }
 
 export function TeamPanel({ canSeePast }: { canSeePast: boolean }) {
