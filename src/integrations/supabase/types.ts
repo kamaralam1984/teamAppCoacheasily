@@ -1371,6 +1371,59 @@ export type Database = {
           },
         ]
       }
+      themes: {
+        Row: {
+          created_at: string
+          dates: string[]
+          emoji: string
+          greeting: string
+          id: string
+          key: string
+          name: string
+          org_id: string
+          particles: string
+          patch: Json
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dates?: string[]
+          emoji?: string
+          greeting?: string
+          id?: string
+          key: string
+          name: string
+          org_id: string
+          particles?: string
+          patch?: Json
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dates?: string[]
+          emoji?: string
+          greeting?: string
+          id?: string
+          key?: string
+          name?: string
+          org_id?: string
+          particles?: string
+          patch?: Json
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "themes_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1454,6 +1507,7 @@ export type Database = {
       team_energy_today: { Args: never; Returns: Json }
       team_goals: { Args: { p_cycle_id?: string }; Returns: Json }
       team_health: { Args: never; Returns: Json }
+      theme_patch_is_safe: { Args: { p: Json }; Returns: boolean }
       update_org_settings: { Args: { p_patch: Json }; Returns: Json }
     }
     Enums: {
