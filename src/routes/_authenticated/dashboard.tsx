@@ -244,9 +244,9 @@ function Dashboard() {
 
         <PresenceBoard rows={presence ?? []} style={{ animationDelay: "120ms" }} />
 
-        {me ? (
+        {profile ? (
           <Rituals
-            me={me}
+            me={profile}
             onCelebrate={(m: string) => setCelebration({ message: m })}
             style={{ animationDelay: "140ms" }}
           />
