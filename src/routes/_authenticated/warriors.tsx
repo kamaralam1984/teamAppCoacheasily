@@ -49,6 +49,7 @@ function WarriorsPage() {
   const [editing, setEditing] = useState<Profile | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [exiting, setExiting] = useState<Profile | null>(null);
+  const [showEveryone, setShowEveryone] = useState(false);
 
   const viewer = mine?.profile ?? null;
   const canManage = isPrivileged(viewer?.role);
