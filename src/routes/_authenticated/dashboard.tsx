@@ -150,7 +150,16 @@ function Dashboard() {
         </section>
 
         {/* ── Work meter (no leave balances here — we celebrate work) ─ */}
+        {/* ── The twenty-second habit, high up ───────────────── */}
+        <DailyNumbers
+          cycle={activeCycle}
+          goals={myGoals ?? []}
+          onCelebrate={setCelebration}
+          style={{ animationDelay: "60ms" }}
+        />
+
         <WorkMeter summary={summary} style={{ animationDelay: "80ms" }} />
+
 
 
         {/* ── Recent attendance, newest first ────────────────── */}
