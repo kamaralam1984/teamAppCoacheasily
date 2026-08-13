@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { Ring } from "@/components/goals/Ring";
+import { ReviewSummary } from "@/components/goals/ReviewSummary";
+import { StepAdvice } from "@/components/goals/StepAdvice";
 import { useGoalEntries } from "@/hooks/useGoals";
 import {
   addDays,
@@ -25,10 +27,13 @@ export function ReviewMode({
   cycle,
   slides,
   onClose,
+  showSummary,
 }: {
   cycle: Cycle;
   slides: ReviewSlide[];
   onClose: () => void;
+  /** managers reviewing their line get the standup read-out draft */
+  showSummary?: boolean;
 }) {
   const [i, setI] = useState(0);
   const at = Math.min(i, Math.max(slides.length - 1, 0));
@@ -73,6 +78,10 @@ export function ReviewMode({
             Nothing written for this cycle yet.
           </p>
         )}
+
+        {showSummary && slides.length > 0 ? (
+          <ReviewSummary slides={slides} cycleName={cycle.name} />
+        ) : null}
 
         <div className="mt-auto flex items-center justify-between gap-3 pt-8">
           <button
@@ -196,6 +205,7 @@ function Slide({ cycle, slide }: { cycle: Cycle; slide: ReviewSlide }) {
                 {fmt(p.weakest_step.rate)}% · {fmt(p.weakest_step.to_count)} of{" "}
                 {fmt(p.weakest_step.from_count)} made it through
               </p>
+              <StepAdvice goalId={goal.id} big />
             </>
           ) : (
             <p className="mt-2 text-[15px] text-soft">

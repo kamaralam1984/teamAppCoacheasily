@@ -37,7 +37,7 @@ export const inviteWarrior = createServerFn({ method: "POST" })
 
     const { data: target, error: targetError } = await supabaseAdmin
       .from("profiles")
-      .select("id, org_id, full_name, title, fun_fact, manager_id, auth_user_id")
+      .select("id, org_id, full_name, title, fun_fact, manager_id, auth_user_id, joined_on")
       .eq("id", data.profileId)
       .maybeSingle();
     if (targetError) throw new Error(targetError.message);
@@ -66,11 +66,16 @@ export const inviteWarrior = createServerFn({ method: "POST" })
 
     const { error: linkError } = await supabaseAdmin
       .from("profiles")
-      .update({ auth_user_id: authUserId })
+      .update({ auth_user_id: authUserId, invited_at: new Date().toISOString() })
       .eq("id", target.id);
     if (linkError) throw new Error(linkError.message);
 
-    // Company-wide welcome
+    // Company-wide welcome — only for genuinely new joiners, so inviting the
+    // existing roster never re-posts everybody's welcome.
+    const joined = target.joined_on ? new Date(target.joined_on).getTime() : null;
+    const isNewJoiner = joined === null || Date.now() - joined < 30 * 864e5;
+    if (!isNewJoiner) return { ok: true, invited: !inviteError, email: data.email };
+
     const { data: everyone } = await supabaseAdmin
       .from("profiles")
       .select("id")
