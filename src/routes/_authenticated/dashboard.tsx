@@ -5,7 +5,12 @@ import { AppShell } from "@/components/AppShell";
 import { Celebrate } from "@/components/Celebrate";
 import { DailyCodeModal } from "@/components/DailyCodeModal";
 import { TodayFocus } from "@/components/TodayFocus";
-import { PresenceBoard } from "@/components/PresenceBoard";
+import { TodayAt } from "@/components/dashboard/TodayAt";
+import { WinTheDay } from "@/components/dashboard/WinTheDay";
+import { MyTasksCard } from "@/components/dashboard/MyTasksCard";
+import { MyGoalsCard } from "@/components/dashboard/MyGoalsCard";
+import { ComingUp } from "@/components/dashboard/ComingUp";
+import { Announcements } from "@/components/dashboard/Announcements";
 import { PunctualityCard } from "@/components/Punctuality";
 import { DailyNumbers } from "@/components/goals/DailyNumbers";
 import { Mark } from "@/components/Mark";
@@ -22,6 +27,10 @@ import { useCycles, useEveningNudge, useGoalsFor } from "@/hooks/useGoals";
 import { usePendingApprovals } from "@/hooks/useLeave";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useOrgSettings, usePunctualityMe } from "@/hooks/useOrg";
+import { useTasks, useUpdateTask } from "@/hooks/useTasks";
+import { useWarriors } from "@/hooks/useWarriors";
+import { useNextDays } from "@/hooks/useCalendar";
+import { useAnnouncements } from "@/hooks/useReports";
 import {
   DEFAULT_MEETING_TIME,
   prettyTime,
@@ -110,6 +119,17 @@ function Dashboard() {
   const activeCycle = useMemo(() => cycles?.find((c) => c.status === "active") ?? null, [cycles]);
   const { data: myGoals } = useGoalsFor(profile ? undefined : null, activeCycle?.id ?? null);
   useEveningNudge(Boolean(profile) && marked);
+
+  const { data: tasks } = useTasks(profile?.id ?? null);
+  const updateTask = useUpdateTask();
+  const { data: people } = useWarriors();
+  const { data: cal } = useNextDays(45);
+  const { data: announcements } = useAnnouncements(Boolean(profile));
+  const roster = people ?? [];
+  const founderId = useMemo(
+    () => roster.find((p) => p.status === "active" && !p.manager_id)?.id ?? null,
+    [roster],
+  );
 
 
   const onMark = (focus: string) => {
@@ -247,22 +267,57 @@ function Dashboard() {
 
         <WorkMeter summary={summary} style={{ animationDelay: "80ms" }} />
 
-        <PresenceBoard rows={presence ?? []} style={{ animationDelay: "120ms" }} />
-
-        {profile ? (
-          <Rituals
-            me={profile}
-            onCelebrate={(m: string) => setCelebration({ message: m })}
-            style={{ animationDelay: "140ms" }}
+        <div className="grid gap-6 md:grid-cols-2">
+          <WinTheDay
+            tasks={tasks}
+            meId={profile?.id ?? null}
+            onToggle={(t) =>
+              updateTask.mutate({
+                id: t.id,
+                patch: { done: !t.done, done_at: t.done ? null : new Date().toISOString() },
+              })
+            }
+            style={{ animationDelay: "100ms" }}
           />
-        ) : null}
+          {profile ? (
+            <Rituals
+              me={profile}
+              onCelebrate={(m: string) => setCelebration({ message: m })}
+              style={{ animationDelay: "110ms" }}
+            />
+          ) : null}
+        </div>
 
+        <TodayAt
+          today={summary?.today ?? new Date().toISOString().slice(0, 10)}
+          data={cal}
+          presence={presence ?? []}
+          people={roster}
+          style={{ animationDelay: "120ms" }}
+        />
 
+        <MyTasksCard tasks={tasks} meId={profile?.id ?? null} style={{ animationDelay: "130ms" }} />
 
+        <MyGoalsCard
+          goals={myGoals ?? []}
+          cycle={activeCycle}
+          style={{ animationDelay: "140ms" }}
+        />
+
+        <ComingUp
+          data={cal}
+          people={roster}
+          me={profile}
+          showTeamBirthdays={Boolean(org?.team_birthdays)}
+          founderId={founderId}
+          style={{ animationDelay: "150ms" }}
+        />
+
+        <Announcements items={announcements} style={{ animationDelay: "160ms" }} />
 
         {/* ── Recent attendance, newest first ────────────────── */}
         {history && history.length > 0 ? (
-          <section className="ce-rise ce-card p-6" style={{ animationDelay: "160ms" }}>
+          <section className="ce-rise ce-card p-6" style={{ animationDelay: "170ms" }}>
             <h2 className="font-display text-2xl text-ink">Your recent days</h2>
             <ul className="mt-4 space-y-2.5">
               {history.map((row) => (
