@@ -1,7 +1,15 @@
 import { useState } from "react";
 
-import { useSaveGoal, type SaveGoalInput } from "@/hooks/useGoals";
-import { METRIC_SUGGESTIONS, templatesFor, type Cycle, type Goal } from "@/lib/goals";
+import { useArchiveGoal, useSaveGoal, type SaveGoalInput } from "@/hooks/useGoals";
+import {
+  METRIC_SUGGESTIONS,
+  applyTemplate,
+  templatesFor,
+  type Cycle,
+  type Goal,
+} from "@/lib/goals";
+
+import { StageEditor } from "./StageEditor";
 
 export interface GoalDraft {
   id?: string;
@@ -13,6 +21,10 @@ export interface GoalDraft {
   target: string;
   stages: string[];
   plan: string;
+  /** how many days of numbers this goal already carries */
+  entriesCount?: number;
+  /** today's number, used when they choose to start a fresh goal */
+  currentValue?: number;
 }
 
 export function emptyDraft(): GoalDraft {
@@ -28,7 +40,7 @@ export function emptyDraft(): GoalDraft {
   };
 }
 
-export function draftFromGoal(g: Goal): GoalDraft {
+export function draftFromGoal(g: Goal, entriesCount = 0, currentValue?: number): GoalDraft {
   return {
     id: g.id,
     kind: g.kind as "number" | "funnel",
@@ -39,6 +51,8 @@ export function draftFromGoal(g: Goal): GoalDraft {
     target: String(g.target),
     stages: g.stages?.length ? g.stages : ["", "", ""],
     plan: g.plan ?? "",
+    entriesCount,
+    ...(currentValue === undefined ? {} : { currentValue }),
   };
 }
 
@@ -66,8 +80,14 @@ export function GoalForm({
   const [step, setStep] = useState(0);
   const [d, setD] = useState<GoalDraft>(initial);
   const [error, setError] = useState<string | null>(null);
+  /** "keep" = rename only · "fresh" = archive this goal and start a clean one */
+  const [historyChoice, setHistoryChoice] = useState<"keep" | "fresh">("keep");
   const save = useSaveGoal();
+  const archive = useArchiveGoal();
   const templates = templatesFor(department);
+
+  const hasHistory = Boolean(initial.id) && (initial.entriesCount ?? 0) > 0;
+  const shapeLocked = hasHistory && historyChoice === "keep";
 
   const set = (patch: Partial<GoalDraft>) => setD((cur) => ({ ...cur, ...patch }));
 
@@ -75,7 +95,10 @@ export function GoalForm({
 
   const canNext = () => {
     if (step === 0) return d.name.trim().length > 1;
-    if (step === 1) return d.kind === "number" ? d.metric.trim().length > 0 : stages.length >= 2;
+    if (step === 1)
+      return d.kind === "number"
+        ? d.metric.trim().length > 0
+        : stages.length >= 2 && stages.length <= 5;
     if (step === 2) return d.baseline.trim() !== "";
     return d.target.trim() !== "";
   };
@@ -87,25 +110,39 @@ export function GoalForm({
       setError("Where you are and where you're going cannot be the same number.");
       return;
     }
+    if (d.kind === "funnel" && (stages.length < 2 || stages.length > 5)) {
+      setError("A funnel needs between two and five steps.");
+      return;
+    }
+
+    /* Starting fresh never rewrites history — the old goal is archived intact. */
+    const startFresh = hasHistory && historyChoice === "fresh";
     const input: SaveGoalInput = {
-      ...(d.id ? { id: d.id } : {}),
+      ...(d.id && !startFresh ? { id: d.id } : {}),
       profile_id: profileId,
       org_id: orgId,
       cycle_id: cycle.id,
       kind: d.kind,
       name: d.name.trim(),
       metric: d.kind === "funnel" ? stages.join(" → ") : d.metric.trim(),
-      unit: d.unit.trim() || (d.kind === "funnel" ? "%" : null),
+      unit: d.kind === "funnel" ? "%" : d.unit.trim() || null,
       baseline,
       target,
       stages: d.kind === "funnel" ? stages : null,
       plan: d.plan.trim() || null,
     };
     save.mutate(input, {
-      onSuccess: onDone,
+      onSuccess: () => {
+        if (startFresh && d.id) {
+          archive.mutate(d.id, { onSuccess: onDone, onError: onDone });
+        } else {
+          onDone();
+        }
+      },
       onError: (e) => setError((e as Error).message),
     });
   };
+
 
   return (
     <div className="ce-card p-6">
