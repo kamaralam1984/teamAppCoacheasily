@@ -175,7 +175,7 @@ function CalendarPage() {
             disabled={!yearData}
             onClick={downloadMyCalendar}
           >
-            📅 Add to my calendar
+            Add to my calendar
           </button>
         </div>
 
