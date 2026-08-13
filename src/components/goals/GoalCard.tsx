@@ -51,25 +51,25 @@ export function GoalCard({ item, editable, onEdit, style }: Props) {
 
   return (
     <article className="ce-rise ce-card p-6" style={style}>
-      <div className="flex items-start gap-4">
+      <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
         <Ring pct={p?.pct ?? 0} />
-        <div className="min-w-0 flex-1">
+        <div className="min-w-[8rem] flex-1">
           <h3 className="font-display text-2xl leading-tight text-ink">{goal.name}</h3>
           {goal.metric ? <p className="mt-0.5 text-[13px] text-soft">{goal.metric}</p> : null}
         </div>
         {editable ? (
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="order-3 flex w-full shrink-0 items-center gap-2 sm:order-none sm:w-auto">
             <button
               type="button"
               onClick={onEdit}
-              className="min-h-11 rounded-full border border-line px-3 text-[12px] font-bold text-soft"
+              className="min-h-11 flex-1 rounded-full border border-line px-3 text-[12px] font-bold text-soft sm:flex-none"
             >
               Edit
             </button>
             <button
               type="button"
               onClick={() => setConfirmDelete(true)}
-              className="min-h-11 rounded-full border border-line px-3 text-[12px] font-bold text-red"
+              className="min-h-11 flex-1 rounded-full border border-line px-3 text-[12px] font-bold text-red sm:flex-none"
             >
               Delete
             </button>
