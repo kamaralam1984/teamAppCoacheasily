@@ -73,7 +73,42 @@ export function LeaveLedgerTable({
         </button>
       </div>
 
-      <div className="mt-5 -mx-2 overflow-x-auto px-2">
+      {/* Below 640px the table becomes stacked cards. */}
+      <div className="mt-5 grid gap-2 sm:hidden">
+        {list.map((r) => {
+          const c = balanceOf(r, "casual");
+          const s = balanceOf(r, "sick");
+          const e = balanceOf(r, "earned");
+          const co = balanceOf(r, "comp_off");
+          return (
+            <div key={r.profile_id} className="rounded-[16px] border border-line p-3">
+              <p className="text-[14px] font-bold text-ink">{r.full_name}</p>
+              {r.department ? <p className="text-[12px] text-soft">{r.department}</p> : null}
+              <div className="mt-2 grid grid-cols-2 gap-y-1 text-[13px]">
+                <span className="text-soft">Casual</span>
+                <span className="text-right">
+                  <Cell used={c?.used ?? 0} of={c?.entitled ?? 0} />
+                </span>
+                <span className="text-soft">Sick</span>
+                <span className="text-right">
+                  <Cell used={s?.used ?? 0} of={s?.entitled ?? 0} />
+                </span>
+                <span className="text-soft">Earned</span>
+                <span className="text-right text-ink">
+                  <span className="font-bold">{e?.used ?? 0}</span> used · {e?.balance ?? 0} left
+                </span>
+                <span className="text-soft">Comp-off</span>
+                <span className="text-right font-bold text-ink">{co?.balance ?? 0}</span>
+                <span className="text-soft">Days worked</span>
+                <span className="text-right text-soft">{r.days_worked}</span>
+              </div>
+            </div>
+          );
+        })}
+        {list.length === 0 ? <p className="text-sm text-soft">Nobody has taken leave yet.</p> : null}
+      </div>
+
+      <div className="mt-5 -mx-2 hidden overflow-x-auto px-2 sm:block">
         <table className="w-full min-w-[680px] border-collapse text-left">
           <thead>
             <tr className="border-b border-line">

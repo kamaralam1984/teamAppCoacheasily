@@ -1,5 +1,10 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { postAnnouncement, sendTestEmail } from "@/lib/email.functions";
 
 import { AppShell } from "@/components/AppShell";
 import { AppraisalTable } from "@/components/reports/AppraisalTable";
@@ -149,7 +154,33 @@ function Page() {
             </div>
           </div>
 
-          <div className="mt-5 -mx-2 overflow-x-auto px-2">
+          {/* Below 640px the table becomes stacked cards. */}
+          <div className="mt-5 grid gap-2 sm:hidden">
+            {sorted.map((r) => (
+              <div key={r.profile_id} className="rounded-[16px] border border-line p-3">
+                <p className="text-[14px] font-bold text-ink">{r.full_name}</p>
+                {r.title ? <p className="text-[12px] text-soft">{r.title}</p> : null}
+                <div className="mt-2 grid grid-cols-2 gap-y-1 text-[13px]">
+                  <span className="text-soft">Working days</span>
+                  <span className="text-right text-ink">{r.working_days}</span>
+                  <span className="text-soft">Marked</span>
+                  <span className="text-right text-ink">{r.marked}</span>
+                  <span className="text-soft">Early</span>
+                  <span className="text-right text-ink">{r.early}</span>
+                  <span className="text-soft">% early</span>
+                  <span className="text-right font-bold text-goldD">{r.pct_early}%</span>
+                  <span className="text-soft">Avg punch</span>
+                  <span className="text-right text-soft">{r.avg_punch ?? "—"}</span>
+                </div>
+              </div>
+            ))}
+            {sorted.length === 0 ? (
+              <p className="text-sm text-soft">Nothing marked in this month yet.</p>
+            ) : null}
+          </div>
+
+          <div className="mt-5 -mx-2 hidden overflow-x-auto px-2 sm:block">
+
             <table className="w-full min-w-[640px] border-collapse text-left">
               <thead>
                 <tr className="border-b border-line">
@@ -192,6 +223,10 @@ function Page() {
         <LeaveLedgerTable rows={ledger} style={{ animationDelay: "100ms" }} />
 
         <SettingsCard />
+
+        <AnnouncementCard />
+
+        <EmailCard />
       </div>
     </AppShell>
   );
@@ -203,10 +238,12 @@ function SettingsCard() {
   const [url, setUrl] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>(null);
   const [birthdays, setBirthdays] = useState<boolean | null>(null);
+  const [digests, setDigests] = useState<boolean | null>(null);
 
   const urlValue = url ?? org?.daily_meeting_url ?? "";
   const timeValue = time ?? org?.daily_meeting_time ?? DEFAULT_MEETING_TIME;
   const birthdayValue = birthdays ?? Boolean(org?.team_birthdays);
+  const digestValue = digests ?? Boolean(org?.digests_enabled);
 
   return (
     <section className="ce-rise ce-card p-6" style={{ animationDelay: "120ms" }}>
@@ -250,6 +287,20 @@ function SettingsCard() {
         </span>
       </label>
 
+      <label className="mt-3 flex items-start gap-3">
+        <input
+          type="checkbox"
+          className="mt-1 h-5 w-5"
+          checked={digestValue}
+          onChange={(e) => setDigests(e.target.checked)}
+        />
+        <span className="text-[13px] leading-relaxed text-soft">
+          <span className="block font-bold text-ink">Send the daily and Monday summary emails</span>
+          Working days at 10:30, plus a Monday morning wrap for everyone and for managers. Off by
+          default — nothing is sent while this is unticked.
+        </span>
+      </label>
+
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <button
           type="button"
@@ -261,6 +312,7 @@ function SettingsCard() {
                 daily_meeting_url: urlValue.trim(),
                 daily_meeting_time: timeValue,
                 team_birthdays: birthdayValue,
+                digests_enabled: digestValue,
                 timezone: "Asia/Kolkata",
               },
               {
@@ -268,6 +320,7 @@ function SettingsCard() {
                   setUrl(null);
                   setTime(null);
                   setBirthdays(null);
+                  setDigests(null);
                 },
               },
             )
@@ -279,6 +332,106 @@ function SettingsCard() {
         {save.isError ? (
           <span className="text-[13px] font-bold text-red">{(save.error as Error).message}</span>
         ) : null}
+      </div>
+    </section>
+  );
+}
+
+function AnnouncementCard() {
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const post = useServerFn(postAnnouncement);
+  const mutation = useMutation({
+    mutationFn: (input: { title: string; body: string }) => post({ data: input }),
+    onSuccess: (res) => {
+      setTitle("");
+      setBody("");
+      toast.success(
+        res.emailed > 0
+          ? `Posted to ${res.posted} warriors and emailed ${res.emailed}.`
+          : `Posted to ${res.posted} warriors.`,
+      );
+    },
+    onError: (err: Error) => toast.error(err.message || "The announcement could not be posted."),
+  });
+
+  return (
+    <section className="ce-rise ce-card p-6" style={{ animationDelay: "140ms" }}>
+      <p className="ce-label">People &amp; Culture</p>
+      <h2 className="mt-1 font-display text-2xl text-ink">Post an announcement</h2>
+      <p className="mt-1 text-[13px] text-soft">
+        It appears on everybody's dashboard and in their bell straight away.
+      </p>
+
+      <label className="mt-4 block">
+        <span className="ce-label">Title</span>
+        <input
+          className="ce-input mt-1 h-12 w-full"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Office closed on Friday"
+        />
+      </label>
+      <label className="mt-3 block">
+        <span className="ce-label">Details</span>
+        <textarea
+          className="ce-input mt-1 min-h-24 w-full py-2"
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          placeholder="A line or two of context."
+        />
+      </label>
+
+      <button
+        type="button"
+        className="btn3d mt-4"
+        disabled={mutation.isPending || title.trim().length === 0}
+        onClick={() => mutation.mutate({ title, body })}
+      >
+        {mutation.isPending ? "Posting…" : "Post announcement"}
+      </button>
+    </section>
+  );
+}
+
+function EmailCard() {
+  const { data } = useMyProfile();
+  const [to, setTo] = useState("");
+  const send = useServerFn(sendTestEmail);
+  const mutation = useMutation({
+    mutationFn: (address: string) => send({ data: { to: address } }),
+    onSuccess: (res) => (res.sent ? toast.success(res.message) : toast.warning(res.message)),
+    onError: (err: Error) => toast.error(err.message || "The test email could not be sent."),
+  });
+
+  const address = to || data?.user?.email || "";
+
+  return (
+    <section className="ce-rise ce-card p-6" style={{ animationDelay: "160ms" }}>
+      <p className="ce-label">Email</p>
+      <h2 className="mt-1 font-display text-2xl text-ink">Check email delivery</h2>
+      <p className="mt-1 text-[13px] text-soft">
+        Emails stay dormant until an email key is added. Everything else works without it.
+      </p>
+
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+        <label className="block flex-1">
+          <span className="ce-label">Send a test to</span>
+          <input
+            className="ce-input mt-1 h-12 w-full"
+            value={address}
+            onChange={(e) => setTo(e.target.value)}
+            placeholder="you@coacheasily.com"
+          />
+        </label>
+        <button
+          type="button"
+          className="btn3d btn3d-ghost"
+          disabled={mutation.isPending || !address.includes("@")}
+          onClick={() => mutation.mutate(address)}
+        >
+          {mutation.isPending ? "Sending…" : "Send test email"}
+        </button>
       </div>
     </section>
   );

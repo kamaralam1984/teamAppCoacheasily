@@ -1437,6 +1437,34 @@ export type Database = {
       can_keep_calendar: { Args: never; Returns: boolean }
       can_read_goal: { Args: { p_goal_id: string }; Returns: boolean }
       daily_code_today: { Args: never; Returns: Json }
+      digest_daily: {
+        Args: never
+        Returns: {
+          email: string
+          full_name: string
+          payload: Json
+          profile_id: string
+        }[]
+      }
+      digest_weekly_manager: {
+        Args: never
+        Returns: {
+          email: string
+          full_name: string
+          payload: Json
+          profile_id: string
+        }[]
+      }
+      digest_weekly_self: {
+        Args: never
+        Returns: {
+          email: string
+          full_name: string
+          payload: Json
+          profile_id: string
+        }[]
+      }
+      digests_enabled: { Args: never; Returns: boolean }
       goal_nudge_me: { Args: never; Returns: boolean }
       goal_owner: { Args: { p_goal_id: string }; Returns: string }
       goal_pct: { Args: { p_goal_id: string }; Returns: number }

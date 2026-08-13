@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
+import { notifyByEmail } from "@/lib/notify";
 import type { Profile } from "@/lib/warriors";
 import type { Priority, Slot, Task } from "@/lib/tasks";
 
@@ -51,6 +52,17 @@ export function useCreateTasks(orgId?: string | null, createdBy?: string | null)
         })),
       );
       if (error) throw error;
+
+      const assigned = inputs.filter((t) => t.owner_id !== createdBy);
+      for (const task of assigned) {
+        notifyByEmail({
+          kind: "task_assigned",
+          profileIds: [task.owner_id],
+          title: `New task: ${task.title.trim()}`,
+          body: task.due_date ? `Due ${task.due_date}.` : "No due date set.",
+          link: "/tasks",
+        });
+      }
       return inputs.length;
     },
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["tasks"] }),
