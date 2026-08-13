@@ -10,6 +10,9 @@ import {
   EVENT_TYPES,
   PROGRAM_TYPES,
   WEEKDAYS,
+  HORIZON_CHOICES,
+  BULK_CONFIRM_ABOVE,
+  DEFAULT_HORIZON_WEEKS,
   addDays,
   dayOfWeek,
   daysBetween,
@@ -181,7 +184,25 @@ export function Scheduler({ orgId, profileId, warriors }: Props) {
   // ── one event, in plain English ──
   const [sentence, setSentence] = useState("");
   const [hostId, setHostId] = useState("");
-  const parsed = useMemo(() => (sentence.trim() ? parseLine(sentence, today) : null), [sentence, today]);
+  const [horizonWeeks, setHorizonWeeks] = useState<number>(DEFAULT_HORIZON_WEEKS);
+  const [horizonUntil, setHorizonUntil] = useState("");
+  const [bulkOk, setBulkOk] = useState(false);
+  const [nameEdit, setNameEdit] = useState("");
+  const [nameFor, setNameFor] = useState("");
+  const parsed = useMemo(
+    () =>
+      sentence.trim()
+        ? parseLine(sentence, today, { weeks: horizonWeeks, until: horizonUntil || null })
+        : null,
+    [sentence, today, horizonWeeks, horizonUntil],
+  );
+
+  // the parser's suggestion seeds the box; the person's edit wins after that
+  const suggested = parsed?.ok ? parsed.name : "";
+  if (parsed?.ok && nameFor !== parsed.raw) {
+    setNameFor(parsed.raw);
+    setNameEdit(suggested);
+  }
 
   // ── paste a list ──
   const [pasted, setPasted] = useState("");
@@ -391,14 +412,38 @@ export function Scheduler({ orgId, profileId, warriors }: Props) {
             </select>
           </div>
           <VoiceInput onTranscript={(t) => setSentence((s) => (s ? `${s} ${t}` : t))} />
-          {parsed ? <Preview parsed={parsed} data={window} /> : null}
+          {parsed ? (
+            <Preview
+              parsed={parsed}
+              data={window}
+              name={nameEdit}
+              onName={setNameEdit}
+              weeks={horizonWeeks}
+              onWeeks={setHorizonWeeks}
+              until={horizonUntil}
+              onUntil={setHorizonUntil}
+              bulkOk={bulkOk}
+              onBulkOk={setBulkOk}
+            />
+          ) : null}
 
           <button
             type="button"
             className="btn3d w-full sm:w-auto"
-            disabled={!parsed?.ok || busy}
+            disabled={
+              !parsed?.ok ||
+              busy ||
+              nameEdit.trim().length < 2 ||
+              (parsed.dates.length > BULK_CONFIRM_ABOVE && !bulkOk)
+            }
             onClick={() => {
-              if (parsed?.ok) void commit([parsed], hostId).then(() => setSentence(""));
+              if (parsed?.ok)
+                void commit([{ ...parsed, name: nameEdit.trim() }], hostId).then(() => {
+                  setSentence("");
+                  setBulkOk(false);
+                  setHorizonUntil("");
+                  setHorizonWeeks(DEFAULT_HORIZON_WEEKS);
+                });
             }}
           >
             Confirm and add
@@ -614,6 +659,8 @@ export function Scheduler({ orgId, profileId, warriors }: Props) {
                   location: mLocation || null,
                   repeatDow: mRepeat ? dayOfWeek(mFrom) : null,
                   repeatUntil: mRepeat ? mUntil || null : null,
+                  unbounded: mRepeat && !mUntil,
+                  weeks: 0,
                   dates: manualDates(),
                 };
                 void commit([item], mHost).then(() => setMName(""));
