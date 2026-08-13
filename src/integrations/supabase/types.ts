@@ -540,6 +540,7 @@ export type Database = {
     }
     Functions: {
       attendance_summary: { Args: { p_profile_id?: string }; Returns: Json }
+      calendar_leave: { Args: { p_from: string; p_to: string }; Returns: Json }
       leave_approver_for: { Args: { p_profile_id: string }; Returns: string }
       leave_balances: { Args: { p_profile_id?: string }; Returns: Json }
       leave_check: {
