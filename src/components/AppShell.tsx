@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Bell, ChevronDown, KeyRound, LogOut } from "lucide-react";
 
 import { Mark } from "@/components/Mark";
+import { ThemePicker } from "@/components/ThemePicker";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,11 +63,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const label = roleLabel(profile?.role);
 
   return (
-    <div className="min-h-screen bg-pearl">
+    <div className="relative z-10 min-h-screen bg-pearl/85">
       <header className="sticky top-0 z-40 bg-night">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
           <Link to="/dashboard" className="flex items-center gap-2.5">
-            <Mark size={34} color="#F0C75E" />
+            <Mark size={34} color="var(--ce-goldL)" className="ce-float" />
             <span className="leading-none">
               <span className="font-display text-xl text-white">Coach</span>
               <span className="font-display text-xl text-goldL">Easily</span>
@@ -77,6 +78,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
 
           <div className="ml-auto flex items-center gap-2">
+            <ThemePicker canSetDefault={role === "hr" || role === "admin"} />
+
             <button
               type="button"
               aria-label="Notifications"

@@ -42,7 +42,7 @@ function Index() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-pearl px-4 text-center">
-      <Mark size={56} color="#C9A227" />
+      <Mark size={56} color="var(--ce-gold)" />
       <h1 className="font-display text-3xl text-ink">
         <span>Coach</span>
         <span className="text-goldD">Easily</span>

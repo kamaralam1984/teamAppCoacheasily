@@ -12,6 +12,9 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
+import { Ambient } from "@/components/Ambient";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ThemeProvider } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
@@ -131,9 +134,14 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
-      <Toaster position="top-center" richColors closeButton />
+      <ThemeProvider>
+        <Ambient />
+        <ErrorBoundary>
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+        </ErrorBoundary>
+        <Toaster position="top-center" richColors closeButton />
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

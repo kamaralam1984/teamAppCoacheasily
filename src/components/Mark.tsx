@@ -8,7 +8,7 @@ interface MarkProps {
  * CoachEasily logo mark. Path traced from the real logo file — do not redraw.
  * Aspect ratio is fixed: width is always size * 0.694.
  */
-export function Mark({ size = 32, color = "#F0C75E", className }: MarkProps) {
+export function Mark({ size = 32, color = "var(--ce-goldL)", className }: MarkProps) {
   return (
     <svg
       viewBox="0 0 100 144.1"
