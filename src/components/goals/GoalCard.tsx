@@ -171,7 +171,6 @@ export function GoalCard({ item, editable, onEdit, style }: Props) {
             {goal.kind === "number" ? (
               <input
                 type="number"
-              inputMode="numeric"
                 inputMode="decimal"
                 value={reviewValue}
                 onChange={(e) => setReviewValue(e.target.value)}
