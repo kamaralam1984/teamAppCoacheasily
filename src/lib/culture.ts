@@ -1,0 +1,60 @@
+import type { Tables } from "@/integrations/supabase/types";
+
+export type Recognition = Tables<"recognitions">;
+export type EnergyLog = Tables<"energy_logs">;
+export type Ritual = Tables<"rituals">;
+export type SopItem = Tables<"sop_items">;
+
+export const BADGES = [
+  "Champion of the Cycle",
+  "Quiet Engine",
+  "Went the Extra Mile",
+  "Customer Hero",
+  "Team Player",
+  "Fastest Learner",
+] as const;
+
+export const ENERGY_LEVELS = [
+  { score: 1, emoji: "😞", label: "Running on empty" },
+  { score: 2, emoji: "😕", label: "Heavy" },
+  { score: 3, emoji: "😐", label: "Okay" },
+  { score: 4, emoji: "🙂", label: "Good" },
+  { score: 5, emoji: "🔥", label: "Flying" },
+] as const;
+
+/** The one number leadership may see — and only when it cannot point at a person. */
+export interface TeamEnergy {
+  enough: boolean;
+  checked_in: number;
+  average: number | null;
+}
+
+export function energyFor(score: number | null | undefined) {
+  return ENERGY_LEVELS.find((l) => l.score === score) ?? null;
+}
+
+export function istToday(): string {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+}
+
+export function shortDate(iso: string): string {
+  return new Date(`${iso}T00:00:00`).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+export function whenLabel(iso: string): string {
+  const d = new Date(iso);
+  const day = d.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+  if (day === istToday()) return "today";
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
+/** Badges first, then appreciation — newest first inside each. */
+export function shelfOrder(rows: Recognition[]): Recognition[] {
+  const rank = (r: Recognition) => (r.kind === "badge" ? 0 : r.kind === "welcome" ? 2 : 1);
+  return [...rows].sort(
+    (a, b) => rank(a) - rank(b) || b.created_at.localeCompare(a.created_at),
+  );
+}

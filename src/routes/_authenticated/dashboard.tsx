@@ -9,6 +9,8 @@ import { PunctualityCard } from "@/components/Punctuality";
 import { DailyNumbers } from "@/components/goals/DailyNumbers";
 import { Mark } from "@/components/Mark";
 import { WorkMeter } from "@/components/WorkMeter";
+import { Rituals } from "@/components/culture/Rituals";
+
 import {
   useAttendanceHistory,
   useAttendanceSummary,
@@ -241,6 +243,15 @@ function Dashboard() {
         <WorkMeter summary={summary} style={{ animationDelay: "80ms" }} />
 
         <PresenceBoard rows={presence ?? []} style={{ animationDelay: "120ms" }} />
+
+        {profile ? (
+          <Rituals
+            me={profile}
+            onCelebrate={(m: string) => setCelebration({ message: m })}
+            style={{ animationDelay: "140ms" }}
+          />
+        ) : null}
+
 
 
 

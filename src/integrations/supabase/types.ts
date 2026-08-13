@@ -347,6 +347,54 @@ export type Database = {
           },
         ]
       }
+      energy_logs: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          note: string | null
+          org_id: string
+          profile_id: string
+          score: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          note?: string | null
+          org_id: string
+          profile_id: string
+          score: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          note?: string | null
+          org_id?: string
+          profile_id?: string
+          score?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "energy_logs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "energy_logs_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           all_day: boolean
@@ -963,6 +1011,235 @@ export type Database = {
           },
         ]
       }
+      recognitions: {
+        Row: {
+          badge_name: string | null
+          created_at: string
+          from_id: string | null
+          id: string
+          kind: string
+          org_id: string
+          text: string
+          to_id: string
+        }
+        Insert: {
+          badge_name?: string | null
+          created_at?: string
+          from_id?: string | null
+          id?: string
+          kind: string
+          org_id: string
+          text: string
+          to_id: string
+        }
+        Update: {
+          badge_name?: string | null
+          created_at?: string
+          from_id?: string | null
+          id?: string
+          kind?: string
+          org_id?: string
+          text?: string
+          to_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recognitions_from_id_fkey"
+            columns: ["from_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recognitions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recognitions_to_id_fkey"
+            columns: ["to_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ritual_logs: {
+        Row: {
+          created_at: string
+          date: string
+          done: boolean
+          id: string
+          org_id: string
+          ritual_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          done?: boolean
+          id?: string
+          org_id: string
+          ritual_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          done?: boolean
+          id?: string
+          org_id?: string
+          ritual_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ritual_logs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ritual_logs_ritual_id_fkey"
+            columns: ["ritual_id"]
+            isOneToOne: false
+            referencedRelation: "rituals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rituals: {
+        Row: {
+          created_at: string
+          id: string
+          org_id: string
+          profile_id: string
+          sort_order: number
+          text: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          org_id: string
+          profile_id: string
+          sort_order?: number
+          text: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          org_id?: string
+          profile_id?: string
+          sort_order?: number
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rituals_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rituals_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sop_items: {
+        Row: {
+          created_at: string
+          department: string
+          id: string
+          org_id: string
+          sort_order: number
+          text: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department: string
+          id?: string
+          org_id: string
+          sort_order?: number
+          text: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department?: string
+          id?: string
+          org_id?: string
+          sort_order?: number
+          text?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sop_items_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sop_logs: {
+        Row: {
+          created_at: string
+          date: string
+          done: boolean
+          id: string
+          org_id: string
+          profile_id: string
+          sop_item_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          done?: boolean
+          id?: string
+          org_id: string
+          profile_id: string
+          sop_item_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          done?: boolean
+          id?: string
+          org_id?: string
+          profile_id?: string
+          sop_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sop_logs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sop_logs_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sop_logs_sop_item_id_fkey"
+            columns: ["sop_item_id"]
+            isOneToOne: false
+            referencedRelation: "sop_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           blocked_by: string | null
@@ -1066,6 +1343,7 @@ export type Database = {
         Returns: Json
       }
       goals_remind_pending: { Args: { p_cycle_id?: string }; Returns: number }
+      has_fixed_weekly_off: { Args: { p_off: string }; Returns: boolean }
       is_ordinary_event_type: { Args: { p_type: string }; Returns: boolean }
       leave_approver_for: { Args: { p_profile_id: string }; Returns: string }
       leave_balances: { Args: { p_profile_id?: string }; Returns: Json }
@@ -1122,6 +1400,7 @@ export type Database = {
       punctuality_rows: { Args: { p_month?: string }; Returns: Json }
       reconcile_roster: { Args: never; Returns: Json }
       tasks_blocked_nudges: { Args: never; Returns: number }
+      team_energy_today: { Args: never; Returns: Json }
       team_goals: { Args: { p_cycle_id?: string }; Returns: Json }
       update_org_settings: { Args: { p_patch: Json }; Returns: Json }
     }
