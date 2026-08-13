@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           created_at: string
           date: string
+          focus: string | null
           id: string
           marked_at: string
           org_id: string
@@ -26,6 +27,7 @@ export type Database = {
         Insert: {
           created_at?: string
           date?: string
+          focus?: string | null
           id?: string
           marked_at?: string
           org_id: string
@@ -34,6 +36,7 @@ export type Database = {
         Update: {
           created_at?: string
           date?: string
+          focus?: string | null
           id?: string
           marked_at?: string
           org_id?: string
@@ -245,6 +248,98 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_codes: {
+        Row: {
+          body: string
+          created_at: string
+          day_no: number
+          department: string | null
+          id: string
+          org_id: string
+          pledge: string
+          title: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          day_no: number
+          department?: string | null
+          id?: string
+          org_id: string
+          pledge: string
+          title: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          day_no?: number
+          department?: string | null
+          id?: string
+          org_id?: string
+          pledge?: string
+          title?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_codes_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_reflections: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          note: string
+          org_id: string
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          note: string
+          org_id: string
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          note?: string
+          org_id?: string
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_reflections_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_reflections_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -865,6 +960,89 @@ export type Database = {
           },
         ]
       }
+      tasks: {
+        Row: {
+          blocked_by: string | null
+          blocked_notified_on: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          done: boolean
+          done_at: string | null
+          due_date: string | null
+          id: string
+          org_id: string
+          owner_id: string
+          priority: string
+          slot: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          blocked_by?: string | null
+          blocked_notified_on?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          done?: boolean
+          done_at?: string | null
+          due_date?: string | null
+          id?: string
+          org_id: string
+          owner_id: string
+          priority?: string
+          slot?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          blocked_by?: string | null
+          blocked_notified_on?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          done?: boolean
+          done_at?: string | null
+          due_date?: string | null
+          id?: string
+          org_id?: string
+          owner_id?: string
+          priority?: string
+          slot?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_blocked_by_fkey"
+            columns: ["blocked_by"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -876,6 +1054,7 @@ export type Database = {
       calendar_prep_nudges: { Args: never; Returns: number }
       can_keep_calendar: { Args: never; Returns: boolean }
       can_read_goal: { Args: { p_goal_id: string }; Returns: boolean }
+      daily_code_today: { Args: never; Returns: Json }
       goal_nudge_me: { Args: never; Returns: boolean }
       goal_owner: { Args: { p_goal_id: string }; Returns: string }
       goal_progress: { Args: { p_goal_id: string }; Returns: Json }
@@ -934,7 +1113,9 @@ export type Database = {
         Args: { p_end_date: string; p_name?: string }
         Returns: Json
       }
+      presence_today: { Args: never; Returns: Json }
       reconcile_roster: { Args: never; Returns: Json }
+      tasks_blocked_nudges: { Args: never; Returns: number }
       team_goals: { Args: { p_cycle_id?: string }; Returns: Json }
     }
     Enums: {
