@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
 import { Celebrate } from "@/components/Celebrate";
+import { DailyNumbers } from "@/components/goals/DailyNumbers";
 import { Mark } from "@/components/Mark";
 import { WorkMeter } from "@/components/WorkMeter";
 import {
@@ -10,9 +11,11 @@ import {
   useAttendanceSummary,
   useMarkAttendance,
 } from "@/hooks/useAttendance";
+import { useCycles, useEveningNudge, useGoalsFor } from "@/hooks/useGoals";
 import { usePendingApprovals } from "@/hooks/useLeave";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { shortDate } from "@/lib/warriors";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
