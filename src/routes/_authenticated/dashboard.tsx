@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { Celebrate } from "@/components/Celebrate";
 import { DailyCodeModal } from "@/components/DailyCodeModal";
+import { TodayFocus } from "@/components/TodayFocus";
 import { PresenceBoard } from "@/components/PresenceBoard";
 import { PunctualityCard } from "@/components/Punctuality";
 import { DailyNumbers } from "@/components/goals/DailyNumbers";
@@ -191,6 +192,10 @@ function Dashboard() {
               </a>
             ) : null}
           </div>
+
+          {marked && profile && summary ? (
+            <TodayFocus profileId={profile.id} today={summary.today} />
+          ) : null}
 
           {!marked ? (
             <p className="mt-4 text-[13px] leading-relaxed text-mist">
