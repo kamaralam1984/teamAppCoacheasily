@@ -7,7 +7,7 @@ import { PRIORITIES, SLOTS, istToday, type Priority, type Slot } from "@/lib/tas
 import type { Profile } from "@/lib/warriors";
 import type { TaskInput } from "@/hooks/useTasks";
 
-interface Draft extends DumpCandidate {
+interface Draft extends Omit<DumpCandidate, "owner_id"> {
   owner_id: string;
 }
 
@@ -26,7 +26,12 @@ export function BrainDump({ meId, line, pending, onConfirm }: BrainDumpProps) {
   const parse = useMutation({
     mutationFn: async () => read({ data: { text, today: istToday() } }),
     onSuccess: (res) =>
-      setDrafts(res.tasks.map((t) => ({ ...t, owner_id: meId }))),
+      setDrafts(
+        res.tasks.map((t) => ({
+          ...t,
+          owner_id: t.owner_id && line.some((p) => p.id === t.owner_id) ? t.owner_id : meId,
+        })),
+      ),
   });
 
   const patch = (i: number, p: Partial<Draft>) =>
@@ -36,7 +41,9 @@ export function BrainDump({ meId, line, pending, onConfirm }: BrainDumpProps) {
     <section className="ce-card p-6">
       <h2 className="font-display text-2xl text-ink">Brain dump</h2>
       <p className="mt-1.5 text-[13px] text-soft">
-        Type everything in your head. We'll shape it into tasks — nothing is saved until you say so.
+        Paste messy notes or a whole meeting transcript. CoachEasily AI shapes it into tasks with
+        dates, priority and — if you manage people — a suggested owner. Nothing is saved until you
+        say so.
       </p>
 
       <textarea
@@ -116,6 +123,9 @@ export function BrainDump({ meId, line, pending, onConfirm }: BrainDumpProps) {
                     ))}
                   </select>
                 </div>
+                {d.owner_reason && d.owner_id !== meId ? (
+                  <p className="mt-2 text-[12px] text-soft">Suggested owner — {d.owner_reason}</p>
+                ) : null}
                 <button
                   type="button"
                   className="mt-2 min-h-11 text-[13px] font-semibold text-soft underline-offset-4 hover:underline"

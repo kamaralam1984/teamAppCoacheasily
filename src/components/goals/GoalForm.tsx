@@ -9,6 +9,7 @@ import {
   type Goal,
 } from "@/lib/goals";
 
+import { GoalCoach } from "./GoalCoach";
 import { StageEditor } from "./StageEditor";
 
 export interface GoalDraft {
@@ -346,6 +347,24 @@ export function GoalForm({
               />
             </label>
           </>
+        ) : null}
+
+        {step === 3 ? (
+          <GoalCoach
+            payload={{
+              kind: d.kind,
+              name: d.name,
+              metric: d.metric,
+              unit: d.unit,
+              baseline: d.baseline,
+              target: d.target,
+              stages,
+              cycleStart: cycle.start_date,
+              cycleEnd: cycle.end_date,
+            }}
+            disabled={shapeLocked}
+            onUseStages={(next) => set({ kind: "funnel", stages: next })}
+          />
         ) : null}
 
         {error ? <p className="text-[13px] font-semibold text-red">{error}</p> : null}

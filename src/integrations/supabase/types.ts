@@ -493,6 +493,51 @@ export type Database = {
           },
         ]
       }
+      goal_advice: {
+        Row: {
+          advice: string
+          created_at: string
+          goal_id: string
+          id: string
+          org_id: string
+          step_key: string
+          week_start: string
+        }
+        Insert: {
+          advice: string
+          created_at?: string
+          goal_id: string
+          id?: string
+          org_id: string
+          step_key: string
+          week_start: string
+        }
+        Update: {
+          advice?: string
+          created_at?: string
+          goal_id?: string
+          id?: string
+          org_id?: string
+          step_key?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_advice_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goal_advice_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goal_entries: {
         Row: {
           counts: number[] | null
@@ -835,6 +880,7 @@ export type Database = {
           full_name: string
           fun_fact: string | null
           id: string
+          invited_at: string | null
           joined_on: string | null
           manager_id: string | null
           new_badge: string
@@ -859,6 +905,7 @@ export type Database = {
           full_name: string
           fun_fact?: string | null
           id?: string
+          invited_at?: string | null
           joined_on?: string | null
           manager_id?: string | null
           new_badge?: string
@@ -883,6 +930,7 @@ export type Database = {
           full_name?: string
           fun_fact?: string | null
           id?: string
+          invited_at?: string | null
           joined_on?: string | null
           manager_id?: string | null
           new_badge?: string

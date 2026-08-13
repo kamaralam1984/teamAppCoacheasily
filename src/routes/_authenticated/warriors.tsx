@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { PresenceBoard } from "@/components/PresenceBoard";
 import { ExitDialog } from "@/components/warriors/ExitDialog";
+import { InvitePanel, useLoginStatus } from "@/components/warriors/InvitePanel";
 import { OrgTree } from "@/components/warriors/OrgTree";
 import { ProfileModal } from "@/components/warriors/ProfileModal";
 import { WarriorForm } from "@/components/warriors/WarriorForm";
@@ -52,12 +53,19 @@ function WarriorsPage() {
   const [editing, setEditing] = useState<Profile | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [exiting, setExiting] = useState<Profile | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteOnly, setInviteOnly] = useState<Profile | null>(null);
 
   const viewer = mine?.profile ?? null;
   const canManage = isPrivileged(viewer?.role);
   const all = useMemo(() => warriors ?? [], [warriors]);
   const active = useMemo(() => all.filter((p) => p.status === "active"), [all]);
   const tree = useMemo(() => buildTree(all), [all]);
+  const { data: logins } = useLoginStatus(canManage);
+  const withoutLogin = useMemo(
+    () => (logins ? active.filter((p) => !logins.get(p.id)?.has_login).length : 0),
+    [active, logins],
+  );
 
   const newJoiners = useMemo(
     () =>
@@ -88,6 +96,17 @@ function WarriorsPage() {
             </p>
           </div>
           {canManage ? (
+            <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="min-h-12 rounded-full border border-line px-5 text-[13px] font-bold text-ink hover:bg-cream"
+              onClick={() => {
+                setInviteOnly(null);
+                setInviteOpen(true);
+              }}
+            >
+              Logins &amp; invites{withoutLogin ? ` · ${withoutLogin} pending` : ""}
+            </button>
             <button
               className="btn3d"
               onClick={() => {
@@ -97,6 +116,7 @@ function WarriorsPage() {
             >
               Add warrior
             </button>
+            </div>
           ) : null}
         </header>
 
@@ -166,6 +186,11 @@ function WarriorsPage() {
                   setFormOpen(true);
                 }}
                 onExit={(p) => setExiting(p)}
+                logins={logins}
+                onInvite={(p) => {
+                  setInviteOnly(p);
+                  setInviteOpen(true);
+                }}
               />
 
             )}
@@ -197,6 +222,18 @@ function WarriorsPage() {
           onClose={() => {
             setFormOpen(false);
             setEditing(null);
+          }}
+        />
+      ) : null}
+
+      {inviteOpen && canManage ? (
+        <InvitePanel
+          tree={tree}
+          statuses={logins}
+          only={inviteOnly}
+          onClose={() => {
+            setInviteOpen(false);
+            setInviteOnly(null);
           }}
         />
       ) : null}

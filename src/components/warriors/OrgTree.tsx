@@ -1,6 +1,12 @@
 import { WarriorAvatar } from "@/components/warriors/Avatar";
 import { isNewWarrior, roleLabel, type Profile, type TreeNode } from "@/lib/warriors";
 
+export interface LoginBadge {
+  has_login: boolean;
+  invited_at: string | null;
+  accepted_at: string | null;
+}
+
 /** Title and department are often the same word (e.g. "Technology") — show it once. */
 function subtitle(p: Profile) {
   const title = p.title?.trim() || null;
@@ -17,6 +23,8 @@ function Row({
   onExit,
   canManage,
   index,
+  logins,
+  onInvite,
 }: {
   node: TreeNode;
   depth: number;
@@ -25,9 +33,13 @@ function Row({
   onEdit: (p: Profile) => void;
   onExit: (p: Profile) => void;
   canManage: boolean;
+  logins?: Map<string, LoginBadge> | undefined;
+  onInvite?: ((p: Profile) => void) | undefined;
 }) {
   const p = node.profile;
   const label = roleLabel(p.role);
+  const login = logins?.get(p.id);
+  const needsLogin = Boolean(canManage && logins && p.status === "active" && !login?.has_login);
 
   return (
     <div className={depth > 0 ? "border-l border-line pl-3 sm:pl-5" : ""}>
@@ -54,6 +66,15 @@ function Row({
                   New
                 </span>
               ) : null}
+              {needsLogin ? (
+                <span className="rounded-full bg-line px-2 py-0.5 text-[10px] font-bold tracking-wider text-soft uppercase">
+                  No login yet
+                </span>
+              ) : login?.has_login && !login.accepted_at ? (
+                <span className="rounded-full bg-saff/12 px-2 py-0.5 text-[10px] font-bold tracking-wider text-saffBtn uppercase">
+                  Invite sent
+                </span>
+              ) : null}
               {p.status === "exited" ? (
                 <span className="rounded-full bg-line px-2 py-0.5 text-[10px] font-bold tracking-wider text-soft uppercase">
                   Exited
@@ -74,6 +95,16 @@ function Row({
             >
               Edit
             </button>
+            {needsLogin && onInvite ? (
+              <button
+                type="button"
+                onClick={() => onInvite(p)}
+                aria-label={`Invite ${p.full_name}`}
+                className="flex h-11 min-w-11 items-center justify-center rounded-lg border border-gold px-2 text-[12px] font-bold text-goldD transition-colors hover:bg-cream focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+              >
+                Invite
+              </button>
+            ) : null}
             {p.status !== "exited" ? (
               <button
                 type="button"
@@ -100,6 +131,8 @@ function Row({
               onEdit={onEdit}
               onExit={onExit}
               canManage={canManage}
+              logins={logins}
+              onInvite={onInvite}
             />
           ))}
         </div>
@@ -114,12 +147,16 @@ export function OrgTree({
   onEdit,
   onExit,
   canManage,
+  logins,
+  onInvite,
 }: {
   tree: TreeNode[];
   onOpen: (p: Profile) => void;
   onEdit: (p: Profile) => void;
   onExit: (p: Profile) => void;
   canManage: boolean;
+  logins?: Map<string, LoginBadge> | undefined;
+  onInvite?: ((p: Profile) => void) | undefined;
 }) {
   if (tree.length === 0) {
     return <p className="text-sm text-soft">No warriors yet.</p>;
@@ -136,6 +173,8 @@ export function OrgTree({
           onEdit={onEdit}
           onExit={onExit}
           canManage={canManage}
+          logins={logins}
+          onInvite={onInvite}
         />
       ))}
     </div>
