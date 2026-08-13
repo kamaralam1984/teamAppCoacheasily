@@ -186,15 +186,16 @@ export function buildTree(profiles: Profile[]): TreeNode[] {
     visited.add(p.id);
     const kids = (childrenOf.get(p.id) ?? [])
       .filter((c) => !visited.has(c.id))
-      .sort((a, b) => a.full_name.localeCompare(b.full_name));
+      .sort(compareSiblings);
     kids.forEach((k) => visited.add(k.id));
     return { profile: p, children: kids.map(build) };
   };
 
   const tree = roots
     .filter((r) => !visited.has(r.id))
-    .sort((a, b) => a.full_name.localeCompare(b.full_name))
+    .sort(compareSiblings)
     .map(build);
+
 
   // Orphans stranded by a cycle still get rendered, never dropped.
   for (const p of profiles) {
