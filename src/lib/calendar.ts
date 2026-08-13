@@ -171,8 +171,18 @@ export interface Parsed {
   /** 0–6, Sunday first, when the line asked for a weekly repeat. */
   repeatDow: number | null;
   repeatUntil: string | null;
+  /** true when the line repeats but never said when to stop. */
+  unbounded: boolean;
+  /** how many weeks the expansion actually covered. */
+  weeks: number;
   dates: { from: string; to: string }[];
 }
+
+/** How far an open-ended "every Wednesday" runs unless somebody says otherwise. */
+export const DEFAULT_HORIZON_WEEKS = 12;
+export const HORIZON_CHOICES = [4, 8, 12, 26, 52] as const;
+/** Above this, creating the series needs an explicit tick. */
+export const BULK_CONFIRM_ABOVE = 26;
 
 const MONTH_WORDS: Record<string, number> = {};
 MONTHS.forEach((name, i) => {
@@ -202,6 +212,111 @@ function parseTime(raw: string): string | null {
   if (!mer && h < 8) h += 12; // "at 4 to 6" almost always means the evening here
   if (h > 23) return null;
   return `${String(h).padStart(2, "0")}:${min}`;
+}
+
+// ── naming: what's left after the when, the where and the filler ──
+
+/** "we have", "please add" and friends carry no meaning in an event name. */
+const FILLER = [
+  "i want to add",
+  "i want to schedule",
+  "i'd like to add",
+  "please add",
+  "please schedule",
+  "let us do",
+  "let's do",
+  "lets do",
+  "let us have",
+  "let's have",
+  "lets have",
+  "we have",
+  "we do",
+  "we run",
+  "we hold",
+  "there is",
+  "there's",
+  "there are",
+  "schedule a",
+  "schedule an",
+  "schedule the",
+  "schedule",
+  "add a",
+  "add an",
+  "add the",
+  "add",
+  "book a",
+  "book an",
+  "book",
+  "create a",
+  "create an",
+  "create",
+  "put in",
+  "set up a",
+  "set up",
+];
+
+const EDGE_WORDS = new Set([
+  "on","at","from","to","the","a","an","for","every","until","till","in","of","and","with",
+  "we","is","are","be","it","this","that","our","my","new","also","then","please","pm","am",
+]);
+
+const KEEP_CAPS = /^[A-Z0-9][A-Z0-9&./-]*$/; // CBA, MCA, 1:1, R&D
+
+function titleCase(s: string): string {
+  return s
+    .split(/\s+/)
+    .map((w) => (KEEP_CAPS.test(w) ? w : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()))
+    .join(" ");
+}
+
+/** "sessions" → "session": every occurrence is one of them. */
+function singularise(word: string): string {
+  const lower = word.toLowerCase();
+  if (/(ss|us|is)$/.test(lower)) return word;
+  if (/ies$/i.test(word)) return `${word.slice(0, -3)}y`;
+  if (/(ch|sh|x|z|s)es$/i.test(word)) return word.slice(0, -2);
+  if (/s$/i.test(word) && word.length > 3) return word.slice(0, -1);
+  return word;
+}
+
+/**
+ * Builds the event name from whatever the sentence has left once the date,
+ * time, recurrence and location phrases have been eaten out of it.
+ */
+export function cleanName(leftover: string, opts: { type: string; recurring: boolean }): string {
+  let s = ` ${leftover.toLowerCase()} `
+    .replace(/[,:;–—“”"()]+/g, " ")
+    .replace(/\s+/g, " ");
+
+  // filler can sit anywhere in the sentence, not only at the front
+  for (const phrase of FILLER) {
+    s = s.replace(new RegExp(`\\b${phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "g"), " ");
+  }
+  s = s.replace(/\s+/g, " ").trim();
+
+  // keep the original casing of the surviving words (CBA, MCA, Hinglish…)
+  const originals = leftover.replace(/[,:;–—“”"()]+/g, " ").split(/\s+/).filter(Boolean);
+  let words = s.split(/\s+/).filter(Boolean).map((w) => {
+    const hit = originals.find((o) => o.replace(/[^A-Za-z0-9:&./-]/g, "").toLowerCase() === w);
+    return (hit ?? w).replace(/[^A-Za-z0-9:&./'-]+$/g, "");
+  });
+
+  // trim stray connectors and stop-words from both ends
+  while (words.length && EDGE_WORDS.has(words[0]!.toLowerCase())) words.shift();
+  while (words.length && EDGE_WORDS.has(words[words.length - 1]!.toLowerCase())) words.pop();
+
+  if (recurringPlural(words, opts.recurring)) {
+    words[words.length - 1] = singularise(words[words.length - 1]!);
+  }
+
+  const name = titleCase(words.join(" ").trim());
+  if (name.replace(/[^A-Za-z0-9]/g, "").length < 3) return opts.type;
+  return name;
+}
+
+function recurringPlural(words: string[], recurring: boolean): boolean {
+  if (!recurring || words.length === 0) return false;
+  return /s$/i.test(words[words.length - 1]!);
 }
 
 /**
