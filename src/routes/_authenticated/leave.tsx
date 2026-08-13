@@ -16,6 +16,7 @@ import {
 } from "@/hooks/useLeave";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useWarriors } from "@/hooks/useWarriors";
+import { useTasksInWindow } from "@/hooks/useTasks";
 import { shortDate } from "@/lib/warriors";
 
 export const Route = createFileRoute("/_authenticated/leave")({
@@ -79,6 +80,7 @@ function LeavePage() {
   const [celebration, setCelebration] = useState<string | null>(null);
 
   const effectiveTo = halfDay ? from : to;
+  const { data: windowTasks } = useTasksInWindow(profile?.id ?? null, from, effectiveTo);
   const check = useLeaveCheck({
     type,
     from,
