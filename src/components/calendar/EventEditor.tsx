@@ -12,6 +12,7 @@ import {
   type SeriesScope,
 } from "@/hooks/useCalendar";
 import { EVENT_TYPES, PROGRAM_TYPES, longDate } from "@/lib/calendar";
+import { SeriesPanel } from "@/components/calendar/SeriesPanel";
 import { googleEventUrl } from "@/lib/calendarLinks";
 import { canEditEvent, canEditProgram, isOrdinary } from "@/lib/calendarPerms";
 import type { Profile } from "@/lib/warriors";
@@ -67,6 +68,7 @@ export function EventEditor({ target, warriors, me, onClose }: Props) {
   const [coverId, setCoverId] = useState(isEvent ? "" : ((row as Program).cover_id ?? ""));
   const [scope, setScope] = useState<SeriesScope>("one");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showSeries, setShowSeries] = useState(false);
   const [note, setNote] = useState<string | null>(null);
 
   const mine = useMemo(
@@ -219,6 +221,29 @@ export function EventEditor({ target, warriors, me, onClose }: Props) {
           <p className="mt-4 rounded-lg border border-line bg-cream p-3 text-[13px] text-soft">
             You can see everything here, but this one is kept by People &amp; Culture and Admin.
           </p>
+        ) : null}
+
+        {inSeries ? (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line bg-cream p-3">
+            <p className="text-[13px] text-ink">Part of a series.</p>
+            <button
+              type="button"
+              className="btn3d btn3d-ghost"
+              onClick={() => setShowSeries(true)}
+            >
+              Manage series
+            </button>
+          </div>
+        ) : null}
+
+        {showSeries && row.series_id ? (
+          <SeriesPanel
+            table={isEvent ? "events" : "programs"}
+            seriesId={row.series_id}
+            orgId={row.org_id}
+            createdBy={me?.id ?? ""}
+            onClose={() => setShowSeries(false)}
+          />
         ) : null}
 
         {inSeries && mayEdit ? (

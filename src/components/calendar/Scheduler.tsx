@@ -10,6 +10,9 @@ import {
   EVENT_TYPES,
   PROGRAM_TYPES,
   WEEKDAYS,
+  HORIZON_CHOICES,
+  BULK_CONFIRM_ABOVE,
+  DEFAULT_HORIZON_WEEKS,
   addDays,
   dayOfWeek,
   daysBetween,
@@ -43,10 +46,27 @@ function clashesFor(data: CalendarData | undefined, from: string, to: string): s
 function Preview({
   parsed,
   data,
+  name,
+  onName,
+  weeks,
+  onWeeks,
+  until,
+  onUntil,
+  bulkOk,
+  onBulkOk,
 }: {
   parsed: Parsed;
   data: CalendarData | undefined;
+  name: string;
+  onName: (v: string) => void;
+  weeks: number;
+  onWeeks: (v: number) => void;
+  until: string;
+  onUntil: (v: string) => void;
+  bulkOk: boolean;
+  onBulkOk: (v: boolean) => void;
 }) {
+  const [showAll, setShowAll] = useState(false);
   if (!parsed.ok) {
     return (
       <p className="rounded-lg border border-red/30 bg-red/10 p-3 text-[13px] font-semibold text-red">
@@ -54,19 +74,80 @@ function Preview({
       </p>
     );
   }
+  const shown = showAll ? parsed.dates : parsed.dates.slice(0, 5);
+  const last = parsed.dates[parsed.dates.length - 1];
   return (
     <div className="rounded-lg border border-line bg-white p-3">
-      <p className="text-sm font-bold text-ink">
-        ✓ {parsed.name} <span className="font-normal text-soft">· {parsed.type}</span>
+      <label className="ce-label" htmlFor="preview-name">
+        Name (edit if needed)
+      </label>
+      <input
+        id="preview-name"
+        className="ce-input"
+        value={name}
+        onChange={(e) => onName(e.target.value)}
+      />
+      <p className="mt-2 text-[13px] text-soft">
+        {parsed.type}
+        {parsed.fromTime ? ` · ${parsed.fromTime}${parsed.toTime ? `–${parsed.toTime}` : ""}` : ""}
+        {parsed.location ? ` · ${parsed.location}` : ""}
+        {` · ${parsed.dates.length} date${parsed.dates.length === 1 ? "" : "s"}`}
       </p>
+
+      {parsed.unbounded ? (
+        <div className="mt-3 rounded-lg border border-gold/40 bg-gold/10 p-3">
+          <p className="text-[13px] font-semibold text-ink">
+            No end date given — I'll create {parsed.dates.length} session
+            {parsed.dates.length === 1 ? "" : "s"}
+            {last ? ` through ${rangeLabel(last.from, last.to)}` : ""}.
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {HORIZON_CHOICES.map((w) => (
+              <button
+                key={w}
+                type="button"
+                onClick={() => {
+                  onUntil("");
+                  onWeeks(w);
+                }}
+                className={`min-h-9 rounded-full px-3 text-[12px] font-bold ${
+                  !until && weeks === w
+                    ? "bg-night text-goldL"
+                    : "border border-line bg-white text-soft"
+                }`}
+              >
+                {w} weeks
+              </button>
+            ))}
+            <input
+              type="date"
+              aria-label="Or pick an end date"
+              className="ce-input h-9 w-auto py-0 text-[12px]"
+              value={until}
+              onChange={(e) => onUntil(e.target.value)}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      {parsed.dates.length > BULK_CONFIRM_ABOVE ? (
+        <label className="mt-3 flex min-h-11 items-center gap-2 text-[13px] font-semibold text-ink">
+          <input
+            type="checkbox"
+            className="h-4 w-4"
+            checked={bulkOk}
+            onChange={(e) => onBulkOk(e.target.checked)}
+          />
+          Yes, create {parsed.dates.length} sessions.
+        </label>
+      ) : null}
+
       <ul className="mt-2 space-y-1">
-        {parsed.dates.map((d) => {
+        {shown.map((d) => {
           const clash = clashesFor(data, d.from, d.to);
           return (
             <li key={d.from} className="text-[12px] text-soft">
               {rangeLabel(d.from, d.to)}
-              {parsed.fromTime ? ` · ${parsed.fromTime}${parsed.toTime ? `–${parsed.toTime}` : ""}` : ""}
-              {parsed.location ? ` · ${parsed.location}` : ""}
               {clash.length > 0 ? (
                 <span className="font-bold text-goldD"> ⚠ already: {clash.join(", ")}</span>
               ) : null}
@@ -74,9 +155,19 @@ function Preview({
           );
         })}
       </ul>
+      {parsed.dates.length > 5 ? (
+        <button
+          type="button"
+          className="mt-1 text-[12px] font-bold text-plum underline"
+          onClick={() => setShowAll((v) => !v)}
+        >
+          {showAll ? "Show less" : `+${parsed.dates.length - 5} more`}
+        </button>
+      ) : null}
     </div>
   );
 }
+
 
 export function Scheduler({ orgId, profileId, warriors }: Props) {
   const [mode, setMode] = useState<"one" | "paste" | "manual">("one");
@@ -93,7 +184,25 @@ export function Scheduler({ orgId, profileId, warriors }: Props) {
   // ── one event, in plain English ──
   const [sentence, setSentence] = useState("");
   const [hostId, setHostId] = useState("");
-  const parsed = useMemo(() => (sentence.trim() ? parseLine(sentence, today) : null), [sentence, today]);
+  const [horizonWeeks, setHorizonWeeks] = useState<number>(DEFAULT_HORIZON_WEEKS);
+  const [horizonUntil, setHorizonUntil] = useState("");
+  const [bulkOk, setBulkOk] = useState(false);
+  const [nameEdit, setNameEdit] = useState("");
+  const [nameFor, setNameFor] = useState("");
+  const parsed = useMemo(
+    () =>
+      sentence.trim()
+        ? parseLine(sentence, today, { weeks: horizonWeeks, until: horizonUntil || null })
+        : null,
+    [sentence, today, horizonWeeks, horizonUntil],
+  );
+
+  // the parser's suggestion seeds the box; the person's edit wins after that
+  const suggested = parsed?.ok ? parsed.name : "";
+  if (parsed?.ok && nameFor !== parsed.raw) {
+    setNameFor(parsed.raw);
+    setNameEdit(suggested);
+  }
 
   // ── paste a list ──
   const [pasted, setPasted] = useState("");
@@ -303,14 +412,38 @@ export function Scheduler({ orgId, profileId, warriors }: Props) {
             </select>
           </div>
           <VoiceInput onTranscript={(t) => setSentence((s) => (s ? `${s} ${t}` : t))} />
-          {parsed ? <Preview parsed={parsed} data={window} /> : null}
+          {parsed ? (
+            <Preview
+              parsed={parsed}
+              data={window}
+              name={nameEdit}
+              onName={setNameEdit}
+              weeks={horizonWeeks}
+              onWeeks={setHorizonWeeks}
+              until={horizonUntil}
+              onUntil={setHorizonUntil}
+              bulkOk={bulkOk}
+              onBulkOk={setBulkOk}
+            />
+          ) : null}
 
           <button
             type="button"
             className="btn3d w-full sm:w-auto"
-            disabled={!parsed?.ok || busy}
+            disabled={
+              !parsed?.ok ||
+              busy ||
+              nameEdit.trim().length < 2 ||
+              (parsed.dates.length > BULK_CONFIRM_ABOVE && !bulkOk)
+            }
             onClick={() => {
-              if (parsed?.ok) void commit([parsed], hostId).then(() => setSentence(""));
+              if (parsed?.ok)
+                void commit([{ ...parsed, name: nameEdit.trim() }], hostId).then(() => {
+                  setSentence("");
+                  setBulkOk(false);
+                  setHorizonUntil("");
+                  setHorizonWeeks(DEFAULT_HORIZON_WEEKS);
+                });
             }}
           >
             Confirm and add
@@ -526,6 +659,8 @@ export function Scheduler({ orgId, profileId, warriors }: Props) {
                   location: mLocation || null,
                   repeatDow: mRepeat ? dayOfWeek(mFrom) : null,
                   repeatUntil: mRepeat ? mUntil || null : null,
+                  unbounded: mRepeat && !mUntil,
+                  weeks: 0,
                   dates: manualDates(),
                 };
                 void commit([item], mHost).then(() => setMName(""));

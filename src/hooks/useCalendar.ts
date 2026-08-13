@@ -300,6 +300,36 @@ export interface ProgramPatch {
   cover_id?: string | null;
 }
 
+/**
+ * Standard calendar behaviour before a scoped change:
+ *  "one"       — pull this occurrence out of the series so it stands alone
+ *  "following" — split the series here, so earlier sessions keep the old values
+ */
+async function applyScopeSplit(
+  table: "events" | "programs",
+  row: { id: string; series_id: string | null },
+  scope: SeriesScope,
+  anchorDate: string,
+) {
+  if (!row.series_id || scope === "all") return;
+  const dateCol = table === "events" ? "date" : "from_date";
+  if (scope === "one") {
+    const { error } = await supabase
+      .from(table)
+      .update({ series_id: null, session_no: null } as never)
+      .eq("id", row.id);
+    if (error) throw error;
+    return;
+  }
+  const newSeries = crypto.randomUUID();
+  const { error } = await supabase
+    .from(table)
+    .update({ series_id: newSeries } as never)
+    .eq("series_id", row.series_id)
+    .gte(dateCol, anchorDate);
+  if (error) throw error;
+}
+
 /** Rows in the same series that a given scope should touch. */
 async function siblings(
   table: "events" | "programs",
@@ -329,6 +359,7 @@ export function useSaveEvent() {
       scope: SeriesScope;
     }) => {
       const ids = await siblings("events", args.row, args.scope, args.row.date);
+      await applyScopeSplit("events", args.row, args.scope, args.row.date);
       const shiftDays =
         args.patch.date && args.patch.date !== args.row.date
           ? daysBetween(args.row.date, args.patch.date)
@@ -370,6 +401,7 @@ export function useSaveProgram() {
       scope: SeriesScope;
     }) => {
       const ids = await siblings("programs", args.row, args.scope, args.row.from_date);
+      await applyScopeSplit("programs", args.row, args.scope, args.row.from_date);
       const shiftDays =
         args.patch.from_date && args.patch.from_date !== args.row.from_date
           ? daysBetween(args.row.from_date, args.patch.from_date)
@@ -545,5 +577,102 @@ export function usePrepNudges(enabled: boolean) {
       if (error) throw error;
       return data ?? 0;
     },
+  });
+}
+
+
+// ───────────────────────── series management ─────────────────────────
+
+export interface SeriesRow {
+  id: string;
+  name: string;
+  type: string;
+  date: string;
+  from_time: string | null;
+  to_time: string | null;
+  location: string | null;
+  host_id: string | null;
+  status: string;
+  session_no: number | null;
+}
+
+/** Every occurrence of one series, oldest first. */
+export function useSeries(table: "events" | "programs", seriesId: string | null) {
+  return useQuery({
+    queryKey: ["calendar-series", table, seriesId],
+    enabled: Boolean(seriesId),
+    queryFn: async (): Promise<SeriesRow[]> => {
+      const dateCol = table === "events" ? "date" : "from_date";
+      const { data, error } = await supabase
+        .from(table)
+        .select(
+          `id, name, type, ${dateCol}, from_time, to_time, location, host_id, status, session_no`,
+        )
+        .eq("series_id", seriesId!)
+        .order(dateCol, { ascending: true });
+      if (error) throw error;
+      return (data ?? []).map((r) => {
+        const row = r as unknown as Record<string, unknown>;
+        return { ...(row as unknown as SeriesRow), date: String(row[dateCol]) };
+      });
+    },
+  });
+}
+
+/** Adds only the dates a series doesn't already have. */
+export function useExtendSeries() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: {
+      table: "events" | "programs";
+      seriesId: string;
+      dates: string[];
+      template: SeriesRow;
+      orgId: string;
+      createdBy: string;
+    }) => {
+      const dateCol = args.table === "events" ? "date" : "from_date";
+      const { data: existing, error: readError } = await supabase
+        .from(args.table)
+        .select(`id, ${dateCol}`)
+        .eq("series_id", args.seriesId);
+      if (readError) throw readError;
+      const have = new Set(
+        (existing ?? []).map((r) => String((r as unknown as Record<string, unknown>)[dateCol])),
+      );
+      const fresh = args.dates.filter((d) => !have.has(d));
+      if (fresh.length === 0) return 0;
+      const rows = fresh.map((d) => ({
+        org_id: args.orgId,
+        name: args.template.name,
+        type: args.template.type,
+        from_time: args.template.from_time,
+        to_time: args.template.to_time,
+        location: args.template.location,
+        host_id: args.template.host_id,
+        series_id: args.seriesId,
+        created_by: args.createdBy,
+        ...(args.table === "events" ? { date: d } : { from_date: d, to_date: d }),
+      }));
+      const { error } = await supabase.from(args.table).insert(rows as never);
+      if (error) throw error;
+      return fresh.length;
+    },
+    onSuccess: () => invalidate(qc),
+  });
+}
+
+/** Cancels every occurrence — the one-action "delete the whole series". */
+export function useDeleteSeries() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: { table: "events" | "programs"; seriesId: string }) => {
+      const { error } = await supabase
+        .from(args.table)
+        .update({ status: "cancelled" } as never)
+        .eq("series_id", args.seriesId);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidate(qc),
   });
 }
