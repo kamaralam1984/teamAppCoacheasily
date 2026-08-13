@@ -91,8 +91,17 @@ export function AppShell({ children }: { children: ReactNode }) {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="flex h-11 items-center gap-2 rounded-lg px-2 text-left transition-colors hover:bg-night2"
+                  aria-label="Account menu"
+                  className="flex h-11 min-w-11 items-center gap-2 rounded-lg px-2 text-left transition-colors hover:bg-night2"
                 >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-night2 text-[11px] font-bold tracking-wide text-goldL sm:hidden">
+                    {(profile?.full_name ?? data?.user?.email ?? "?")
+                      .split(" ")
+                      .slice(0, 2)
+                      .map((w) => w[0])
+                      .join("")
+                      .toUpperCase()}
+                  </span>
                   <span className="hidden max-w-[11rem] flex-col items-end leading-tight sm:flex">
                     <span className="max-w-[11rem] truncate text-sm font-semibold text-white">
                       {isLoading ? "…" : (profile?.full_name ?? data?.user?.email ?? "")}
