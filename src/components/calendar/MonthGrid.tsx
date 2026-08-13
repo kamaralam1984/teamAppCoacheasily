@@ -1,3 +1,4 @@
+import type { EditTarget } from "@/components/calendar/EventEditor";
 import type { CalendarData } from "@/hooks/useCalendar";
 import { MARKER_COLOUR, WEEKDAYS, monthGrid, parseIso, weekdayName } from "@/lib/calendar";
 import { buildDayView } from "@/lib/calendarDerive";
@@ -12,6 +13,9 @@ interface Props {
   viewerWeeklyOff: string | null;
   selected: string;
   onSelect: (date: string) => void;
+  onOpen?: (target: EditTarget) => void;
+  /** Desktop drag-to-move. Undefined means the viewer may not move things. */
+  onMove?: (target: EditTarget, toDate: string) => void;
 }
 
 export function MonthGrid({
@@ -23,8 +27,19 @@ export function MonthGrid({
   viewerWeeklyOff,
   selected,
   onSelect,
+  onOpen,
+  onMove,
 }: Props) {
   const cells = monthGrid(year, month);
+
+  const pick = (kind: "event" | "program", id: string): EditTarget | null => {
+    if (kind === "event") {
+      const row = data?.events.find((e) => e.id === id);
+      return row ? { kind: "event", row } : null;
+    }
+    const row = data?.programs.find((p) => p.id === id);
+    return row ? { kind: "program", row } : null;
+  };
 
   return (
     <div className="ce-card overflow-hidden">
@@ -43,12 +58,9 @@ export function MonthGrid({
         {cells.map((cell) => {
           const view = buildDayView(data, cell.date, byId);
           const items = [
-            ...view.programs.map((p) => ({ key: p.id, type: p.type, label: p.name })),
-            ...view.events.map((e) => ({ key: e.id, type: "Event", label: e.name })),
+            ...view.programs.map((p) => ({ key: p.id, kind: "program" as const, type: p.type, label: p.name })),
+            ...view.events.map((e) => ({ key: e.id, kind: "event" as const, type: e.type, label: e.name })),
           ];
-          if (view.holiday) {
-            items.unshift({ key: view.holiday.id, type: "Holiday", label: view.holiday.name });
-          }
           const isToday = cell.date === today;
           const isOff = viewerWeeklyOff && weekdayName(cell.date) === viewerWeeklyOff;
           const isSelected = cell.date === selected;
@@ -58,6 +70,18 @@ export function MonthGrid({
               key={cell.date}
               type="button"
               onClick={() => onSelect(cell.date)}
+              onDragOver={(e) => {
+                if (onMove) e.preventDefault();
+              }}
+              onDrop={(e) => {
+                if (!onMove) return;
+                e.preventDefault();
+                const raw = e.dataTransfer.getData("text/plain");
+                const [kind, id] = raw.split(":");
+                if (kind !== "event" && kind !== "program") return;
+                const target = pick(kind, id ?? "");
+                if (target) onMove(target, cell.date);
+              }}
               aria-label={`${cell.date}${view.holiday ? ` · ${view.holiday.name}` : ""}`}
               aria-pressed={isSelected}
               className={[
@@ -84,7 +108,21 @@ export function MonthGrid({
 
               <span className="mt-0.5 block space-y-0.5">
                 {items.slice(0, 2).map((it) => (
-                  <span key={it.key} className="flex items-center gap-1">
+                  <span
+                    key={it.key}
+                    draggable={Boolean(onMove)}
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData("text/plain", `${it.kind}:${it.key}`);
+                      e.dataTransfer.effectAllowed = "move";
+                    }}
+                    onClick={(e) => {
+                      if (!onOpen) return;
+                      e.stopPropagation();
+                      const target = pick(it.kind, it.key);
+                      if (target) onOpen(target);
+                    }}
+                    className="flex items-center gap-1"
+                  >
                     <span
                       className={`h-1.5 w-1.5 shrink-0 rounded-full ${MARKER_COLOUR[it.type] ?? "bg-soft"}`}
                     />

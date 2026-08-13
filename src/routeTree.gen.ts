@@ -24,6 +24,7 @@ import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedWarriorsRouteImport } from './routes/_authenticated/warriors'
 import { Route as ApiPublicBootstrapAdminRouteImport } from './routes/api/public/bootstrap-admin'
+import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar/$token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -100,6 +101,11 @@ const ApiPublicBootstrapAdminRoute = ApiPublicBootstrapAdminRouteImport.update({
   path: '/api/public/bootstrap-admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCalendarTokenRoute = ApiPublicCalendarTokenRouteImport.update({
+  id: '/api/public/calendar/$token',
+  path: '/api/public/calendar/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/team': typeof AuthenticatedTeamRoute
   '/warriors': typeof AuthenticatedWarriorsRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
+  '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/team': typeof AuthenticatedTeamRoute
   '/warriors': typeof AuthenticatedWarriorsRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
+  '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/warriors': typeof AuthenticatedWarriorsRoute
   '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
+  '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -168,6 +177,7 @@ export interface FileRouteTypes {
     | '/team'
     | '/warriors'
     | '/api/public/bootstrap-admin'
+    | '/api/public/calendar/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -184,6 +194,7 @@ export interface FileRouteTypes {
     | '/team'
     | '/warriors'
     | '/api/public/bootstrap-admin'
+    | '/api/public/calendar/$token'
   id:
     | '__root__'
     | '/'
@@ -201,6 +212,7 @@ export interface FileRouteTypes {
     | '/_authenticated/team'
     | '/_authenticated/warriors'
     | '/api/public/bootstrap-admin'
+    | '/api/public/calendar/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -208,6 +220,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiPublicBootstrapAdminRoute: typeof ApiPublicBootstrapAdminRoute
+  ApiPublicCalendarTokenRoute: typeof ApiPublicCalendarTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -317,6 +330,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBootstrapAdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/calendar/$token': {
+      id: '/api/public/calendar/$token'
+      path: '/api/public/calendar/$token'
+      fullPath: '/api/public/calendar/$token'
+      preLoaderRoute: typeof ApiPublicCalendarTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -356,6 +376,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiPublicBootstrapAdminRoute: ApiPublicBootstrapAdminRoute,
+  ApiPublicCalendarTokenRoute: ApiPublicCalendarTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -203,6 +203,18 @@
     box-shadow: 0 1px 0 0 #0d0819;
   }
 
+  .btn3d-danger {
+    background: var(--ce-red);
+    color: var(--ce-white);
+    box-shadow: 0 4px 0 0 #8c2a1e;
+  }
+
+  .btn3d-danger:active {
+    box-shadow: 0 1px 0 0 #8c2a1e;
+  }
+
+
+
   .ce-card {
     background: var(--ce-ivory);
     border: 1px solid var(--ce-line);

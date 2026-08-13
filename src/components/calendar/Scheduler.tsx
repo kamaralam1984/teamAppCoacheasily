@@ -18,6 +18,8 @@ import {
   todayIso,
   type Parsed,
 } from "@/lib/calendar";
+import { PasteReview, type Draft } from "@/components/calendar/PasteReview";
+import { VoiceInput } from "@/components/calendar/VoiceInput";
 import type { Profile } from "@/lib/warriors";
 
 interface Props {
@@ -163,6 +165,62 @@ export function Scheduler({ orgId, profileId, warriors }: Props) {
     setNote(`Added ${programRows.length + eventRows.length} dated item(s).`);
   };
 
+  /** Reviewed rows from the paste table — same name and type becomes one numbered series. */
+  const commitDrafts = async (drafts: Draft[]) => {
+    const seriesFor = new Map<string, string>();
+    const counts = new Map<string, number>();
+    for (const d of drafts) {
+      const k = `${d.name}|${d.type}`;
+      counts.set(k, (counts.get(k) ?? 0) + 1);
+    }
+    for (const [k, n] of counts) if (n > 1) seriesFor.set(k, crypto.randomUUID());
+
+    const seen = new Map<string, number>();
+    const programRows = [];
+    const eventRows = [];
+    for (const d of drafts) {
+      const k = `${d.name}|${d.type}`;
+      const seriesId = seriesFor.get(k) ?? null;
+      const no = (seen.get(k) ?? 0) + 1;
+      seen.set(k, no);
+      if (d.isProgram && isProgramType(d.type)) {
+        programRows.push({
+          org_id: orgId,
+          name: d.name,
+          type: d.type,
+          from_date: d.from,
+          to_date: d.to,
+          from_time: d.fromTime || null,
+          to_time: d.toTime || null,
+          host_id: d.hostId || null,
+          location: d.location || null,
+          series_id: seriesId,
+          session_no: seriesId ? no : null,
+          created_by: profileId,
+        });
+      } else {
+        eventRows.push({
+          org_id: orgId,
+          name: d.name,
+          type: d.type,
+          date: d.from,
+          end_date: d.to === d.from ? null : d.to,
+          from_time: d.fromTime || null,
+          to_time: d.toTime || null,
+          host_id: d.hostId || null,
+          location: d.location || null,
+          series_id: seriesId,
+          created_by: profileId,
+        });
+      }
+    }
+    await addPrograms.mutateAsync(programRows);
+    await addEvents.mutateAsync(eventRows);
+    setNote(`Added ${programRows.length + eventRows.length} dated item(s).`);
+  };
+
+
+
   const manualDates = () => {
     const out: { from: string; to: string }[] = [];
     const span = Math.max(0, daysBetween(mFrom, mTo));
@@ -244,7 +302,9 @@ export function Scheduler({ orgId, profileId, warriors }: Props) {
               ))}
             </select>
           </div>
+          <VoiceInput onTranscript={(t) => setSentence((s) => (s ? `${s} ${t}` : t))} />
           {parsed ? <Preview parsed={parsed} data={window} /> : null}
+
           <button
             type="button"
             className="btn3d w-full sm:w-auto"
@@ -292,22 +352,16 @@ export function Scheduler({ orgId, profileId, warriors }: Props) {
             </select>
           </div>
           {parsedList.length > 0 ? (
-            <ul className="space-y-2">
-              {parsedList.map((p, i) => (
-                <li key={`${p.raw}-${i}`}>
-                  <Preview parsed={p} data={window} />
-                </li>
-              ))}
-            </ul>
+            <PasteReview
+              parsed={parsedList}
+              hosts={hosts}
+              defaultHostId={hostId}
+              data={window}
+              busy={busy}
+              onConfirm={(drafts) => void commitDrafts(drafts).then(() => setPasted(""))}
+            />
           ) : null}
-          <button
-            type="button"
-            className="btn3d w-full sm:w-auto"
-            disabled={validList.length === 0 || busy}
-            onClick={() => void commit(validList, hostId).then(() => setPasted(""))}
-          >
-            Add {validList.length} item{validList.length === 1 ? "" : "s"}
-          </button>
+
         </div>
       ) : null}
 

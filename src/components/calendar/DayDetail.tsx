@@ -1,7 +1,7 @@
+import type { EditTarget } from "@/components/calendar/EventEditor";
 import { CHIP_STYLE, longDate, timeLabel, weekdayName } from "@/lib/calendar";
 import { buildDayView } from "@/lib/calendarDerive";
 import type { CalendarData } from "@/hooks/useCalendar";
-import { useRemoveEvent, useRemoveProgram } from "@/hooks/useCalendar";
 import { TYPE_LABEL } from "@/hooks/useLeave";
 import type { Profile } from "@/lib/warriors";
 
@@ -10,6 +10,7 @@ interface Props {
   data: CalendarData | undefined;
   byId: Map<string, Profile>;
   canSchedule: boolean;
+  onOpen?: (target: EditTarget) => void;
 }
 
 function Chip({ type }: { type: string }) {
@@ -24,10 +25,8 @@ function Chip({ type }: { type: string }) {
   );
 }
 
-export function DayDetail({ date, data, byId, canSchedule }: Props) {
+export function DayDetail({ date, data, byId, canSchedule, onOpen }: Props) {
   const view = buildDayView(data, date, byId);
-  const removeEvent = useRemoveEvent();
-  const removeProgram = useRemoveProgram();
 
   const nothing =
     !view.holiday && view.programs.length === 0 && view.events.length === 0 && view.leave.length === 0;
@@ -85,15 +84,13 @@ export function DayDetail({ date, data, byId, canSchedule }: Props) {
                     {p.language ? ` · ${p.language}` : ""}
                   </p>
                 </div>
-                {canSchedule ? (
+                {onOpen ? (
                   <button
                     type="button"
-                    onClick={() =>
-                      removeProgram.mutate({ id: p.id, seriesId: p.series_id, whole: false })
-                    }
-                    className="min-h-9 rounded-lg border border-line px-3 text-[12px] font-bold text-soft"
+                    onClick={() => onOpen({ kind: "program", row: p })}
+                    className="min-h-9 rounded-lg border border-line px-3 text-[12px] font-bold text-ink"
                   >
-                    Remove
+                    {canSchedule ? "Open" : "Details"}
                   </button>
                 ) : null}
               </li>
@@ -123,13 +120,13 @@ export function DayDetail({ date, data, byId, canSchedule }: Props) {
                     {creator ? ` · added by ${creator.full_name}` : ""}
                   </p>
                 </div>
-                {canSchedule ? (
+                {onOpen ? (
                   <button
                     type="button"
-                    onClick={() => removeEvent.mutate(e.id)}
-                    className="min-h-9 rounded-lg border border-line px-3 text-[12px] font-bold text-soft"
+                    onClick={() => onOpen({ kind: "event", row: e })}
+                    className="min-h-9 rounded-lg border border-line px-3 text-[12px] font-bold text-ink"
                   >
-                    Remove
+                    {canSchedule ? "Open" : "Details"}
                   </button>
                 ) : null}
               </li>
@@ -156,7 +153,9 @@ export function DayDetail({ date, data, byId, canSchedule }: Props) {
       ) : null}
 
       {nothing ? (
-        <p className="mt-4 text-sm text-soft">Nothing on this day. A rare and beautiful thing.</p>
+        <p className="mt-4 text-sm text-soft">
+          No sessions today — a clear day to move your goals forward.
+        </p>
       ) : null}
     </div>
   );
