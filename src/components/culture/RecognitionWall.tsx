@@ -213,6 +213,7 @@ export function MyShelf({
     [rows, meId],
   );
   const badges = mine.filter((r) => r.kind === "badge");
+  const praise = mine.filter((r) => r.kind === "praise");
 
   return (
     <section className="ce-rise ce-card p-6">
