@@ -227,6 +227,23 @@ export function WarriorForm({
             </select>
           </label>
 
+          <label>
+            <Label>Display order</Label>
+            <input
+              type="number"
+              step={10}
+              className="ce-input"
+              value={form.sort_order}
+              onChange={(e) => set("sort_order", e.target.value)}
+            />
+            <span className="mt-2 block text-[13px] leading-relaxed text-soft">
+              Lower numbers appear higher among people with the same manager. Leadership sits
+              above everyone regardless. Leave at 100 if you don't mind.
+            </span>
+          </label>
+
+
+
           <label className="sm:col-span-2">
             <Label>Access level</Label>
             <select
