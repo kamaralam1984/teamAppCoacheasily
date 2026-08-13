@@ -47,19 +47,17 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 function WarriorsPage() {
   const { data: mine } = useMyProfile();
   const { data: warriors, isLoading, error } = useWarriors();
+  const { data: presence } = usePresenceToday(Boolean(mine?.profile));
   const [selected, setSelected] = useState<Profile | null>(null);
   const [editing, setEditing] = useState<Profile | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [exiting, setExiting] = useState<Profile | null>(null);
-  const [showEveryone, setShowEveryone] = useState(false);
 
   const viewer = mine?.profile ?? null;
   const canManage = isPrivileged(viewer?.role);
   const all = useMemo(() => warriors ?? [], [warriors]);
   const active = useMemo(() => all.filter((p) => p.status === "active"), [all]);
   const tree = useMemo(() => buildTree(all), [all]);
-  const offToday = useMemo(() => active.filter((p) => isOffToday(p)), [active]);
-  const working = useMemo(() => active.filter((p) => !isOffToday(p)), [active]);
 
   const newJoiners = useMemo(
     () =>
