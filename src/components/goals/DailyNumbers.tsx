@@ -39,7 +39,7 @@ export function DailyNumbers({ cycle, goals, onCelebrate, style }: Props) {
   return (
     <section className="ce-rise ce-card p-6" style={style}>
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 className="font-display text-2xl text-ink">⭐ Today's numbers</h2>
+        <h2 className="font-display text-2xl text-ink">Today&rsquo;s numbers</h2>
         {goals.length > 0 ? (
           <span
             className={`rounded-full px-3 py-1 text-[12px] font-bold ${
