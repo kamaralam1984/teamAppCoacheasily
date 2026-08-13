@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { Celebrate } from "@/components/Celebrate";
 import { Mark } from "@/components/Mark";
+import { WorkMeter } from "@/components/WorkMeter";
 import {
   useAttendanceHistory,
   useAttendanceSummary,
@@ -66,10 +67,6 @@ function Dashboard() {
   const pendingLeave: number = 0; // leave requests land in a later screen
 
   const marked = summary?.marked_today ?? false;
-  const days = summary?.days_marked ?? 0;
-  const toNext = summary?.to_next_leave ?? 20;
-  const progress = ((days % 20) / 20) * 100;
-  const streak = summary?.streak ?? 0;
 
   const onMark = () => {
     mark.mutate(undefined, {
