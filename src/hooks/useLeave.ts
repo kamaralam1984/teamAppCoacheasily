@@ -106,6 +106,8 @@ export interface ApplyInput {
   half_day: boolean;
   reason: string;
   handover_to: string | null;
+  /** Exactly which open tasks move across. Empty means none. */
+  handover_task_ids?: string[];
 }
 
 export function useApplyLeave(profileId?: string | null, orgId?: string | null) {
@@ -124,6 +126,7 @@ export function useApplyLeave(profileId?: string | null, orgId?: string | null) 
           half_day: input.half_day,
           reason: input.reason || null,
           handover_to: input.handover_to,
+          handover_task_ids: input.handover_to ? (input.handover_task_ids ?? []) : [],
         })
         .select("*")
         .single();

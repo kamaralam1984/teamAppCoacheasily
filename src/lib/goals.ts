@@ -248,9 +248,18 @@ export function allTemplates(): GoalTemplate[] {
   return Object.values(TEMPLATES).flat();
 }
 
+/** A department People & Culture added themselves still gets a starting point. */
+export function genericTemplates(department: string): GoalTemplate[] {
+  return [
+    funnel(department, "Reached to done", ["Reached out", "Responded", "Done"]),
+    number(department, "Weekly output", "Things completed", "items"),
+    number(department, "Quality", "Quality", "%"),
+  ];
+}
+
 export function templatesFor(department: string | null | undefined): GoalTemplate[] {
   if (!department) return [];
-  return TEMPLATES[department] ?? [];
+  return TEMPLATES[department] ?? genericTemplates(department);
 }
 
 /** The only way a template may be used. Every shape field moves together. */

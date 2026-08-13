@@ -347,6 +347,41 @@ export type Database = {
           },
         ]
       }
+      departments: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          org_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          org_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          org_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "departments_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       energy_logs: {
         Row: {
           created_at: string
@@ -709,6 +744,7 @@ export type Database = {
           decided_by: string | null
           from_date: string
           half_day: boolean
+          handover_task_ids: string[] | null
           handover_to: string | null
           id: string
           org_id: string
@@ -728,6 +764,7 @@ export type Database = {
           decided_by?: string | null
           from_date: string
           half_day?: boolean
+          handover_task_ids?: string[] | null
           handover_to?: string | null
           id?: string
           org_id: string
@@ -747,6 +784,7 @@ export type Database = {
           decided_by?: string | null
           from_date?: string
           half_day?: boolean
+          handover_task_ids?: string[] | null
           handover_to?: string | null
           id?: string
           org_id?: string

@@ -56,6 +56,29 @@ export function useOpenCycle() {
   });
 }
 
+/** People & Culture can correct a cycle's name or dates at any time. */
+export function useUpdateCycle() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: {
+      id: string;
+      name?: string;
+      start_date?: string;
+      end_date?: string;
+      status?: string;
+    }) => {
+      const { id, ...patch } = args;
+      const { error } = await supabase.from("cycles").update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["cycles"] });
+      void qc.invalidateQueries({ queryKey: ["goals"] });
+      void qc.invalidateQueries({ queryKey: ["calendar"] });
+    },
+  });
+}
+
 /* ── goals + progress, always straight from Postgres ───────── */
 
 export function useGoalsFor(profileId?: string | null, cycleId?: string | null) {

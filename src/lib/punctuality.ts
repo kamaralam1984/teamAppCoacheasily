@@ -35,6 +35,9 @@ export interface OrgSettings {
   team_birthdays?: boolean;
   /** Automatic daily and Monday summary emails. Off until switched on here. */
   digests_enabled?: boolean;
+  /** Yearly leave entitlements. People & Culture own these, not the code. */
+  casual_quota?: number;
+  sick_quota?: number;
 }
 
 export const DEFAULT_MEETING_TIME = "11:00";

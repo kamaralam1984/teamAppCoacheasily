@@ -77,6 +77,7 @@ function LeavePage() {
   const [halfDay, setHalfDay] = useState(false);
   const [reason, setReason] = useState("");
   const [handover, setHandover] = useState("");
+  const [handoverTasks, setHandoverTasks] = useState<string[]>([]);
   const [celebration, setCelebration] = useState<string | null>(null);
 
   const effectiveTo = halfDay ? from : to;
@@ -119,11 +120,13 @@ function LeavePage() {
         half_day: halfDay,
         reason,
         handover_to: handover || null,
+        handover_task_ids: handoverTasks,
       },
       {
         onSuccess: () => {
           setReason("");
           setHandover("");
+          setHandoverTasks([]);
           setCelebration(
             `${TYPE_LABEL[type]} applied for ${shortDate(from)}. Your approver has been told.`,
           );
@@ -245,20 +248,58 @@ function LeavePage() {
                 ))}
               </select>
               <p className="mt-1 text-[12px] text-soft">
-                Once this leave is approved, your open tasks due in these dates move to them.
+                Once this leave is approved, the tasks you tick below move to them.
               </p>
               {windowTasks && windowTasks.length > 0 ? (
                 <div className="mt-3 rounded-[12px] border border-line bg-pearl p-3.5">
                   <p className="text-[11px] font-bold tracking-wider text-goldD uppercase">
-                    {windowTasks.length} task{windowTasks.length === 1 ? "" : "s"} fall in these dates
+                    {windowTasks.length} task{windowTasks.length === 1 ? "" : "s"} fall in these
+                    dates — tick what should move
                   </p>
-                  <ul className="mt-2 space-y-1.5">
+                  <ul className="mt-2 space-y-2">
                     {windowTasks.map((t) => (
-                      <li key={t.id} className="text-[13px] text-soft">
-                        {shortDate(t.due_date!)} · {t.title}
+                      <li key={t.id}>
+                        <label className="flex min-h-11 items-start gap-3 text-[13px] text-ink">
+                          <input
+                            type="checkbox"
+                            className="mt-0.5 h-5 w-5 shrink-0"
+                            checked={handoverTasks.includes(t.id)}
+                            onChange={(e) =>
+                              setHandoverTasks((ids) =>
+                                e.target.checked
+                                  ? [...ids, t.id]
+                                  : ids.filter((id) => id !== t.id),
+                              )
+                            }
+                          />
+                          <span>
+                            <span className="font-semibold">{t.title}</span>
+                            <span className="block text-[12px] text-soft">
+                              {shortDate(t.due_date!)} · {t.slot}
+                            </span>
+                          </span>
+                        </label>
                       </li>
                     ))}
                   </ul>
+                  <button
+                    type="button"
+                    className="mt-2 text-[12px] font-bold text-goldD underline"
+                    onClick={() =>
+                      setHandoverTasks(
+                        handoverTasks.length === windowTasks.length
+                          ? []
+                          : windowTasks.map((t) => t.id),
+                      )
+                    }
+                  >
+                    {handoverTasks.length === windowTasks.length ? "Clear all" : "Select all"}
+                  </button>
+                  {handover && handoverTasks.length === 0 ? (
+                    <p className="mt-2 text-[12px] text-soft">
+                      Nothing ticked — no tasks will move.
+                    </p>
+                  ) : null}
                 </div>
               ) : null}
             </div>
