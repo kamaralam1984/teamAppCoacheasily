@@ -141,60 +141,9 @@ function Dashboard() {
           ) : null}
         </section>
 
-        {/* ── Work meter ─────────────────────────────────────── */}
-        <section className="ce-rise ce-card p-6" style={{ animationDelay: "80ms" }}>
-          <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <h2 className="font-display text-2xl text-ink">
-              🔥 {days} {days === 1 ? "day" : "days"} worked in the app
-            </h2>
-            <p className="text-[13px] font-semibold text-goldD">
-              {toNext} more and you earn a paid leave
-            </p>
-          </div>
+        {/* ── Work meter (no leave balances here — we celebrate work) ─ */}
+        <WorkMeter summary={summary} style={{ animationDelay: "80ms" }} />
 
-          <div
-            className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-cream"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={20}
-            aria-valuenow={days % 20}
-            aria-label="Progress to your next earned leave"
-          >
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-gold to-goldL transition-[width] duration-500"
-              style={{ width: `${Math.max(progress, 2)}%` }}
-            />
-          </div>
-
-          <p className="mt-3 text-[13px] leading-relaxed text-soft">
-            Starts the day you first mark attendance here. 1 paid leave for every 20 days.
-          </p>
-
-          {streak >= 2 ? (
-            <p className="mt-3 text-[13px] font-semibold text-emer">
-              {streak} days in a row — just for you, never on a leaderboard.
-            </p>
-          ) : null}
-
-          <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-line pt-5">
-            <div>
-              <dt className="text-[11px] font-bold tracking-[0.12em] text-soft uppercase">
-                Earned leave available
-              </dt>
-              <dd className="mt-1 font-display text-3xl text-ink">
-                {summary?.earned_available ?? 0}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-[11px] font-bold tracking-[0.12em] text-soft uppercase">
-                Comp-offs in hand
-              </dt>
-              <dd className="mt-1 font-display text-3xl text-ink">
-                {summary?.comp_off_available ?? 0}
-              </dd>
-            </div>
-          </dl>
-        </section>
 
         {/* ── Recent attendance, newest first ────────────────── */}
         {history && history.length > 0 ? (
