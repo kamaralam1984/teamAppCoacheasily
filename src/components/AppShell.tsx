@@ -146,8 +146,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                   data-active={active}
                   className={
                     active
-                      ? "shrink-0 rounded-full bg-night px-4 py-2.5 text-sm font-bold whitespace-nowrap text-goldL"
-                      : "shrink-0 rounded-full px-4 py-2.5 text-sm font-semibold whitespace-nowrap text-mist transition-colors hover:text-goldL"
+                      ? "flex min-h-11 shrink-0 items-center rounded-full bg-night px-4 text-sm font-bold whitespace-nowrap text-goldL"
+                      : "flex min-h-11 shrink-0 items-center rounded-full px-4 text-sm font-semibold whitespace-nowrap text-mist transition-colors hover:text-goldL"
                   }
                 >
                   {tab.label}
