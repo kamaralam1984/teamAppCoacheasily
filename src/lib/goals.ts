@@ -217,17 +217,36 @@ export const TEMPLATES: Record<string, GoalTemplate[]> = {
 };
 
 export const METRIC_SUGGESTIONS = [
+  "Sales closed",
   "Calls made",
-  "Quality leads",
-  "Revenue collected",
-  "Students attended",
+  "Conversion %",
+  "Show-up rate %",
+  "Session attendance %",
   "Task completion %",
+  "Student retention %",
+  "Members onboarded",
+  "Weekly active members",
   "Response time (hours)",
-  "Posts published",
-  "Requests shipped",
-  "Downtime minutes",
-  "NPS",
+  "Refund requests",
+  "Payment completion %",
+  "Revenue (₹ lakh)",
+  "Videos published",
+  "Ads per week",
+  "Posts per week",
+  "Leads followed up",
+  "1:1s completed",
+  "Call connection %",
+  "NPS score",
+  "Referrals",
+  "Bugs fixed",
+  "Tickets resolved",
+  "Uptime %",
 ];
+
+/** Every template in the company — used on the empty state, where a blank page is hardest. */
+export function allTemplates(): GoalTemplate[] {
+  return Object.values(TEMPLATES).flat();
+}
 
 export function templatesFor(department: string | null | undefined): GoalTemplate[] {
   if (!department) return [];

@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { Ring } from "@/components/goals/Ring";
-import { useLogEntry, useSaveLearnings } from "@/hooks/useGoals";
+import { useDeleteGoal, useLogEntry, useSaveLearnings } from "@/hooks/useGoals";
 import { fmt, istToday, weekLine, type GoalWithProgress } from "@/lib/goals";
 
 interface Props {
@@ -17,6 +17,8 @@ export function GoalCard({ item, editable, onEdit, style }: Props) {
   const [reviewValue, setReviewValue] = useState("");
   const [reviewNote, setReviewNote] = useState("");
   const [learnings, setLearnings] = useState(goal.learnings ?? "");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const del = useDeleteGoal();
   const log = useLogEntry();
   const saveLearnings = useSaveLearnings();
 
@@ -56,15 +58,51 @@ export function GoalCard({ item, editable, onEdit, style }: Props) {
           {goal.metric ? <p className="mt-0.5 text-[13px] text-soft">{goal.metric}</p> : null}
         </div>
         {editable ? (
-          <button
-            type="button"
-            onClick={onEdit}
-            className="min-h-11 shrink-0 rounded-full border border-line px-3 text-[12px] font-bold text-soft"
-          >
-            Edit
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={onEdit}
+              className="min-h-11 rounded-full border border-line px-3 text-[12px] font-bold text-soft"
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              className="min-h-11 rounded-full border border-line px-3 text-[12px] font-bold text-red"
+            >
+              Delete
+            </button>
+          </div>
         ) : null}
       </div>
+
+      {confirmDelete ? (
+        <div className="mt-4 rounded-[14px] border border-red/40 bg-red/8 p-4">
+          <p className="text-[13px] leading-relaxed font-bold text-ink">
+            {(p?.entries_count ?? 0) > 0
+              ? `This goal has ${p?.entries_count} day${p?.entries_count === 1 ? "" : "s"} of logged numbers. Deleting removes them too.`
+              : "Delete this goal? Nothing has been logged against it yet."}
+          </p>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <button
+              type="button"
+              className="min-h-11 flex-1 rounded-lg border border-line bg-ivory px-3 text-[13px] font-bold text-ink"
+              onClick={() => setConfirmDelete(false)}
+            >
+              Keep
+            </button>
+            <button
+              type="button"
+              className="min-h-11 flex-1 rounded-lg bg-red px-3 text-[13px] font-bold text-white disabled:opacity-50"
+              disabled={del.isPending}
+              onClick={() => del.mutate(goal.id)}
+            >
+              {del.isPending ? "Deleting…" : "Delete"}
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <div className="mt-4 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[13px] font-semibold">
         <span className="text-soft">{fmt(goal.baseline)}</span>

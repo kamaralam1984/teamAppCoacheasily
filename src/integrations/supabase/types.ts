@@ -21,6 +21,7 @@ export type Database = {
           focus: string | null
           id: string
           marked_at: string
+          on_time: boolean | null
           org_id: string
           profile_id: string
         }
@@ -30,6 +31,7 @@ export type Database = {
           focus?: string | null
           id?: string
           marked_at?: string
+          on_time?: boolean | null
           org_id: string
           profile_id: string
         }
@@ -39,6 +41,7 @@ export type Database = {
           focus?: string | null
           id?: string
           marked_at?: string
+          on_time?: boolean | null
           org_id?: string
           profile_id?: string
         }
@@ -1113,10 +1116,14 @@ export type Database = {
         Args: { p_end_date: string; p_name?: string }
         Returns: Json
       }
+      org_settings: { Args: never; Returns: Json }
       presence_today: { Args: never; Returns: Json }
+      punctuality_me: { Args: never; Returns: Json }
+      punctuality_rows: { Args: { p_month?: string }; Returns: Json }
       reconcile_roster: { Args: never; Returns: Json }
       tasks_blocked_nudges: { Args: never; Returns: number }
       team_goals: { Args: { p_cycle_id?: string }; Returns: Json }
+      update_org_settings: { Args: { p_patch: Json }; Returns: Json }
     }
     Enums: {
       [_ in never]: never

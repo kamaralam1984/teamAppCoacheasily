@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { useArchiveGoal, useSaveGoal, type SaveGoalInput } from "@/hooks/useGoals";
+import { useSaveGoal, type SaveGoalInput } from "@/hooks/useGoals";
 import {
   METRIC_SUGGESTIONS,
   applyTemplate,
@@ -80,14 +80,15 @@ export function GoalForm({
   const [step, setStep] = useState(0);
   const [d, setD] = useState<GoalDraft>(initial);
   const [error, setError] = useState<string | null>(null);
-  /** "keep" = rename only · "fresh" = archive this goal and start a clean one */
-  const [historyChoice, setHistoryChoice] = useState<"keep" | "fresh">("keep");
+  /** true once they tap "Create a new goal from this" — the fork carries the number forward */
+  const [forked, setForked] = useState(false);
   const save = useSaveGoal();
-  const archive = useArchiveGoal();
   const templates = templatesFor(department);
 
-  const hasHistory = Boolean(initial.id) && (initial.entriesCount ?? 0) > 0;
-  const shapeLocked = hasHistory && historyChoice === "keep";
+  /* counts[] is positional forever: counts[1] is stage 1 for every day already logged.
+     So a goal with history may be RENAMED but never re-shaped. Forking is the way out. */
+  const hasHistory = Boolean(initial.id) && (initial.entriesCount ?? 0) > 0 && !forked;
+  const shapeLocked = hasHistory;
 
   const set = (patch: Partial<GoalDraft>) => setD((cur) => ({ ...cur, ...patch }));
 
@@ -115,10 +116,9 @@ export function GoalForm({
       return;
     }
 
-    /* Starting fresh never rewrites history — the old goal is archived intact. */
-    const startFresh = hasHistory && historyChoice === "fresh";
+    /* A fork never rewrites history — the old goal stays exactly as it is. */
     const input: SaveGoalInput = {
-      ...(d.id && !startFresh ? { id: d.id } : {}),
+      ...(d.id ? { id: d.id } : {}),
       profile_id: profileId,
       org_id: orgId,
       cycle_id: cycle.id,
@@ -132,13 +132,7 @@ export function GoalForm({
       plan: d.plan.trim() || null,
     };
     save.mutate(input, {
-      onSuccess: () => {
-        if (startFresh && d.id) {
-          archive.mutate(d.id, { onSuccess: onDone, onError: onDone });
-        } else {
-          onDone();
-        }
-      },
+      onSuccess: onDone,
       onError: (e) => setError((e as Error).message),
     });
   };
@@ -203,45 +197,42 @@ export function GoalForm({
           <>
             {hasHistory ? (
               <div className="rounded-[14px] border border-gold/50 bg-gold/8 p-4">
-                <p className="text-[13px] font-bold text-ink">
+                <p className="text-[13px] leading-relaxed font-bold text-ink">
                   This goal already has {initial.entriesCount} day
-                  {initial.entriesCount === 1 ? "" : "s"} of numbers. Changing the steps will not
-                  match that history.
+                  {initial.entriesCount === 1 ? "" : "s"} of numbers logged against these stages.
+                  Changing them now would scramble that history. Create a new goal instead — you
+                  can carry the current number forward as its starting point.
                 </p>
-                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                  {(
-                    [
-                      ["keep", "Keep the history — rename only"],
-                      ["fresh", "Archive this goal and start fresh"],
-                    ] as const
-                  ).map(([k, label]) => (
-                    <button
-                      key={k}
-                      type="button"
-                      onClick={() => {
-                        setHistoryChoice(k);
-                        if (k === "fresh" && initial.currentValue !== undefined) {
-                          set({ baseline: String(initial.currentValue) });
-                        }
-                      }}
-                      className={`min-h-11 flex-1 rounded-lg border px-3 text-[13px] font-bold ${
-                        historyChoice === k
-                          ? "border-gold bg-gold/15 text-ink"
-                          : "border-line text-soft"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                {historyChoice === "fresh" ? (
-                  <p className="mt-2 text-[12px] text-soft">
-                    The old goal stays exactly as it is, archived. The new one starts from today
-                    {initial.currentValue === undefined ? "" : `'s number (${initial.currentValue})`}
-                    .
-                  </p>
-                ) : null}
+                <p className="mt-2 text-[12px] text-soft">
+                  Renaming a step is fine — the position never moves, so the history still lines up.
+                </p>
+                <button
+                  type="button"
+                  className="btn3d mt-3 w-full sm:w-auto"
+                  onClick={() => {
+                    setForked(true);
+                    setD((cur) => {
+                      const { id: _drop, ...rest } = cur;
+                      return {
+                        ...rest,
+                        entriesCount: 0,
+                        ...(initial.currentValue === undefined
+                          ? {}
+                          : { baseline: String(initial.currentValue) }),
+                      };
+                    });
+                  }}
+                >
+                  Create a new goal from this →
+                </button>
               </div>
+            ) : null}
+
+            {forked ? (
+              <p className="rounded-[14px] border border-emer/40 bg-emer/8 p-3 text-[13px] font-bold text-emer">
+                Fresh goal, everything pre-filled. The old one stays untouched with all its days
+                intact.
+              </p>
             ) : null}
 
             <div className="flex gap-2">

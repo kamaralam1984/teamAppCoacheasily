@@ -129,6 +129,24 @@ export function useArchiveGoal() {
   });
 }
 
+/** A goal written by mistake should never be permanent. Entries go with it. */
+export function useDeleteGoal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (goalId: string) => {
+      const { error: e1 } = await supabase.from("goal_entries").delete().eq("goal_id", goalId);
+      if (e1) throw e1;
+      const { error } = await supabase.from("goals").delete().eq("id", goalId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["goals"] });
+      void qc.invalidateQueries({ queryKey: ["goal-entries"] });
+      void qc.invalidateQueries({ queryKey: ["team-goals"] });
+    },
+  });
+}
+
 export function useSaveLearnings() {
   const qc = useQueryClient();
   return useMutation({
