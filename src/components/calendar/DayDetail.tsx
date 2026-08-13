@@ -10,7 +10,7 @@ interface Props {
   data: CalendarData | undefined;
   byId: Map<string, Profile>;
   canSchedule: boolean;
-  onOpen?: (target: EditTarget) => void;
+  onOpen?: ((target: EditTarget) => void) | undefined;
 }
 
 function Chip({ type }: { type: string }) {

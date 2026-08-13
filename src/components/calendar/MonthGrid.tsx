@@ -13,9 +13,9 @@ interface Props {
   viewerWeeklyOff: string | null;
   selected: string;
   onSelect: (date: string) => void;
-  onOpen?: (target: EditTarget) => void;
+  onOpen?: ((target: EditTarget) => void) | undefined;
   /** Desktop drag-to-move. Undefined means the viewer may not move things. */
-  onMove?: (target: EditTarget, toDate: string) => void;
+  onMove?: ((target: EditTarget, toDate: string) => void) | undefined;
 }
 
 export function MonthGrid({
