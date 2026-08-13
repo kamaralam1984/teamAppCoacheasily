@@ -98,29 +98,69 @@ export function isNewWarrior(p: Profile): boolean {
   return d !== null && d >= 0 && d < 90;
 }
 
-/** Days until the next anniversary of joined_on, or null. */
-export function daysToAnniversary(joinedOn: string | null): number | null {
+export const SHORT_MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
+
+/** "1 Sep" for an ISO date string, in the day-first way India writes dates. */
+export function shortDate(iso: string): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return `${d.getUTCDate()} ${SHORT_MONTHS[d.getUTCMonth()]}`;
+}
+
+export interface Anniversary {
+  /** Days from today until the upcoming anniversary. */
+  days: number;
+  /** Years completed ON that upcoming date — never today's age. */
+  years: number;
+  /** "1 Sep" */
+  label: string;
+}
+
+/**
+ * The UPCOMING work anniversary. Years are counted from the anniversary date,
+ * not from today, so someone at 11 months whose date falls next week correctly
+ * reads "1 year" instead of being computed as 0 and filtered away.
+ */
+export function upcomingAnniversary(joinedOn: string | null): Anniversary | null {
   if (!joinedOn) return null;
   const joined = new Date(`${joinedOn}T00:00:00Z`);
   if (Number.isNaN(joined.getTime())) return null;
+
   const now = new Date();
   const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  let next = Date.UTC(now.getUTCFullYear(), joined.getUTCMonth(), joined.getUTCDate());
-  if (next < today) next = Date.UTC(now.getUTCFullYear() + 1, joined.getUTCMonth(), joined.getUTCDate());
-  return Math.round((next - today) / 86_400_000);
+  let year = now.getUTCFullYear();
+  let next = Date.UTC(year, joined.getUTCMonth(), joined.getUTCDate());
+  if (next < today) {
+    year += 1;
+    next = Date.UTC(year, joined.getUTCMonth(), joined.getUTCDate());
+  }
+
+  const d = new Date(next);
+  return {
+    days: Math.round((next - today) / 86_400_000),
+    years: year - joined.getUTCFullYear(),
+    label: `${d.getUTCDate()} ${SHORT_MONTHS[d.getUTCMonth()]}`,
+  };
 }
 
-export function yearsAt(joinedOn: string | null): number {
-  if (!joinedOn) return 0;
-  const joined = new Date(`${joinedOn}T00:00:00Z`);
-  const now = new Date();
-  let years = now.getUTCFullYear() - joined.getUTCFullYear();
-  const before =
-    now.getUTCMonth() < joined.getUTCMonth() ||
-    (now.getUTCMonth() === joined.getUTCMonth() && now.getUTCDate() < joined.getUTCDate());
-  if (before) years -= 1;
-  return Math.max(years, 0);
+/** Days until the next anniversary of joined_on, or null. */
+export function daysToAnniversary(joinedOn: string | null): number | null {
+  return upcomingAnniversary(joinedOn)?.days ?? null;
 }
+
 
 const WEEKDAYS = [
   "Sunday",
