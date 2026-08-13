@@ -116,105 +116,104 @@ export function nearestWednesday(iso: string): string {
   return daysBetween(iso, forward) <= daysBetween(back, iso) ? forward : back;
 }
 
-/* ── role-based templates, one tap to pre-fill ─────────────── */
+/* ── role-based templates ──────────────────────────────────────
+   A template is ONE SEALED UNIT. Its name, metric, unit and stages
+   always travel together and are never combined across departments.
+   Applying one replaces every shape field at once — see applyTemplate().
+   Templates are a starting point, never a cage: every stage can be
+   renamed, reordered, added to or removed in the goal form.        */
 
 export interface GoalTemplate {
+  /** department + slug, so a template can never be half-applied */
+  id: string;
+  department: string;
   name: string;
   kind: "number" | "funnel";
   metric: string;
-  unit?: string;
-  stages?: string[];
+  unit: string | null;
+  /** funnel only — always 2 to 5, always in order */
+  stages: string[] | null;
+}
+
+function funnel(department: string, name: string, stages: string[]): GoalTemplate {
+  return {
+    id: `${department}:${name}`,
+    department,
+    name,
+    kind: "funnel",
+    metric: stages.join(" → "),
+    unit: null,
+    stages,
+  };
+}
+
+function number(
+  department: string,
+  name: string,
+  metric: string,
+  unit: string,
+): GoalTemplate {
+  return { id: `${department}:${name}`, department, name, kind: "number", metric, unit, stages: null };
 }
 
 export const TEMPLATES: Record<string, GoalTemplate[]> = {
-  Sales: [
-    {
-      name: "Calls to closures",
-      kind: "funnel",
-      metric: "Calls made → Connected → Closed",
-      stages: ["Calls made", "Connected", "Closed"],
-    },
-    {
-      name: "Lock payments to full payment",
-      kind: "funnel",
-      metric: "Lock payments → Followed up → Full payment",
-      stages: ["Lock payments", "Followed up", "Full payment"],
-    },
-  ],
   "Tele-calling": [
-    {
-      name: "Dials to quality leads",
-      kind: "funnel",
-      metric: "Dialled → Connected → Quality leads",
-      stages: ["Dialled", "Connected", "Quality leads"],
-    },
-    {
-      name: "Reminder calls completed",
-      kind: "number",
-      metric: "Reminder calls completed",
-      unit: "%",
-    },
+    funnel("Tele-calling", "Dials to quality leads", ["Dialled", "Connected", "Quality leads"]),
+    number("Tele-calling", "Reminder calls completed", "Reminder calls completed", "%"),
+  ],
+  Sales: [
+    funnel("Sales", "Calls to closures", ["Calls made", "Connected", "Closed"]),
+    funnel("Sales", "Lock payments to full payment", [
+      "Lock payments",
+      "Followed up",
+      "Full payment",
+    ]),
   ],
   Coaching: [
-    {
-      name: "Batch attendance",
-      kind: "funnel",
-      metric: "Students in batch → Reminded → Attended",
-      stages: ["Students in batch", "Reminded", "Attended"],
-    },
-    { name: "Task completion", kind: "number", metric: "Task completion", unit: "%" },
-    { name: "Response time", kind: "number", metric: "Response time", unit: "hours" },
+    funnel("Coaching", "Students to completed task", [
+      "Students contacted",
+      "Attended session",
+      "Completed task",
+    ]),
+    number("Coaching", "Task completion", "Task completion", "%"),
   ],
   Community: [
-    {
-      name: "Enrolled to showed up",
-      kind: "funnel",
-      metric: "Enrolled → Reminded → Showed up",
-      stages: ["Enrolled", "Reminded", "Showed up"],
-    },
-    { name: "Members onboarded", kind: "number", metric: "Members onboarded", unit: "people" },
-    { name: "Refund requests", kind: "number", metric: "Refund requests", unit: "requests" },
+    funnel("Community", "Invited to showed up", ["Invited", "Registered", "Showed up"]),
+    number("Community", "Members onboarded", "Members onboarded", "people"),
   ],
   "Customer Experience": [
-    {
-      name: "Queries resolved",
-      kind: "funnel",
-      metric: "Queries received → First reply → Resolved",
-      stages: ["Queries received", "First reply", "Resolved"],
-    },
-    { name: "NPS", kind: "number", metric: "NPS", unit: "score" },
+    funnel("Customer Experience", "Queries resolved same day", [
+      "Queries received",
+      "First reply",
+      "Resolved same day",
+    ]),
+    number("Customer Experience", "NPS", "NPS", "score"),
   ],
   Content: [
-    { name: "Posts per week", kind: "number", metric: "Posts published", unit: "posts" },
-    { name: "Ads per week", kind: "number", metric: "Ads shipped", unit: "ads" },
+    number("Content", "Posts per week", "Posts published", "posts"),
+    number("Content", "Ads per week", "Ads shipped", "ads"),
   ],
   Technology: [
-    { name: "Requests shipped", kind: "number", metric: "Requests shipped", unit: "requests" },
-    { name: "Downtime", kind: "number", metric: "Downtime", unit: "minutes" },
-    {
-      name: "Bugs fixed",
-      kind: "funnel",
-      metric: "Bugs → Reproduced → Fixed",
-      stages: ["Bugs", "Reproduced", "Fixed"],
-    },
+    number("Technology", "Requests shipped", "Requests shipped", "requests"),
+    number("Technology", "Downtime", "Downtime", "minutes"),
   ],
   "People & Culture": [
-    { name: "Roles filled", kind: "number", metric: "Roles filled", unit: "roles" },
-    {
-      name: "Joiners settled in 7 days",
-      kind: "funnel",
-      metric: "Joiners → Started → Done in 7 days",
-      stages: ["Joiners", "Started", "Done in 7 days"],
-    },
+    funnel("People & Culture", "Joiners settled in 7 days", [
+      "Joiners",
+      "Onboarding started",
+      "Done within 7 days",
+    ]),
+    number("People & Culture", "Roles filled", "Roles filled", "roles"),
   ],
   Leadership: [
-    {
-      name: "Departments with an owner",
-      kind: "number",
-      metric: "Departments with an owner",
-      unit: "departments",
-    },
+    number(
+      "Leadership",
+      "Departments with a clear owner",
+      "Departments with a clear owner",
+      "departments",
+    ),
   ],
+  Finance: [number("Finance", "Days to close the books", "Days to close the books", "days")],
 };
 
 export const METRIC_SUGGESTIONS = [
@@ -234,6 +233,24 @@ export function templatesFor(department: string | null | undefined): GoalTemplat
   if (!department) return [];
   return TEMPLATES[department] ?? [];
 }
+
+/** The only way a template may be used. Every shape field moves together. */
+export function applyTemplate(t: GoalTemplate): {
+  name: string;
+  kind: "number" | "funnel";
+  metric: string;
+  unit: string;
+  stages: string[];
+} {
+  return {
+    name: t.name,
+    kind: t.kind,
+    metric: t.metric,
+    unit: t.kind === "number" ? (t.unit ?? "") : "",
+    stages: t.kind === "funnel" ? [...(t.stages ?? [])] : [],
+  };
+}
+
 
 /* ── presentation helpers (never percentage maths) ─────────── */
 
