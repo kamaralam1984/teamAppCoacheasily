@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useDepartmentNames } from "@/hooks/useDepartments";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
@@ -8,7 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { inviteWarrior } from "@/lib/invite.functions";
 import {
   ACCESS_LEVELS,
-  DEPARTMENTS,
   WEEKLY_OFFS,
   accessBlurb,
   downlineIds,
@@ -44,15 +44,18 @@ export function WarriorForm({
   const queryClient = useQueryClient();
   const invite = useServerFn(inviteWarrior);
   const [saving, setSaving] = useState(false);
+  const departments = useDepartmentNames();
 
   const [form, setForm] = useState({
     full_name: editing?.full_name ?? "",
     title: editing?.title ?? "",
-    department: editing?.department ?? DEPARTMENTS[0],
+    department: editing?.department ?? "",
     manager_id: editing?.manager_id ?? "",
     role: (editing?.role ?? "member") as Role,
     weekly_off: editing?.weekly_off ?? "Sunday",
     sort_order: String(editing?.sort_order ?? 100),
+    opening_earned_leave: String(editing?.opening_earned_leave ?? 0),
+    can_manage_calendar: Boolean(editing?.can_manage_calendar),
 
     joined_on: editing?.joined_on ?? "",
     birthday: editing?.birthday ?? "",
@@ -98,6 +101,12 @@ export function WarriorForm({
         birthday: form.birthday || null,
         wedding_anniversary: form.wedding_anniversary || null,
         new_badge: form.new_badge,
+        opening_earned_leave:
+          Number.isFinite(Number(form.opening_earned_leave)) &&
+          form.opening_earned_leave.trim() !== ""
+            ? Math.max(0, Math.trunc(Number(form.opening_earned_leave)))
+            : 0,
+        can_manage_calendar: form.can_manage_calendar,
         responsibilities: form.responsibilities.trim() || null,
         fun_fact: form.fun_fact.trim() || null,
       };
@@ -188,7 +197,8 @@ export function WarriorForm({
               value={form.department}
               onChange={(e) => set("department", e.target.value)}
             >
-              {DEPARTMENTS.map((d) => (
+              <option value="">Not set</option>
+              {departments.map((d) => (
                 <option key={d} value={d}>
                   {d}
                 </option>
@@ -244,6 +254,37 @@ export function WarriorForm({
           </label>
 
 
+
+          <label>
+            <Label>Opening earned leave</Label>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              className="ce-input"
+              value={form.opening_earned_leave}
+              onChange={(e) => set("opening_earned_leave", e.target.value)}
+            />
+            <span className="mt-2 block text-[13px] leading-relaxed text-soft">
+              The earned leave they already had before this app. Everything after that is earned
+              here, one day for every twenty worked.
+            </span>
+          </label>
+
+          <label className="flex items-start gap-3 rounded-xl border border-line bg-white p-3">
+            <input
+              type="checkbox"
+              className="mt-1 h-5 w-5"
+              checked={form.can_manage_calendar}
+              onChange={(e) => set("can_manage_calendar", e.target.checked)}
+            />
+            <span>
+              <span className="block text-sm font-bold text-ink">Can manage the calendar</span>
+              <span className="mt-1 block text-[13px] leading-relaxed text-soft">
+                Lets this person add and edit programmes and events for everyone.
+              </span>
+            </span>
+          </label>
 
           <label className="sm:col-span-2">
             <Label>Access level</Label>

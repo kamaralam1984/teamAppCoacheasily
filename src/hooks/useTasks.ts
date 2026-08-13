@@ -170,3 +170,21 @@ export function useSaveReflection(profileId?: string | null, orgId?: string | nu
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["reflections"] }),
   });
 }
+
+/** The exact tasks a leave request hands over — shown to the approver before they decide. */
+export function useTasksByIds(ids: string[]) {
+  const key = [...ids].sort().join(",");
+  return useQuery({
+    queryKey: ["tasks-by-ids", key],
+    enabled: ids.length > 0,
+    queryFn: async (): Promise<Task[]> => {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .in("id", ids)
+        .order("due_date", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}

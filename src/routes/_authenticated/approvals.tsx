@@ -9,6 +9,8 @@ import {
   type PendingRequest,
 } from "@/hooks/useLeave";
 import { useHostConflicts } from "@/hooks/useCalendar";
+import { useTasksByIds } from "@/hooks/useTasks";
+import { useWarriors } from "@/hooks/useWarriors";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { rangeLabel } from "@/lib/calendar";
 import { shortDate } from "@/lib/warriors";
@@ -79,6 +81,38 @@ function HostWarning({ request }: { request: PendingRequest }) {
   );
 }
 
+function HandoverPreview({ request }: { request: PendingRequest }) {
+  const ids = request.handover_task_ids ?? [];
+  const { data: tasks } = useTasksByIds(ids);
+  const { data: warriors } = useWarriors();
+  if (!request.handover_to) return null;
+  const to = (warriors ?? []).find((w) => w.id === request.handover_to)?.full_name ?? "a teammate";
+
+  return (
+    <div className="mt-3 rounded-[12px] border border-line bg-pearl p-3.5">
+      <p className="text-[11px] font-bold tracking-wider text-goldD uppercase">
+        Handover to {to}
+      </p>
+      {ids.length === 0 ? (
+        <p className="mt-1 text-[13px] text-soft">No tasks ticked — only cover, nothing moves.</p>
+      ) : (
+        <ul className="mt-2 space-y-1.5">
+          {(tasks ?? []).map((t) => (
+            <li key={t.id} className="text-[13px] text-soft">
+              <span className="font-semibold text-ink">{t.title}</span>
+              {t.due_date ? ` · ${shortDate(t.due_date)}` : ""}
+            </li>
+          ))}
+          {!tasks ? <li className="text-[13px] text-soft">Loading tasks…</li> : null}
+        </ul>
+      )}
+      <p className="mt-2 text-[12px] text-soft">
+        Approving moves {ids.length === 0 ? "nothing" : `${ids.length} task${ids.length === 1 ? "" : "s"}`} to {to}.
+      </p>
+    </div>
+  );
+}
+
 function RequestCard({
   request,
   index,
@@ -120,6 +154,7 @@ function RequestCard({
       ) : null}
 
       <HostWarning request={request} />
+      <HandoverPreview request={request} />
 
       <div className="mt-3 border-t border-line pt-3">
         <BalanceContext profileId={request.profile_id} type={request.type} />

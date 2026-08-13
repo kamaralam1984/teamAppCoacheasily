@@ -208,6 +208,20 @@ export function useAddHoliday(orgId?: string | null) {
   });
 }
 
+export function useUpdateHoliday() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: { id: string; date: string; name: string }) => {
+      const { error } = await supabase
+        .from("holidays")
+        .update({ date: args.date, name: args.name.trim() })
+        .eq("id", args.id);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidate(qc),
+  });
+}
+
 export function useRemoveHoliday() {
   const qc = useQueryClient();
   return useMutation({

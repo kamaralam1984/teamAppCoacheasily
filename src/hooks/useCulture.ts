@@ -236,6 +236,30 @@ export function useEditPlaybook(orgId?: string | null) {
     onSuccess: done,
   });
 
+  const update = useMutation({
+    mutationFn: async ({ id, text }: { id: string; text: string }) => {
+      const clean = text.trim();
+      if (!clean) throw new Error("A playbook line cannot be empty.");
+      const { error } = await supabase.from("sop_items").update({ text: clean }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: done,
+  });
+
+  /** Reordering rewrites every sort_order in the list, so it can never drift. */
+  const reorder = useMutation({
+    mutationFn: async (ids: string[]) => {
+      for (let i = 0; i < ids.length; i += 1) {
+        const { error } = await supabase
+          .from("sop_items")
+          .update({ sort_order: (i + 1) * 10 })
+          .eq("id", ids[i]!);
+        if (error) throw error;
+      }
+    },
+    onSuccess: done,
+  });
+
   const remove = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("sop_items").delete().eq("id", id);
@@ -244,5 +268,22 @@ export function useEditPlaybook(orgId?: string | null) {
     onSuccess: done,
   });
 
-  return { add, remove };
+  return { add, update, reorder, remove };
+}
+
+/** Every playbook line for one department — the People & Culture editing view. */
+export function useDepartmentPlaybook(department: string | null) {
+  return useQuery({
+    queryKey: ["playbook", "dept", department ?? "none"],
+    enabled: Boolean(department),
+    queryFn: async (): Promise<SopItem[]> => {
+      const { data, error } = await supabase
+        .from("sop_items")
+        .select("*")
+        .eq("department", department!)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
 }

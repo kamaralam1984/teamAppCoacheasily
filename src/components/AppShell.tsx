@@ -33,6 +33,8 @@ const LEAD_TABS = [
   { label: "Reports", to: "/reports" },
 ] as const;
 
+const HR_TABS = [{ label: "Settings", to: "/settings" }] as const;
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { data, isLoading } = useMyProfile();
   const navigate = useNavigate();
@@ -47,6 +49,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const tabs = [
     ...BASE_TABS,
     ...(role === "manager" || role === "hr" || role === "admin" ? LEAD_TABS : []),
+    ...(role === "hr" || role === "admin" ? HR_TABS : []),
   ];
 
   useEffect(() => {

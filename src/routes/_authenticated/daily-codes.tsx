@@ -11,7 +11,7 @@ import {
   type DailyCode,
 } from "@/hooks/useDailyCode";
 import { useMyProfile } from "@/hooks/useMyProfile";
-import { DEPARTMENTS } from "@/lib/warriors";
+import { useDepartmentNames } from "@/hooks/useDepartments";
 
 export const Route = createFileRoute("/_authenticated/daily-codes")({
   head: () => ({
@@ -43,6 +43,7 @@ const BLANK = {
 };
 
 function Page() {
+  const departments = useDepartmentNames();
   const { data } = useMyProfile();
   const me = data?.profile ?? null;
   const allowed = me?.role === "hr" || me?.role === "admin";
@@ -141,7 +142,7 @@ function Page() {
                   onChange={(e) => setForm({ ...form, department: e.target.value })}
                 >
                   <option value="">Everyone</option>
-                  {DEPARTMENTS.map((d) => (
+                  {departments.map((d) => (
                     <option key={d}>{d}</option>
                   ))}
                 </select>
