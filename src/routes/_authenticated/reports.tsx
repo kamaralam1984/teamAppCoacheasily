@@ -154,7 +154,33 @@ function Page() {
             </div>
           </div>
 
-          <div className="mt-5 -mx-2 overflow-x-auto px-2">
+          {/* Below 640px the table becomes stacked cards. */}
+          <div className="mt-5 grid gap-2 sm:hidden">
+            {sorted.map((r) => (
+              <div key={r.profile_id} className="rounded-[16px] border border-line p-3">
+                <p className="text-[14px] font-bold text-ink">{r.full_name}</p>
+                {r.title ? <p className="text-[12px] text-soft">{r.title}</p> : null}
+                <div className="mt-2 grid grid-cols-2 gap-y-1 text-[13px]">
+                  <span className="text-soft">Working days</span>
+                  <span className="text-right text-ink">{r.working_days}</span>
+                  <span className="text-soft">Marked</span>
+                  <span className="text-right text-ink">{r.marked}</span>
+                  <span className="text-soft">Early</span>
+                  <span className="text-right text-ink">{r.early}</span>
+                  <span className="text-soft">% early</span>
+                  <span className="text-right font-bold text-goldD">{r.pct_early}%</span>
+                  <span className="text-soft">Avg punch</span>
+                  <span className="text-right text-soft">{r.avg_punch ?? "—"}</span>
+                </div>
+              </div>
+            ))}
+            {sorted.length === 0 ? (
+              <p className="text-sm text-soft">Nothing marked in this month yet.</p>
+            ) : null}
+          </div>
+
+          <div className="mt-5 -mx-2 hidden overflow-x-auto px-2 sm:block">
+
             <table className="w-full min-w-[640px] border-collapse text-left">
               <thead>
                 <tr className="border-b border-line">
