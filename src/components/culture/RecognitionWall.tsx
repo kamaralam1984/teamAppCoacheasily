@@ -220,9 +220,9 @@ export function MyShelf({
       <h2 className="mt-1 font-display text-2xl text-ink">
         {mine.length === 0
           ? "Nothing on the shelf yet"
-          : `${badges.length} badge${badges.length === 1 ? "" : "s"} · ${
-              mine.length - badges.length
-            } kind word${mine.length - badges.length === 1 ? "" : "s"}`}
+          : `${badges.length} badge${badges.length === 1 ? "" : "s"} · ${praise.length} kind word${
+              praise.length === 1 ? "" : "s"
+            }`}
       </h2>
       <p className="mt-1 text-[13px] text-soft">
         Everything you have ever been given stays here. It does not scroll away.
