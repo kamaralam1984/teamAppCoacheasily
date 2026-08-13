@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 
 import { useGoalEntries, useLogEntry } from "@/hooks/useGoals";
 import {
-  addDays,
   dayLabel,
   fmt,
   istToday,
@@ -233,8 +232,6 @@ function GoalRow({
           ))}
         </p>
       ) : null}
-
-      {addDays(date, 0) !== date ? null : null}
     </div>
   );
 }
