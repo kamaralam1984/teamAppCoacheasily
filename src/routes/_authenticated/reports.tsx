@@ -1,5 +1,10 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { postAnnouncement, sendTestEmail } from "@/lib/email.functions";
 
 import { AppShell } from "@/components/AppShell";
 import { AppraisalTable } from "@/components/reports/AppraisalTable";
@@ -301,6 +306,106 @@ function SettingsCard() {
         {save.isError ? (
           <span className="text-[13px] font-bold text-red">{(save.error as Error).message}</span>
         ) : null}
+      </div>
+    </section>
+  );
+}
+
+function AnnouncementCard() {
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const post = useServerFn(postAnnouncement);
+  const mutation = useMutation({
+    mutationFn: (input: { title: string; body: string }) => post({ data: input }),
+    onSuccess: (res) => {
+      setTitle("");
+      setBody("");
+      toast.success(
+        res.emailed > 0
+          ? `Posted to ${res.posted} warriors and emailed ${res.emailed}.`
+          : `Posted to ${res.posted} warriors.`,
+      );
+    },
+    onError: (err: Error) => toast.error(err.message || "The announcement could not be posted."),
+  });
+
+  return (
+    <section className="ce-rise ce-card p-6" style={{ animationDelay: "140ms" }}>
+      <p className="ce-label">People &amp; Culture</p>
+      <h2 className="mt-1 font-display text-2xl text-ink">Post an announcement</h2>
+      <p className="mt-1 text-[13px] text-soft">
+        It appears on everybody's dashboard and in their bell straight away.
+      </p>
+
+      <label className="mt-4 block">
+        <span className="ce-label">Title</span>
+        <input
+          className="ce-input mt-1 h-12 w-full"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Office closed on Friday"
+        />
+      </label>
+      <label className="mt-3 block">
+        <span className="ce-label">Details</span>
+        <textarea
+          className="ce-input mt-1 min-h-24 w-full py-2"
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          placeholder="A line or two of context."
+        />
+      </label>
+
+      <button
+        type="button"
+        className="btn3d mt-4"
+        disabled={mutation.isPending || title.trim().length === 0}
+        onClick={() => mutation.mutate({ title, body })}
+      >
+        {mutation.isPending ? "Posting…" : "Post announcement"}
+      </button>
+    </section>
+  );
+}
+
+function EmailCard() {
+  const { data } = useMyProfile();
+  const [to, setTo] = useState("");
+  const send = useServerFn(sendTestEmail);
+  const mutation = useMutation({
+    mutationFn: (address: string) => send({ data: { to: address } }),
+    onSuccess: (res) => (res.sent ? toast.success(res.message) : toast.warning(res.message)),
+    onError: (err: Error) => toast.error(err.message || "The test email could not be sent."),
+  });
+
+  const address = to || data?.user?.email || "";
+
+  return (
+    <section className="ce-rise ce-card p-6" style={{ animationDelay: "160ms" }}>
+      <p className="ce-label">Email</p>
+      <h2 className="mt-1 font-display text-2xl text-ink">Check email delivery</h2>
+      <p className="mt-1 text-[13px] text-soft">
+        Emails stay dormant until an email key is added. Everything else works without it.
+      </p>
+
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+        <label className="block flex-1">
+          <span className="ce-label">Send a test to</span>
+          <input
+            className="ce-input mt-1 h-12 w-full"
+            value={address}
+            onChange={(e) => setTo(e.target.value)}
+            placeholder="you@coacheasily.com"
+          />
+        </label>
+        <button
+          type="button"
+          className="btn3d btn3d-ghost"
+          disabled={mutation.isPending || !address.includes("@")}
+          onClick={() => mutation.mutate(address)}
+        >
+          {mutation.isPending ? "Sending…" : "Send test email"}
+        </button>
       </div>
     </section>
   );
