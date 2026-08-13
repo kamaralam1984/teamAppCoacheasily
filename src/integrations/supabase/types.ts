@@ -1376,6 +1376,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      appraisal_matrix: { Args: never; Returns: Json }
       attendance_summary: { Args: { p_profile_id?: string }; Returns: Json }
       calendar_feed: { Args: { p_token: string }; Returns: Json }
       calendar_leave: { Args: { p_from: string; p_to: string }; Returns: Json }
@@ -1385,6 +1386,7 @@ export type Database = {
       daily_code_today: { Args: never; Returns: Json }
       goal_nudge_me: { Args: never; Returns: boolean }
       goal_owner: { Args: { p_goal_id: string }; Returns: string }
+      goal_pct: { Args: { p_goal_id: string }; Returns: number }
       goal_progress: { Args: { p_goal_id: string }; Returns: Json }
       goals_for: {
         Args: { p_cycle_id?: string; p_profile_id?: string }
@@ -1413,6 +1415,7 @@ export type Database = {
         Args: { p_from: string; p_profile_id: string; p_to: string }
         Returns: Json
       }
+      leave_ledger: { Args: never; Returns: Json }
       leave_remind_approvers: { Args: never; Returns: number }
       leave_sandwich_conflict: {
         Args: {
@@ -1450,6 +1453,7 @@ export type Database = {
       tasks_blocked_nudges: { Args: never; Returns: number }
       team_energy_today: { Args: never; Returns: Json }
       team_goals: { Args: { p_cycle_id?: string }; Returns: Json }
+      team_health: { Args: never; Returns: Json }
       update_org_settings: { Args: { p_patch: Json }; Returns: Json }
     }
     Enums: {

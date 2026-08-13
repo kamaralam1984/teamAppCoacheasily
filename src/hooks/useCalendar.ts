@@ -74,6 +74,16 @@ export function useNext30() {
   });
 }
 
+/** Any window starting today — the dashboard looks 45 days ahead. */
+export function useNextDays(days: number) {
+  const from = todayIso();
+  const to = addDays(from, days);
+  return useQuery({
+    queryKey: ["calendar-next", days, from],
+    queryFn: () => fetchWindow(from, to),
+  });
+}
+
 /** A full year around today, used to build the .ics file. */
 export function useCalendarYear(enabled: boolean) {
   const from = addDays(todayIso(), -30);
