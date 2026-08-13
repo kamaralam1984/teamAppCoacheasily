@@ -167,9 +167,10 @@ function GoalRow({
     if (goal.kind !== "funnel") return null;
     const nums = raw().map((r) => (r === "" ? null : Number(r)));
     for (let i = 1; i < nums.length; i += 1) {
-      const prev = nums[i - 1];
-      const cur = nums[i];
+      const prev = nums[i - 1] ?? null;
+      const cur = nums[i] ?? null;
       if (prev !== null && cur !== null && cur > prev) {
+
         return `${stages[i]} can't be more than ${stages[i - 1]}.`;
       }
     }
