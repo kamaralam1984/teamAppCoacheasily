@@ -56,6 +56,90 @@ export type Database = {
           },
         ]
       }
+      calendar_attendees: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          org_id: string
+          profile_id: string
+          ref_id: string
+          required: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          org_id: string
+          profile_id: string
+          ref_id: string
+          required?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          org_id?: string
+          profile_id?: string
+          ref_id?: string
+          required?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_attendees_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_attendees_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calendar_tokens: {
+        Row: {
+          created_at: string
+          org_id: string
+          profile_id: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          org_id: string
+          profile_id: string
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          org_id?: string
+          profile_id?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_tokens_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_tokens_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comp_off_credits: {
         Row: {
           consumed: boolean
@@ -167,49 +251,67 @@ export type Database = {
       }
       events: {
         Row: {
+          all_day: boolean
           created_at: string
           created_by: string | null
           cycle_id: string | null
           date: string
+          description: string | null
           end_date: string | null
           from_time: string | null
+          host_id: string | null
           id: string
           location: string | null
           name: string
           org_id: string
+          sequence: number
           series_id: string | null
+          session_no: number | null
+          status: string
           to_time: string | null
           type: string
           updated_at: string
         }
         Insert: {
+          all_day?: boolean
           created_at?: string
           created_by?: string | null
           cycle_id?: string | null
           date: string
+          description?: string | null
           end_date?: string | null
           from_time?: string | null
+          host_id?: string | null
           id?: string
           location?: string | null
           name: string
           org_id: string
+          sequence?: number
           series_id?: string | null
+          session_no?: number | null
+          status?: string
           to_time?: string | null
           type?: string
           updated_at?: string
         }
         Update: {
+          all_day?: boolean
           created_at?: string
           created_by?: string | null
           cycle_id?: string | null
           date?: string
+          description?: string | null
           end_date?: string | null
           from_time?: string | null
+          host_id?: string | null
           id?: string
           location?: string | null
           name?: string
           org_id?: string
+          sequence?: number
           series_id?: string | null
+          session_no?: number | null
+          status?: string
           to_time?: string | null
           type?: string
           updated_at?: string
@@ -227,6 +329,13 @@ export type Database = {
             columns: ["cycle_id"]
             isOneToOne: false
             referencedRelation: "cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -573,6 +682,7 @@ export type Database = {
           auth_user_id: string | null
           avatar_url: string | null
           birthday: string | null
+          can_manage_calendar: boolean
           created_at: string
           department: string | null
           exited_on: string | null
@@ -596,6 +706,7 @@ export type Database = {
           auth_user_id?: string | null
           avatar_url?: string | null
           birthday?: string | null
+          can_manage_calendar?: boolean
           created_at?: string
           department?: string | null
           exited_on?: string | null
@@ -619,6 +730,7 @@ export type Database = {
           auth_user_id?: string | null
           avatar_url?: string | null
           birthday?: string | null
+          can_manage_calendar?: boolean
           created_at?: string
           department?: string | null
           exited_on?: string | null
@@ -657,54 +769,79 @@ export type Database = {
       }
       programs: {
         Row: {
+          cover_id: string | null
           created_at: string
           created_by: string | null
+          description: string | null
           from_date: string
+          from_time: string | null
           host_id: string | null
           id: string
           language: string | null
           location: string | null
           name: string
           org_id: string
+          sequence: number
           series_id: string | null
           session_no: number | null
+          status: string
           to_date: string
+          to_time: string | null
           type: string
           updated_at: string
         }
         Insert: {
+          cover_id?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           from_date: string
+          from_time?: string | null
           host_id?: string | null
           id?: string
           language?: string | null
           location?: string | null
           name: string
           org_id: string
+          sequence?: number
           series_id?: string | null
           session_no?: number | null
+          status?: string
           to_date: string
+          to_time?: string | null
           type: string
           updated_at?: string
         }
         Update: {
+          cover_id?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           from_date?: string
+          from_time?: string | null
           host_id?: string | null
           id?: string
           language?: string | null
           location?: string | null
           name?: string
           org_id?: string
+          sequence?: number
           series_id?: string | null
           session_no?: number | null
+          status?: string
           to_date?: string
+          to_time?: string | null
           type?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "programs_cover_id_fkey"
+            columns: ["cover_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "programs_created_by_fkey"
             columns: ["created_by"]
@@ -734,7 +871,10 @@ export type Database = {
     }
     Functions: {
       attendance_summary: { Args: { p_profile_id?: string }; Returns: Json }
+      calendar_feed: { Args: { p_token: string }; Returns: Json }
       calendar_leave: { Args: { p_from: string; p_to: string }; Returns: Json }
+      calendar_prep_nudges: { Args: never; Returns: number }
+      can_keep_calendar: { Args: never; Returns: boolean }
       can_read_goal: { Args: { p_goal_id: string }; Returns: boolean }
       goal_nudge_me: { Args: never; Returns: boolean }
       goal_owner: { Args: { p_goal_id: string }; Returns: string }
@@ -744,6 +884,7 @@ export type Database = {
         Returns: Json
       }
       goals_remind_pending: { Args: { p_cycle_id?: string }; Returns: number }
+      is_ordinary_event_type: { Args: { p_type: string }; Returns: boolean }
       leave_approver_for: { Args: { p_profile_id: string }; Returns: string }
       leave_balances: { Args: { p_profile_id?: string }; Returns: Json }
       leave_check: {
@@ -754,6 +895,10 @@ export type Database = {
           p_to: string
           p_type: string
         }
+        Returns: Json
+      }
+      leave_cover_conflicts: {
+        Args: { p_from: string; p_profile_id: string; p_to: string }
         Returns: Json
       }
       leave_host_conflicts: {
