@@ -111,6 +111,69 @@ export type Database = {
           },
         ]
       }
+      events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date: string
+          end_date: string | null
+          from_time: string | null
+          id: string
+          location: string | null
+          name: string
+          org_id: string
+          series_id: string | null
+          to_time: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date: string
+          end_date?: string | null
+          from_time?: string | null
+          id?: string
+          location?: string | null
+          name: string
+          org_id: string
+          series_id?: string | null
+          to_time?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          end_date?: string | null
+          from_time?: string | null
+          id?: string
+          location?: string | null
+          name?: string
+          org_id?: string
+          series_id?: string | null
+          to_time?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       holidays: {
         Row: {
           created_at: string
@@ -398,6 +461,79 @@ export type Database = {
           },
         ]
       }
+      programs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          from_date: string
+          host_id: string | null
+          id: string
+          language: string | null
+          location: string | null
+          name: string
+          org_id: string
+          series_id: string | null
+          session_no: number | null
+          to_date: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          from_date: string
+          host_id?: string | null
+          id?: string
+          language?: string | null
+          location?: string | null
+          name: string
+          org_id: string
+          series_id?: string | null
+          session_no?: number | null
+          to_date: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          from_date?: string
+          host_id?: string | null
+          id?: string
+          language?: string | null
+          location?: string | null
+          name?: string
+          org_id?: string
+          series_id?: string | null
+          session_no?: number | null
+          to_date?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "programs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "programs_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "programs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -414,6 +550,10 @@ export type Database = {
           p_to: string
           p_type: string
         }
+        Returns: Json
+      }
+      leave_host_conflicts: {
+        Args: { p_from: string; p_profile_id: string; p_to: string }
         Returns: Json
       }
       leave_remind_approvers: { Args: never; Returns: number }
