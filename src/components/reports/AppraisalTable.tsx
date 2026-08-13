@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { useMemo, useState, type CSSProperties } from "react";
 
 import {
@@ -98,7 +99,61 @@ export function AppraisalTable({
         </p>
       )}
 
-      <div className="mt-5 -mx-2 overflow-x-auto px-2">
+      {/* Below 640px the table becomes stacked cards. */}
+      <div className="mt-5 grid gap-2 sm:hidden">
+        {rows.map((r) => {
+          const t = trends.get(r.profile_id);
+          return (
+            <div key={r.profile_id} className="rounded-[16px] border border-line p-3">
+              <p className="text-[14px] font-bold text-ink">{r.full_name}</p>
+              {r.title ? <p className="text-[12px] text-soft">{r.title}</p> : null}
+              <div className="mt-2 grid grid-cols-2 gap-y-1 text-[13px]">
+                {cycles.map((c) => {
+                  const s = r.scores[c.id] ?? null;
+                  const live = c.status !== "closed";
+                  return (
+                    <Fragment key={c.id}>
+                      <span className="text-soft">
+                        {c.name}
+                        {live ? " · live" : ""}
+                      </span>
+                      <button
+                        type="button"
+                        className={`text-right font-bold ${scoreTone(s ? s.pct : null)} ${live ? "opacity-45" : ""}`}
+                        onClick={() =>
+                          setOpen({
+                            profileId: r.profile_id,
+                            name: r.full_name,
+                            cycleId: c.id,
+                            cycleName: c.name,
+                          })
+                        }
+                      >
+                        {pctLabel(s ? s.pct : null)}
+                        {s && live ? " so far" : ""}
+                      </button>
+                    </Fragment>
+                  );
+                })}
+                <span className="text-soft">Trend</span>
+                <span className="text-right">
+                  {canTrend && t?.delta !== null && t?.delta !== undefined ? (
+                    <span className={t.delta >= 0 ? "font-bold text-emer" : "font-bold text-red"}>
+                      {t.delta > 0 ? "↑ +" : t.delta < 0 ? "↓ " : "→ "}
+                      {t.delta === 0 ? "0" : Math.abs(t.delta)}
+                      {t.delta !== 0 ? " pts" : ""}
+                    </span>
+                  ) : (
+                    <span className="text-soft">—</span>
+                  )}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-5 -mx-2 hidden overflow-x-auto px-2 sm:block">
         <table className="w-full min-w-[560px] border-collapse text-left">
           <thead>
             <tr className="border-b border-line">
