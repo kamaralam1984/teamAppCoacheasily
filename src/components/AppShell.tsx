@@ -91,8 +91,17 @@ export function AppShell({ children }: { children: ReactNode }) {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="flex h-11 items-center gap-2 rounded-lg px-2 text-left transition-colors hover:bg-night2"
+                  aria-label="Account menu"
+                  className="flex h-11 min-w-11 items-center gap-2 rounded-lg px-2 text-left transition-colors hover:bg-night2"
                 >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-night2 text-[11px] font-bold tracking-wide text-goldL sm:hidden">
+                    {(profile?.full_name ?? data?.user?.email ?? "?")
+                      .split(" ")
+                      .slice(0, 2)
+                      .map((w) => w[0])
+                      .join("")
+                      .toUpperCase()}
+                  </span>
                   <span className="hidden max-w-[11rem] flex-col items-end leading-tight sm:flex">
                     <span className="max-w-[11rem] truncate text-sm font-semibold text-white">
                       {isLoading ? "…" : (profile?.full_name ?? data?.user?.email ?? "")}
@@ -137,8 +146,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                   data-active={active}
                   className={
                     active
-                      ? "shrink-0 rounded-full bg-night px-4 py-2.5 text-sm font-bold whitespace-nowrap text-goldL"
-                      : "shrink-0 rounded-full px-4 py-2.5 text-sm font-semibold whitespace-nowrap text-mist transition-colors hover:text-goldL"
+                      ? "flex min-h-11 shrink-0 items-center rounded-full bg-night px-4 text-sm font-bold whitespace-nowrap text-goldL"
+                      : "flex min-h-11 shrink-0 items-center rounded-full px-4 text-sm font-semibold whitespace-nowrap text-mist transition-colors hover:text-goldL"
                   }
                 >
                   {tab.label}
