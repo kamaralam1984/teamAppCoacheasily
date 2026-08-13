@@ -258,3 +258,42 @@
     }
   }
 }
+
+@layer components {
+  /* Celebration confetti — brand colours falling and rotating */
+  @keyframes ce-confetti-fall {
+    from {
+      transform: translateY(-12vh);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(110vh);
+      opacity: 0.9;
+    }
+  }
+
+  @keyframes ce-confetti-spin {
+    from {
+      rotate: 0deg;
+    }
+    to {
+      rotate: 360deg;
+    }
+  }
+
+  .ce-confetti {
+    position: absolute;
+    top: 0;
+    pointer-events: none;
+    animation-name: ce-confetti-fall, ce-confetti-spin;
+    animation-timing-function: cubic-bezier(0.3, 0.1, 0.5, 1), linear;
+    animation-iteration-count: 1, infinite;
+    animation-fill-mode: both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ce-confetti {
+      display: none;
+    }
+  }
+}

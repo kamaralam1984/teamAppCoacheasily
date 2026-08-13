@@ -14,6 +14,135 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          marked_at: string
+          org_id: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          marked_at?: string
+          org_id: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          marked_at?: string
+          org_id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comp_off_credits: {
+        Row: {
+          consumed: boolean
+          consumed_by: string | null
+          created_at: string
+          earned_on: string
+          id: string
+          org_id: string
+          profile_id: string
+          reason: string
+        }
+        Insert: {
+          consumed?: boolean
+          consumed_by?: string | null
+          created_at?: string
+          earned_on: string
+          id?: string
+          org_id: string
+          profile_id: string
+          reason: string
+        }
+        Update: {
+          consumed?: boolean
+          consumed_by?: string | null
+          created_at?: string
+          earned_on?: string
+          id?: string
+          org_id?: string
+          profile_id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comp_off_credits_consumed_by_fkey"
+            columns: ["consumed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comp_off_credits_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comp_off_credits_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      holidays: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          name: string
+          org_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          name: string
+          org_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          name?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "holidays_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
@@ -178,6 +307,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      attendance_summary: { Args: { p_profile_id?: string }; Returns: Json }
       manages: { Args: { target_id: string }; Returns: boolean }
       my_org: { Args: never; Returns: string }
       my_profile_id: { Args: never; Returns: string }

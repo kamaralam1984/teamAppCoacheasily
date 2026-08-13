@@ -11,10 +11,10 @@ import { useWarriors } from "@/hooks/useWarriors";
 import {
   buildTree,
   daysSince,
-  daysToAnniversary,
   isOffToday,
   isPrivileged,
-  yearsAt,
+  upcomingAnniversary,
+  type Anniversary,
   type Profile,
 } from "@/lib/warriors";
 
@@ -71,9 +71,9 @@ function WarriorsPage() {
   const anniversaries = useMemo(
     () =>
       active
-        .map((p) => ({ p, days: daysToAnniversary(p.joined_on), years: yearsAt(p.joined_on) }))
-        .filter((x): x is { p: Profile; days: number; years: number } => x.days !== null && x.days <= 30)
-        .sort((a, b) => a.days - b.days),
+        .map((p) => ({ p, ann: upcomingAnniversary(p.joined_on) }))
+        .filter((x): x is { p: Profile; ann: Anniversary } => x.ann !== null && x.ann.days <= 30)
+        .sort((a, b) => a.ann.days - b.ann.days),
     [active],
   );
 
@@ -173,12 +173,12 @@ function WarriorsPage() {
                 {anniversaries.length === 0 ? (
                   <p className="text-sm text-soft">No anniversaries in the next 30 days.</p>
                 ) : (
-                  anniversaries.map(({ p, days, years }) => (
+                  anniversaries.map(({ p, ann }) => (
                     <div key={p.id} className="flex items-center justify-between gap-3">
                       <span className="text-sm font-semibold text-ink">{p.full_name}</span>
                       <span className="text-[13px] text-soft">
-                        {years + 1} year{years + 1 > 1 ? "s" : ""} ·{" "}
-                        {days === 0 ? "today" : `in ${days} day${days > 1 ? "s" : ""}`}
+                        {ann.years} year{ann.years > 1 ? "s" : ""} on {ann.label}
+                        {ann.days === 0 ? " · today" : ""}
                       </span>
                     </div>
                   ))
