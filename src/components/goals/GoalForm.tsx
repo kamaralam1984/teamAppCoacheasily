@@ -311,6 +311,7 @@ export function GoalForm({
             </span>
             <input
               type="number"
+              inputMode="numeric"
               inputMode="decimal"
               className="ce-input mt-1 h-12 w-full sm:w-56"
               value={d.baseline}
@@ -330,6 +331,7 @@ export function GoalForm({
               <span className="ce-label">Where you'll be by {cycle.name} ends</span>
               <input
                 type="number"
+              inputMode="numeric"
                 inputMode="decimal"
                 className="ce-input mt-1 h-12 w-full sm:w-56"
                 value={d.target}

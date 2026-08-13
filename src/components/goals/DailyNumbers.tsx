@@ -251,6 +251,7 @@ function GoalRow({
             <input
               type="number"
               inputMode="numeric"
+              inputMode="numeric"
               min={0}
               value={valueFor(i)}
               onChange={(e) => {

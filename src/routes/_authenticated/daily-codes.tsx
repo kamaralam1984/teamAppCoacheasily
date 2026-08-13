@@ -107,6 +107,7 @@ function Page() {
                 <input
                   id="dc-day"
                   type="number"
+              inputMode="numeric"
                   min={1}
                   max={366}
                   className="ce-input"

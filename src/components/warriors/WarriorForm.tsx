@@ -231,6 +231,7 @@ export function WarriorForm({
             <Label>Display order</Label>
             <input
               type="number"
+              inputMode="numeric"
               step={10}
               className="ce-input"
               value={form.sort_order}
