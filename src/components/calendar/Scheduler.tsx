@@ -43,10 +43,27 @@ function clashesFor(data: CalendarData | undefined, from: string, to: string): s
 function Preview({
   parsed,
   data,
+  name,
+  onName,
+  weeks,
+  onWeeks,
+  until,
+  onUntil,
+  bulkOk,
+  onBulkOk,
 }: {
   parsed: Parsed;
   data: CalendarData | undefined;
+  name: string;
+  onName: (v: string) => void;
+  weeks: number;
+  onWeeks: (v: number) => void;
+  until: string;
+  onUntil: (v: string) => void;
+  bulkOk: boolean;
+  onBulkOk: (v: boolean) => void;
 }) {
+  const [showAll, setShowAll] = useState(false);
   if (!parsed.ok) {
     return (
       <p className="rounded-lg border border-red/30 bg-red/10 p-3 text-[13px] font-semibold text-red">
@@ -54,19 +71,80 @@ function Preview({
       </p>
     );
   }
+  const shown = showAll ? parsed.dates : parsed.dates.slice(0, 5);
+  const last = parsed.dates[parsed.dates.length - 1];
   return (
     <div className="rounded-lg border border-line bg-white p-3">
-      <p className="text-sm font-bold text-ink">
-        ✓ {parsed.name} <span className="font-normal text-soft">· {parsed.type}</span>
+      <label className="ce-label" htmlFor="preview-name">
+        Name (edit if needed)
+      </label>
+      <input
+        id="preview-name"
+        className="ce-input"
+        value={name}
+        onChange={(e) => onName(e.target.value)}
+      />
+      <p className="mt-2 text-[13px] text-soft">
+        {parsed.type}
+        {parsed.fromTime ? ` · ${parsed.fromTime}${parsed.toTime ? `–${parsed.toTime}` : ""}` : ""}
+        {parsed.location ? ` · ${parsed.location}` : ""}
+        {` · ${parsed.dates.length} date${parsed.dates.length === 1 ? "" : "s"}`}
       </p>
+
+      {parsed.unbounded ? (
+        <div className="mt-3 rounded-lg border border-gold/40 bg-gold/10 p-3">
+          <p className="text-[13px] font-semibold text-ink">
+            No end date given — I'll create {parsed.dates.length} session
+            {parsed.dates.length === 1 ? "" : "s"}
+            {last ? ` through ${rangeLabel(last.from, last.to)}` : ""}.
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {HORIZON_CHOICES.map((w) => (
+              <button
+                key={w}
+                type="button"
+                onClick={() => {
+                  onUntil("");
+                  onWeeks(w);
+                }}
+                className={`min-h-9 rounded-full px-3 text-[12px] font-bold ${
+                  !until && weeks === w
+                    ? "bg-night text-goldL"
+                    : "border border-line bg-white text-soft"
+                }`}
+              >
+                {w} weeks
+              </button>
+            ))}
+            <input
+              type="date"
+              aria-label="Or pick an end date"
+              className="ce-input h-9 w-auto py-0 text-[12px]"
+              value={until}
+              onChange={(e) => onUntil(e.target.value)}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      {parsed.dates.length > BULK_CONFIRM_ABOVE ? (
+        <label className="mt-3 flex min-h-11 items-center gap-2 text-[13px] font-semibold text-ink">
+          <input
+            type="checkbox"
+            className="h-4 w-4"
+            checked={bulkOk}
+            onChange={(e) => onBulkOk(e.target.checked)}
+          />
+          Yes, create {parsed.dates.length} sessions.
+        </label>
+      ) : null}
+
       <ul className="mt-2 space-y-1">
-        {parsed.dates.map((d) => {
+        {shown.map((d) => {
           const clash = clashesFor(data, d.from, d.to);
           return (
             <li key={d.from} className="text-[12px] text-soft">
               {rangeLabel(d.from, d.to)}
-              {parsed.fromTime ? ` · ${parsed.fromTime}${parsed.toTime ? `–${parsed.toTime}` : ""}` : ""}
-              {parsed.location ? ` · ${parsed.location}` : ""}
               {clash.length > 0 ? (
                 <span className="font-bold text-goldD"> ⚠ already: {clash.join(", ")}</span>
               ) : null}
@@ -74,9 +152,19 @@ function Preview({
           );
         })}
       </ul>
+      {parsed.dates.length > 5 ? (
+        <button
+          type="button"
+          className="mt-1 text-[12px] font-bold text-plum underline"
+          onClick={() => setShowAll((v) => !v)}
+        >
+          {showAll ? "Show less" : `+${parsed.dates.length - 5} more`}
+        </button>
+      ) : null}
     </div>
   );
 }
+
 
 export function Scheduler({ orgId, profileId, warriors }: Props) {
   const [mode, setMode] = useState<"one" | "paste" | "manual">("one");
