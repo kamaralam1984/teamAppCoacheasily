@@ -42,7 +42,7 @@ export const Route = createFileRoute("/_authenticated/calendar")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: CalendarPage;
+  component: CalendarPage,
 });
 
 function CalendarPage() {
