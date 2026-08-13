@@ -111,10 +111,65 @@ export type Database = {
           },
         ]
       }
+      cycles: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          end_date: string
+          id: string
+          name: string
+          no: number
+          org_id: string
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          end_date: string
+          id?: string
+          name: string
+          no: number
+          org_id: string
+          start_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          end_date?: string
+          id?: string
+          name?: string
+          no?: number
+          org_id?: string
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cycles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cycles_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string
           created_by: string | null
+          cycle_id: string | null
           date: string
           end_date: string | null
           from_time: string | null
@@ -130,6 +185,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          cycle_id?: string | null
           date: string
           end_date?: string | null
           from_time?: string | null
@@ -145,6 +201,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          cycle_id?: string | null
           date?: string
           end_date?: string | null
           from_time?: string | null
@@ -166,10 +223,147 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "events_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "cycles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "events_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goal_entries: {
+        Row: {
+          counts: number[] | null
+          created_at: string
+          date: string
+          goal_id: string
+          id: string
+          note: string | null
+          org_id: string
+          updated_at: string
+          value: number | null
+        }
+        Insert: {
+          counts?: number[] | null
+          created_at?: string
+          date?: string
+          goal_id: string
+          id?: string
+          note?: string | null
+          org_id: string
+          updated_at?: string
+          value?: number | null
+        }
+        Update: {
+          counts?: number[] | null
+          created_at?: string
+          date?: string
+          goal_id?: string
+          id?: string
+          note?: string | null
+          org_id?: string
+          updated_at?: string
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_entries_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goal_entries_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goals: {
+        Row: {
+          archived: boolean
+          baseline: number
+          created_at: string
+          cycle_id: string
+          id: string
+          kind: string
+          learnings: string | null
+          metric: string | null
+          name: string
+          org_id: string
+          plan: string | null
+          profile_id: string
+          stages: string[] | null
+          target: number
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          archived?: boolean
+          baseline?: number
+          created_at?: string
+          cycle_id: string
+          id?: string
+          kind?: string
+          learnings?: string | null
+          metric?: string | null
+          name: string
+          org_id: string
+          plan?: string | null
+          profile_id: string
+          stages?: string[] | null
+          target?: number
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          archived?: boolean
+          baseline?: number
+          created_at?: string
+          cycle_id?: string
+          id?: string
+          kind?: string
+          learnings?: string | null
+          metric?: string | null
+          name?: string
+          org_id?: string
+          plan?: string | null
+          profile_id?: string
+          stages?: string[] | null
+          target?: number
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goals_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goals_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goals_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -541,6 +735,15 @@ export type Database = {
     Functions: {
       attendance_summary: { Args: { p_profile_id?: string }; Returns: Json }
       calendar_leave: { Args: { p_from: string; p_to: string }; Returns: Json }
+      can_read_goal: { Args: { p_goal_id: string }; Returns: boolean }
+      goal_nudge_me: { Args: never; Returns: boolean }
+      goal_owner: { Args: { p_goal_id: string }; Returns: string }
+      goal_progress: { Args: { p_goal_id: string }; Returns: Json }
+      goals_for: {
+        Args: { p_cycle_id?: string; p_profile_id?: string }
+        Returns: Json
+      }
+      goals_remind_pending: { Args: { p_cycle_id?: string }; Returns: number }
       leave_approver_for: { Args: { p_profile_id: string }; Returns: string }
       leave_balances: { Args: { p_profile_id?: string }; Returns: Json }
       leave_check: {
@@ -567,11 +770,27 @@ export type Database = {
         }
         Returns: string
       }
+      log_goal_entry: {
+        Args: {
+          p_counts?: number[]
+          p_date?: string
+          p_goal_id: string
+          p_note?: string
+          p_notify?: boolean
+          p_value?: number
+        }
+        Returns: Json
+      }
       manages: { Args: { target_id: string }; Returns: boolean }
       my_org: { Args: never; Returns: string }
       my_profile_id: { Args: never; Returns: string }
       my_role: { Args: never; Returns: string }
+      open_cycle: {
+        Args: { p_end_date: string; p_name?: string }
+        Returns: Json
+      }
       reconcile_roster: { Args: never; Returns: Json }
+      team_goals: { Args: { p_cycle_id?: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never

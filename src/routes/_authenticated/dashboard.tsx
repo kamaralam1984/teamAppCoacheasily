@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
 import { Celebrate } from "@/components/Celebrate";
+import { DailyNumbers } from "@/components/goals/DailyNumbers";
 import { Mark } from "@/components/Mark";
 import { WorkMeter } from "@/components/WorkMeter";
 import {
@@ -10,9 +11,11 @@ import {
   useAttendanceSummary,
   useMarkAttendance,
 } from "@/hooks/useAttendance";
+import { useCycles, useEveningNudge, useGoalsFor } from "@/hooks/useGoals";
 import { usePendingApprovals } from "@/hooks/useLeave";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { shortDate } from "@/lib/warriors";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -69,6 +72,12 @@ function Dashboard() {
   const pendingLeave = pending?.length ?? 0;
 
   const marked = summary?.marked_today ?? false;
+
+  const { data: cycles } = useCycles();
+  const activeCycle = useMemo(() => cycles?.find((c) => c.status === "active") ?? null, [cycles]);
+  const { data: myGoals } = useGoalsFor(profile ? undefined : null, activeCycle?.id ?? null);
+  useEveningNudge(Boolean(profile) && marked);
+
 
   const onMark = () => {
     mark.mutate(undefined, {
@@ -141,7 +150,16 @@ function Dashboard() {
         </section>
 
         {/* ── Work meter (no leave balances here — we celebrate work) ─ */}
+        {/* ── The twenty-second habit, high up ───────────────── */}
+        <DailyNumbers
+          cycle={activeCycle}
+          goals={myGoals ?? []}
+          onCelebrate={setCelebration}
+          style={{ animationDelay: "60ms" }}
+        />
+
         <WorkMeter summary={summary} style={{ animationDelay: "80ms" }} />
+
 
 
         {/* ── Recent attendance, newest first ────────────────── */}
