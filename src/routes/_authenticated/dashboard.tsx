@@ -29,17 +29,21 @@ function Dashboard() {
 
   return (
     <AppShell>
-      <div className="ce-card p-6">
-        <h1 className="font-display text-3xl text-ink">
+      <div className="ce-rise max-w-2xl py-6">
+        <h1 className="font-display text-4xl leading-tight text-ink">
           Namaste, {profile?.full_name?.split(" ")[0] ?? "warrior"}
         </h1>
         <p className="mt-2 text-sm text-soft">
           {profile?.title ? `${profile.title} · ` : ""}
           {profile?.department ?? "CoachEasily"}
         </p>
-        <p className="mt-5 text-sm text-soft">
-          The foundation is in place — the team screens land in the next prompts.
-        </p>
+        <div className="mt-8 border-l-2 border-goldL/60 pl-4">
+          <p className="text-sm leading-relaxed text-soft">
+            The foundation is in place. Your team lives under{" "}
+            <span className="font-semibold text-ink">Warriors</span> — the rest of the workspace
+            arrives screen by screen.
+          </p>
+        </div>
       </div>
     </AppShell>
   );
