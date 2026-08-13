@@ -179,6 +179,7 @@ export type Database = {
       my_org: { Args: never; Returns: string }
       my_profile_id: { Args: never; Returns: string }
       my_role: { Args: never; Returns: string }
+      reconcile_roster: { Args: never; Returns: Json }
     }
     Enums: {
       [_ in never]: never

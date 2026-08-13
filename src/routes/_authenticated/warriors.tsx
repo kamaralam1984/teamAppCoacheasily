@@ -1,0 +1,227 @@
+import { useMemo, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+
+import { AppShell } from "@/components/AppShell";
+import { ExitDialog } from "@/components/warriors/ExitDialog";
+import { OrgTree } from "@/components/warriors/OrgTree";
+import { ProfileModal } from "@/components/warriors/ProfileModal";
+import { WarriorForm } from "@/components/warriors/WarriorForm";
+import { useMyProfile } from "@/hooks/useMyProfile";
+import { useWarriors } from "@/hooks/useWarriors";
+import {
+  buildTree,
+  daysSince,
+  daysToAnniversary,
+  isOffToday,
+  isPrivileged,
+  yearsAt,
+  type Profile,
+} from "@/lib/warriors";
+
+export const Route = createFileRoute("/_authenticated/warriors")({
+  head: () => ({
+    meta: [
+      { title: "Warriors | CoachEasily Team App" },
+      {
+        name: "description",
+        content: "The CoachEasily org chart — every warrior, who they report to and what they own.",
+      },
+      { property: "og:title", content: "Warriors | CoachEasily Team App" },
+      {
+        property: "og:description",
+        content: "The CoachEasily org chart — every warrior, who they report to and what they own.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: WarriorsPage,
+});
+
+function SectionHeading({ children }: { children: React.ReactNode }) {
+  return <h2 className="font-display text-2xl text-ink">{children}</h2>;
+}
+
+function WarriorsPage() {
+  const { data: mine } = useMyProfile();
+  const { data: warriors, isLoading, error } = useWarriors();
+  const [selected, setSelected] = useState<Profile | null>(null);
+  const [editing, setEditing] = useState<Profile | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [exiting, setExiting] = useState<Profile | null>(null);
+
+  const viewer = mine?.profile ?? null;
+  const canManage = isPrivileged(viewer?.role);
+  const all = useMemo(() => warriors ?? [], [warriors]);
+  const active = useMemo(() => all.filter((p) => p.status === "active"), [all]);
+  const tree = useMemo(() => buildTree(all), [all]);
+
+  const newJoiners = useMemo(
+    () =>
+      active
+        .map((p) => ({ p, days: daysSince(p.joined_on) }))
+        .filter((x): x is { p: Profile; days: number } => x.days !== null && x.days >= 0 && x.days < 90)
+        .sort((a, b) => a.days - b.days),
+    [active],
+  );
+
+  const anniversaries = useMemo(
+    () =>
+      active
+        .map((p) => ({ p, days: daysToAnniversary(p.joined_on), years: yearsAt(p.joined_on) }))
+        .filter((x): x is { p: Profile; days: number; years: number } => x.days !== null && x.days <= 30)
+        .sort((a, b) => a.days - b.days),
+    [active],
+  );
+
+  return (
+    <AppShell>
+      <div className="space-y-10">
+        <header className="ce-rise flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="font-display text-4xl leading-tight text-ink">Warriors</h1>
+            <p className="mt-1.5 text-sm text-soft">
+              {active.length} active {active.length === 1 ? "warrior" : "warriors"} at CoachEasily.
+            </p>
+          </div>
+          {canManage ? (
+            <button
+              className="btn3d"
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              Add warrior
+            </button>
+          ) : null}
+        </header>
+
+        <section className="ce-rise">
+          <SectionHeading>Who's around today</SectionHeading>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {active.map((p) => {
+              const off = isOffToday(p);
+              return (
+                <span
+                  key={p.id}
+                  className={
+                    off
+                      ? "rounded-full border border-line bg-cream px-3 py-2 text-[13px] font-semibold text-soft"
+                      : "rounded-full border border-line bg-ivory px-3 py-2 text-[13px] font-semibold text-ink"
+                  }
+                >
+                  <span
+                    className={
+                      off
+                        ? "mr-2 inline-block h-2 w-2 rounded-full bg-soft/50 align-middle"
+                        : "mr-2 inline-block h-2 w-2 rounded-full bg-emer align-middle"
+                    }
+                  />
+                  {p.full_name}
+                  <span className="ml-1.5 font-normal text-soft">{off ? "weekly off" : "working"}</span>
+                </span>
+              );
+            })}
+          </div>
+        </section>
+
+        {canManage ? (
+          <section className="ce-rise grid gap-5 md:grid-cols-2">
+            <div className="ce-card p-6">
+              <SectionHeading>First 90 days</SectionHeading>
+              <div className="mt-4 space-y-3">
+                {newJoiners.length === 0 ? (
+                  <p className="text-sm text-soft">Nobody is in their first 90 days right now.</p>
+                ) : (
+                  newJoiners.map(({ p, days }) => (
+                    <div key={p.id} className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-semibold text-ink">{p.full_name}</span>
+                      <span className="flex items-center gap-2 text-[13px] text-soft">
+                        Day {days}
+                        {days >= 83 ? (
+                          <span className="rounded-full bg-saff/12 px-2 py-0.5 text-[10px] font-bold tracking-wider text-saffBtn uppercase">
+                            Review due
+                          </span>
+                        ) : null}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="ce-card p-6">
+              <SectionHeading>Work anniversaries · next 30 days</SectionHeading>
+              <div className="mt-4 space-y-3">
+                {anniversaries.length === 0 ? (
+                  <p className="text-sm text-soft">No anniversaries in the next 30 days.</p>
+                ) : (
+                  anniversaries.map(({ p, days, years }) => (
+                    <div key={p.id} className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-semibold text-ink">{p.full_name}</span>
+                      <span className="text-[13px] text-soft">
+                        {years + 1} year{years + 1 > 1 ? "s" : ""} ·{" "}
+                        {days === 0 ? "today" : `in ${days} day${days > 1 ? "s" : ""}`}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        <section className="ce-rise">
+          <SectionHeading>Org chart</SectionHeading>
+          <div className="mt-4">
+            {isLoading ? (
+              <p className="text-sm text-soft">Loading the team…</p>
+            ) : error ? (
+              <p className="text-sm text-red">The team couldn't be loaded. Please refresh.</p>
+            ) : (
+              <OrgTree tree={tree} onOpen={setSelected} />
+            )}
+          </div>
+        </section>
+      </div>
+
+      <ProfileModal
+        profile={selected}
+        profiles={all}
+        viewer={viewer}
+        onClose={() => setSelected(null)}
+        onEdit={(p) => {
+          setSelected(null);
+          setEditing(p);
+          setFormOpen(true);
+        }}
+        onExit={(p) => {
+          setSelected(null);
+          setExiting(p);
+        }}
+      />
+
+      {formOpen && viewer ? (
+        <WarriorForm
+          editing={editing}
+          profiles={all}
+          orgId={viewer.org_id}
+          onClose={() => {
+            setFormOpen(false);
+            setEditing(null);
+          }}
+        />
+      ) : null}
+
+      {exiting && viewer ? (
+        <ExitDialog
+          warrior={exiting}
+          profiles={all}
+          orgId={viewer.org_id}
+          onClose={() => setExiting(null)}
+        />
+      ) : null}
+    </AppShell>
+  );
+}
