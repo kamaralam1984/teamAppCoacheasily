@@ -253,13 +253,50 @@ function GoalRow({
               inputMode="numeric"
               min={0}
               value={valueFor(i)}
-              onChange={(e) => setDraft((d) => ({ ...d, [key(i)]: e.target.value }))}
+              onChange={(e) => {
+                setConfirmMsg(null);
+                setSaved(false);
+                setDraft((d) => ({ ...d, [key(i)]: e.target.value }));
+              }}
               className="ce-input mt-1 h-12 w-full text-[17px] font-bold"
               placeholder="0"
             />
           </label>
         ))}
       </div>
+
+      <p className="mt-2 text-[12px] text-soft">
+        Real numbers only. This is for your growth, not for anyone&rsquo;s approval.
+      </p>
+
+      {block ? (
+        <p className="mt-2 rounded-[12px] border border-red/40 bg-red/8 px-3 py-2 text-[13px] font-semibold text-red">
+          {block}
+        </p>
+      ) : null}
+
+      {confirmMsg && !block ? (
+        <div className="mt-2 rounded-[12px] border border-gold/50 bg-gold/10 px-3 py-3">
+          <p className="text-[13px] font-semibold text-ink">{confirmMsg}</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="min-h-11 rounded-lg border border-gold bg-gold/20 px-3 text-[13px] font-bold text-ink"
+              onClick={write}
+              disabled={log.isPending}
+            >
+              Yes, that&rsquo;s right
+            </button>
+            <button
+              type="button"
+              className="min-h-11 rounded-lg border border-line px-3 text-[13px] font-bold text-soft"
+              onClick={() => setConfirmMsg(null)}
+            >
+              Let me check
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <input
         type="text"
@@ -270,9 +307,20 @@ function GoalRow({
       />
 
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <button type="button" className="btn3d" onClick={save} disabled={log.isPending}>
+        <button
+          type="button"
+          className="btn3d"
+          onClick={save}
+          disabled={log.isPending || Boolean(block)}
+        >
           {log.isPending ? "Saving…" : existing ? "Update" : "Save"}
         </button>
+        {saved ? (
+          <span className="text-[12px] font-bold text-emer">
+            Logged. Honest numbers are how you actually improve.
+          </span>
+        ) : null}
+
         {existing ? (
           <span className="text-[12px] font-bold text-emer">✓ saved for {dayLabel(date)}</span>
         ) : null}
