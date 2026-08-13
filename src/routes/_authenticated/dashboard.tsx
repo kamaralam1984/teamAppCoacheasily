@@ -10,6 +10,7 @@ import {
   useMarkAttendance,
 } from "@/hooks/useAttendance";
 import { useMyProfile } from "@/hooks/useMyProfile";
+import { shortDate } from "@/lib/warriors";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
