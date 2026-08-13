@@ -64,7 +64,7 @@ export const FALLBACK_THEMES: Theme[] = [
   },
 ];
 
-export const EVERYDAY: Theme = FALLBACK_THEMES[0];
+export const EVERYDAY: Theme = FALLBACK_THEMES[0]!;
 
 /** MM-DD in IST. */
 export function istMonthDay(now: Date = new Date()): string {
@@ -103,7 +103,7 @@ export function applyTheme(theme: Theme) {
     if (value) root.style.setProperty(`--ce-${key}`, value);
     else root.style.removeProperty(`--ce-${key}`);
   }
-  root.dataset.theme = theme.key;
+  root.dataset["theme"] = theme.key;
 }
 
 export const THEME_STORAGE_KEY = "ce-theme";
