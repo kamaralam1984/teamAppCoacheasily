@@ -192,6 +192,10 @@ function Page() {
         <LeaveLedgerTable rows={ledger} style={{ animationDelay: "100ms" }} />
 
         <SettingsCard />
+
+        <AnnouncementCard />
+
+        <EmailCard />
       </div>
     </AppShell>
   );
@@ -203,10 +207,12 @@ function SettingsCard() {
   const [url, setUrl] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>(null);
   const [birthdays, setBirthdays] = useState<boolean | null>(null);
+  const [digests, setDigests] = useState<boolean | null>(null);
 
   const urlValue = url ?? org?.daily_meeting_url ?? "";
   const timeValue = time ?? org?.daily_meeting_time ?? DEFAULT_MEETING_TIME;
   const birthdayValue = birthdays ?? Boolean(org?.team_birthdays);
+  const digestValue = digests ?? Boolean(org?.digests_enabled);
 
   return (
     <section className="ce-rise ce-card p-6" style={{ animationDelay: "120ms" }}>
@@ -250,6 +256,20 @@ function SettingsCard() {
         </span>
       </label>
 
+      <label className="mt-3 flex items-start gap-3">
+        <input
+          type="checkbox"
+          className="mt-1 h-5 w-5"
+          checked={digestValue}
+          onChange={(e) => setDigests(e.target.checked)}
+        />
+        <span className="text-[13px] leading-relaxed text-soft">
+          <span className="block font-bold text-ink">Send the daily and Monday summary emails</span>
+          Working days at 10:30, plus a Monday morning wrap for everyone and for managers. Off by
+          default — nothing is sent while this is unticked.
+        </span>
+      </label>
+
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <button
           type="button"
@@ -261,6 +281,7 @@ function SettingsCard() {
                 daily_meeting_url: urlValue.trim(),
                 daily_meeting_time: timeValue,
                 team_birthdays: birthdayValue,
+                digests_enabled: digestValue,
                 timezone: "Asia/Kolkata",
               },
               {
@@ -268,6 +289,7 @@ function SettingsCard() {
                   setUrl(null);
                   setTime(null);
                   setBirthdays(null);
+                  setDigests(null);
                 },
               },
             )

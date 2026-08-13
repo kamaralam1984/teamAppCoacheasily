@@ -33,6 +33,8 @@ export interface OrgSettings {
   timezone?: string;
   /** Show everybody's birthday in "Coming up". The founder's always shows. */
   team_birthdays?: boolean;
+  /** Automatic daily and Monday summary emails. Off until switched on here. */
+  digests_enabled?: boolean;
 }
 
 export const DEFAULT_MEETING_TIME = "11:00";
