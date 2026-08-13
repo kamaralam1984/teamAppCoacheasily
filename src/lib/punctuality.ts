@@ -31,6 +31,8 @@ export interface OrgSettings {
   daily_meeting_url?: string;
   daily_meeting_time?: string;
   timezone?: string;
+  /** Show everybody's birthday in "Coming up". The founder's always shows. */
+  team_birthdays?: boolean;
 }
 
 export const DEFAULT_MEETING_TIME = "11:00";
