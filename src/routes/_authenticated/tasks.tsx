@@ -3,7 +3,9 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
 import { Celebrate } from "@/components/Celebrate";
+import { Playbook } from "@/components/culture/Playbook";
 import { BrainDump } from "@/components/tasks/BrainDump";
+
 import { QuickAdd } from "@/components/tasks/QuickAdd";
 import { TaskRow } from "@/components/tasks/TaskRow";
 import { WeekCard } from "@/components/tasks/WeekCard";
@@ -108,6 +110,12 @@ function Page() {
             </p>
           </section>
         )}
+
+        {me ? (
+          <Playbook me={me} canEdit={me.role === "hr" || me.role === "admin"} />
+        ) : null}
+
+
 
         {me ? (
           <QuickAdd
