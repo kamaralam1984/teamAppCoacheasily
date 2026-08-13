@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bell, ChevronDown, KeyRound, LogOut } from "lucide-react";
+import { ChevronDown, KeyRound, LogOut } from "lucide-react";
 
 import { Mark } from "@/components/Mark";
+import { NotificationBell } from "@/components/NotificationBell";
+import { OfflineGate } from "@/components/OfflineGate";
 import { ThemePicker } from "@/components/ThemePicker";
 import {
   DropdownMenu,
@@ -64,6 +66,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="relative z-10 min-h-screen bg-pearl/85">
+      <OfflineGate />
       <header className="sticky top-0 z-40 bg-night">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
           <Link to="/dashboard" className="flex items-center gap-2.5">
@@ -80,13 +83,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="ml-auto flex items-center gap-2">
             <ThemePicker canSetDefault={role === "hr" || role === "admin"} />
 
-            <button
-              type="button"
-              aria-label="Notifications"
-              className="flex h-11 w-11 items-center justify-center rounded-lg text-mist transition-colors hover:bg-night2 hover:text-goldL"
-            >
-              <Bell size={20} />
-            </button>
+            <NotificationBell enabled={Boolean(profile)} />
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -159,7 +156,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-20">
+      <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))]">
         {isLoading ? (
           <div className="ce-card p-6 text-sm text-soft">Loading your workspace…</div>
         ) : profile ? (

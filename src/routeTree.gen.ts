@@ -24,7 +24,6 @@ import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/tasks'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedWarriorsRouteImport } from './routes/_authenticated/warriors'
-import { Route as ApiPublicBootstrapAdminRouteImport } from './routes/api/public/bootstrap-admin'
 import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar/$token'
 import { Route as ApiPublicHooksDigestRouteImport } from './routes/api/public/hooks/digest'
 
@@ -103,11 +102,6 @@ const AuthenticatedWarriorsRoute = AuthenticatedWarriorsRouteImport.update({
   path: '/warriors',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ApiPublicBootstrapAdminRoute = ApiPublicBootstrapAdminRouteImport.update({
-  id: '/api/public/bootstrap-admin',
-  path: '/api/public/bootstrap-admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicCalendarTokenRoute = ApiPublicCalendarTokenRouteImport.update({
   id: '/api/public/calendar/$token',
   path: '/api/public/calendar/$token',
@@ -134,7 +128,6 @@ export interface FileRoutesByFullPath {
   '/tasks': typeof AuthenticatedTasksRoute
   '/team': typeof AuthenticatedTeamRoute
   '/warriors': typeof AuthenticatedWarriorsRoute
-  '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/hooks/digest': typeof ApiPublicHooksDigestRoute
 }
@@ -153,7 +146,6 @@ export interface FileRoutesByTo {
   '/tasks': typeof AuthenticatedTasksRoute
   '/team': typeof AuthenticatedTeamRoute
   '/warriors': typeof AuthenticatedWarriorsRoute
-  '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/hooks/digest': typeof ApiPublicHooksDigestRoute
 }
@@ -174,7 +166,6 @@ export interface FileRoutesById {
   '/_authenticated/tasks': typeof AuthenticatedTasksRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/warriors': typeof AuthenticatedWarriorsRoute
-  '/api/public/bootstrap-admin': typeof ApiPublicBootstrapAdminRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/hooks/digest': typeof ApiPublicHooksDigestRoute
 }
@@ -195,7 +186,6 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/team'
     | '/warriors'
-    | '/api/public/bootstrap-admin'
     | '/api/public/calendar/$token'
     | '/api/public/hooks/digest'
   fileRoutesByTo: FileRoutesByTo
@@ -214,7 +204,6 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/team'
     | '/warriors'
-    | '/api/public/bootstrap-admin'
     | '/api/public/calendar/$token'
     | '/api/public/hooks/digest'
   id:
@@ -234,7 +223,6 @@ export interface FileRouteTypes {
     | '/_authenticated/tasks'
     | '/_authenticated/team'
     | '/_authenticated/warriors'
-    | '/api/public/bootstrap-admin'
     | '/api/public/calendar/$token'
     | '/api/public/hooks/digest'
   fileRoutesById: FileRoutesById
@@ -243,7 +231,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  ApiPublicBootstrapAdminRoute: typeof ApiPublicBootstrapAdminRoute
   ApiPublicCalendarTokenRoute: typeof ApiPublicCalendarTokenRoute
   ApiPublicHooksDigestRoute: typeof ApiPublicHooksDigestRoute
 }
@@ -355,13 +342,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWarriorsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/bootstrap-admin': {
-      id: '/api/public/bootstrap-admin'
-      path: '/api/public/bootstrap-admin'
-      fullPath: '/api/public/bootstrap-admin'
-      preLoaderRoute: typeof ApiPublicBootstrapAdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/calendar/$token': {
       id: '/api/public/calendar/$token'
       path: '/api/public/calendar/$token'
@@ -416,7 +396,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  ApiPublicBootstrapAdminRoute: ApiPublicBootstrapAdminRoute,
   ApiPublicCalendarTokenRoute: ApiPublicCalendarTokenRoute,
   ApiPublicHooksDigestRoute: ApiPublicHooksDigestRoute,
 }
