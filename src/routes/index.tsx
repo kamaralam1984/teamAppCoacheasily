@@ -1,24 +1,53 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
+import { Mark } from "@/components/Mark";
+import { supabase } from "@/integrations/supabase/client";
+
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "CoachEasily Team App" },
+      {
+        name: "description",
+        content:
+          "The internal operating system for CoachEasily warriors — directory, people and culture, all in one place.",
+      },
+      { property: "og:title", content: "CoachEasily Team App" },
+      {
+        property: "og:description",
+        content:
+          "The internal operating system for CoachEasily warriors — directory, people and culture, all in one place.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let active = true;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      navigate({ to: data.session ? "/dashboard" : "/auth", replace: true });
+    });
+    return () => {
+      active = false;
+    };
+  }, [navigate]);
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-pearl px-4 text-center">
+      <Mark size={56} color="#C9A227" />
+      <h1 className="font-display text-3xl text-ink">
+        <span>Coach</span>
+        <span className="text-goldD">Easily</span>
+      </h1>
+      <p className="text-sm text-soft">Taking you to the team app…</p>
     </div>
   );
 }
