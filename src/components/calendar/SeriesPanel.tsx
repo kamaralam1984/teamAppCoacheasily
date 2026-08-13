@@ -38,7 +38,9 @@ export function SeriesPanel({ table, seriesId, orgId, createdBy, onClose }: Prop
 
   const [untilDate, setUntilDate] = useState("");
   const [every, setEvery] = useState(1);
-  const [dow, setDow] = useState<number>(pattern.dow ?? 0);
+  const [dowPick, setDowPick] = useState<number | null>(null);
+  const dow = dowPick ?? pattern.dow ?? 0;
+  const setDow = setDowPick;
   const [confirmWipe, setConfirmWipe] = useState(false);
   const [note, setNote] = useState<string | null>(null);
 
