@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Ring } from "@/components/goals/Ring";
+import { StepAdvice } from "@/components/goals/StepAdvice";
 import { useDeleteGoal, useLogEntry, useSaveLearnings } from "@/hooks/useGoals";
 import { fmt, istToday, weekLine, type GoalWithProgress } from "@/lib/goals";
 
@@ -144,6 +145,7 @@ export function GoalCard({ item, editable, onEdit, style }: Props) {
               number moves.
             </p>
           ) : null}
+          {p?.weakest_step ? <StepAdvice goalId={goal.id} /> : null}
         </>
       ) : null}
 
