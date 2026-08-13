@@ -1,7 +1,15 @@
 import { useState } from "react";
 
-import { useSaveGoal, type SaveGoalInput } from "@/hooks/useGoals";
-import { METRIC_SUGGESTIONS, templatesFor, type Cycle, type Goal } from "@/lib/goals";
+import { useArchiveGoal, useSaveGoal, type SaveGoalInput } from "@/hooks/useGoals";
+import {
+  METRIC_SUGGESTIONS,
+  applyTemplate,
+  templatesFor,
+  type Cycle,
+  type Goal,
+} from "@/lib/goals";
+
+import { StageEditor } from "./StageEditor";
 
 export interface GoalDraft {
   id?: string;
@@ -13,6 +21,10 @@ export interface GoalDraft {
   target: string;
   stages: string[];
   plan: string;
+  /** how many days of numbers this goal already carries */
+  entriesCount?: number;
+  /** today's number, used when they choose to start a fresh goal */
+  currentValue?: number;
 }
 
 export function emptyDraft(): GoalDraft {
@@ -28,7 +40,7 @@ export function emptyDraft(): GoalDraft {
   };
 }
 
-export function draftFromGoal(g: Goal): GoalDraft {
+export function draftFromGoal(g: Goal, entriesCount = 0, currentValue?: number): GoalDraft {
   return {
     id: g.id,
     kind: g.kind as "number" | "funnel",
@@ -39,6 +51,8 @@ export function draftFromGoal(g: Goal): GoalDraft {
     target: String(g.target),
     stages: g.stages?.length ? g.stages : ["", "", ""],
     plan: g.plan ?? "",
+    entriesCount,
+    ...(currentValue === undefined ? {} : { currentValue }),
   };
 }
 
@@ -66,8 +80,14 @@ export function GoalForm({
   const [step, setStep] = useState(0);
   const [d, setD] = useState<GoalDraft>(initial);
   const [error, setError] = useState<string | null>(null);
+  /** "keep" = rename only · "fresh" = archive this goal and start a clean one */
+  const [historyChoice, setHistoryChoice] = useState<"keep" | "fresh">("keep");
   const save = useSaveGoal();
+  const archive = useArchiveGoal();
   const templates = templatesFor(department);
+
+  const hasHistory = Boolean(initial.id) && (initial.entriesCount ?? 0) > 0;
+  const shapeLocked = hasHistory && historyChoice === "keep";
 
   const set = (patch: Partial<GoalDraft>) => setD((cur) => ({ ...cur, ...patch }));
 
@@ -75,7 +95,10 @@ export function GoalForm({
 
   const canNext = () => {
     if (step === 0) return d.name.trim().length > 1;
-    if (step === 1) return d.kind === "number" ? d.metric.trim().length > 0 : stages.length >= 2;
+    if (step === 1)
+      return d.kind === "number"
+        ? d.metric.trim().length > 0
+        : stages.length >= 2 && stages.length <= 5;
     if (step === 2) return d.baseline.trim() !== "";
     return d.target.trim() !== "";
   };
@@ -87,25 +110,39 @@ export function GoalForm({
       setError("Where you are and where you're going cannot be the same number.");
       return;
     }
+    if (d.kind === "funnel" && (stages.length < 2 || stages.length > 5)) {
+      setError("A funnel needs between two and five steps.");
+      return;
+    }
+
+    /* Starting fresh never rewrites history — the old goal is archived intact. */
+    const startFresh = hasHistory && historyChoice === "fresh";
     const input: SaveGoalInput = {
-      ...(d.id ? { id: d.id } : {}),
+      ...(d.id && !startFresh ? { id: d.id } : {}),
       profile_id: profileId,
       org_id: orgId,
       cycle_id: cycle.id,
       kind: d.kind,
       name: d.name.trim(),
       metric: d.kind === "funnel" ? stages.join(" → ") : d.metric.trim(),
-      unit: d.unit.trim() || (d.kind === "funnel" ? "%" : null),
+      unit: d.kind === "funnel" ? "%" : d.unit.trim() || null,
       baseline,
       target,
       stages: d.kind === "funnel" ? stages : null,
       plan: d.plan.trim() || null,
     };
     save.mutate(input, {
-      onSuccess: onDone,
+      onSuccess: () => {
+        if (startFresh && d.id) {
+          archive.mutate(d.id, { onSuccess: onDone, onError: onDone });
+        } else {
+          onDone();
+        }
+      },
       onError: (e) => setError((e as Error).message),
     });
   };
+
 
   return (
     <div className="ce-card p-6">
@@ -140,27 +177,23 @@ export function GoalForm({
             </label>
             {templates.length > 0 ? (
               <div>
-                <p className="ce-label">Templates for {department}</p>
+                <p className="ce-label">A starting point for {department}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {templates.map((t) => (
                     <button
-                      key={t.name}
+                      key={t.id}
                       type="button"
-                      className="min-h-11 rounded-full border border-line bg-cream px-3 text-[12px] font-bold text-ink"
-                      onClick={() =>
-                        set({
-                          name: t.name,
-                          kind: t.kind,
-                          metric: t.metric,
-                          unit: t.unit ?? (t.kind === "funnel" ? "%" : ""),
-                          stages: t.stages ?? ["", "", ""],
-                        })
-                      }
+                      disabled={shapeLocked}
+                      className="min-h-11 rounded-full border border-line bg-cream px-3 text-[12px] font-bold text-ink disabled:opacity-40"
+                      onClick={() => set(applyTemplate(t))}
                     >
                       {t.name}
                     </button>
                   ))}
                 </div>
+                <p className="mt-2 text-[12px] text-soft">
+                  Or write your own — a template is a starting point, never a cage.
+                </p>
               </div>
             ) : null}
           </>
@@ -168,13 +201,57 @@ export function GoalForm({
 
         {step === 1 ? (
           <>
+            {hasHistory ? (
+              <div className="rounded-[14px] border border-gold/50 bg-gold/8 p-4">
+                <p className="text-[13px] font-bold text-ink">
+                  This goal already has {initial.entriesCount} day
+                  {initial.entriesCount === 1 ? "" : "s"} of numbers. Changing the steps will not
+                  match that history.
+                </p>
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                  {(
+                    [
+                      ["keep", "Keep the history — rename only"],
+                      ["fresh", "Archive this goal and start fresh"],
+                    ] as const
+                  ).map(([k, label]) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => {
+                        setHistoryChoice(k);
+                        if (k === "fresh" && initial.currentValue !== undefined) {
+                          set({ baseline: String(initial.currentValue) });
+                        }
+                      }}
+                      className={`min-h-11 flex-1 rounded-lg border px-3 text-[13px] font-bold ${
+                        historyChoice === k
+                          ? "border-gold bg-gold/15 text-ink"
+                          : "border-line text-soft"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {historyChoice === "fresh" ? (
+                  <p className="mt-2 text-[12px] text-soft">
+                    The old goal stays exactly as it is, archived. The new one starts from today
+                    {initial.currentValue === undefined ? "" : `'s number (${initial.currentValue})`}
+                    .
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+
             <div className="flex gap-2">
               {(["number", "funnel"] as const).map((k) => (
                 <button
                   key={k}
                   type="button"
+                  disabled={shapeLocked}
                   onClick={() => set({ kind: k })}
-                  className={`min-h-11 flex-1 rounded-lg border px-3 text-[13px] font-bold ${
+                  className={`min-h-11 flex-1 rounded-lg border px-3 text-[13px] font-bold disabled:opacity-40 ${
                     d.kind === k ? "border-gold bg-gold/12 text-ink" : "border-line text-soft"
                   }`}
                 >
@@ -219,28 +296,17 @@ export function GoalForm({
             ) : (
               <>
                 <p className="text-[13px] text-soft">
-                  Name each stage. You log raw counts every day — never a percentage.
+                  Name each step in your own words. You log raw counts every day — never a
+                  percentage.
                 </p>
-                {d.stages.map((s, i) => (
-                  <input
-                    key={i}
-                    className="ce-input h-11 w-full"
-                    value={s}
-                    onChange={(e) =>
-                      set({ stages: d.stages.map((x, j) => (j === i ? e.target.value : x)) })
-                    }
-                    placeholder={`Stage ${i + 1}`}
-                  />
-                ))}
-                <button
-                  type="button"
-                  className="rounded-full border border-line px-3 py-2 text-[12px] font-bold text-soft"
-                  onClick={() => set({ stages: [...d.stages, ""] })}
-                >
-                  + Another stage
-                </button>
+                <StageEditor
+                  stages={d.stages}
+                  renameOnly={shapeLocked}
+                  onChange={(s) => set({ stages: s })}
+                />
               </>
             )}
+
           </>
         ) : null}
 

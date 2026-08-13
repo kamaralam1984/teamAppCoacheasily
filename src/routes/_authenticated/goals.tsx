@@ -96,16 +96,26 @@ function Page() {
             key={item.goal.id}
             item={item}
             editable
-            onEdit={() => setDraft(draftFromGoal(item.goal))}
+            onEdit={() =>
+              setDraft(
+                draftFromGoal(
+                  item.goal,
+                  item.progress?.entries_count ?? 0,
+                  item.progress?.current_value ?? undefined,
+                ),
+              )
+            }
             style={{ animationDelay: `${140 + i * 60}ms` }}
           />
         ))}
 
         {active && (goals ?? []).length === 0 && !draft ? (
           <p className="text-sm text-soft">
-            Nothing written for {active.name} yet. Four short steps and you're done.
+            Nothing written for {active.name} yet — and that is honest. A goal exists because you
+            wrote it. Four short steps and you're done.
           </p>
         ) : null}
+
       </div>
     </AppShell>
   );
