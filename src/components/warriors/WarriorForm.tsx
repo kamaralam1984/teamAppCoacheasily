@@ -52,6 +52,8 @@ export function WarriorForm({
     manager_id: editing?.manager_id ?? "",
     role: (editing?.role ?? "member") as Role,
     weekly_off: editing?.weekly_off ?? "Sunday",
+    sort_order: String(editing?.sort_order ?? 100),
+
     joined_on: editing?.joined_on ?? "",
     birthday: editing?.birthday ?? "",
     wedding_anniversary: editing?.wedding_anniversary ?? "",
