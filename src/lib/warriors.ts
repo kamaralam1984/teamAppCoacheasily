@@ -140,10 +140,29 @@ export function isOffToday(p: Profile) {
   return p.weekly_off === todayName();
 }
 
+const ROLE_RANK: Record<string, number> = { hr: 0, admin: 0, manager: 1, member: 2 };
+
+function roleRank(role: string | null | undefined) {
+  return ROLE_RANK[role ?? "member"] ?? 2;
+}
+
+/**
+ * Sibling order at every level: role rank (People & Culture / Admin, then
+ * Manager, then Warrior), then the hand-set display order, then name A→Z.
+ */
+export function compareSiblings(a: Profile, b: Profile): number {
+  const byRole = roleRank(a.role) - roleRank(b.role);
+  if (byRole !== 0) return byRole;
+  const byOrder = (a.sort_order ?? 100) - (b.sort_order ?? 100);
+  if (byOrder !== 0) return byOrder;
+  return a.full_name.localeCompare(b.full_name);
+}
+
 export interface TreeNode {
   profile: Profile;
   children: TreeNode[];
 }
+
 
 /** Cycle-safe tree build: every profile is placed at most once. */
 export function buildTree(profiles: Profile[]): TreeNode[] {
