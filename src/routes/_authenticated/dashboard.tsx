@@ -37,6 +37,7 @@ import {
   punchMessage,
 } from "@/lib/punctuality";
 import { shortDate } from "@/lib/warriors";
+import { useTheme } from "@/hooks/useTheme";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -78,6 +79,7 @@ function todayParts() {
 
 
 function Dashboard() {
+  const { theme } = useTheme();
   const { data } = useMyProfile();
   const profile = data?.profile ?? null;
 
@@ -229,6 +231,21 @@ function Dashboard() {
             </p>
           ) : null}
         </section>
+
+        {theme.greeting ? (
+          <section
+            className="ce-rise ce-card flex items-start gap-3 p-5"
+            style={{ animationDelay: "30ms" }}
+          >
+            <span aria-hidden className="text-2xl leading-none">
+              {theme.emoji}
+            </span>
+            <div>
+              <p className="ce-label">{theme.name}</p>
+              <p className="font-display text-xl leading-snug text-ink">{theme.greeting}</p>
+            </div>
+          </section>
+        ) : null}
 
         {/* ── Work meter (no leave balances here — we celebrate work) ─ */}
         {/* ── The twenty-second habit, high up ───────────────── */}
