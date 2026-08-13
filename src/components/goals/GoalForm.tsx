@@ -177,27 +177,23 @@ export function GoalForm({
             </label>
             {templates.length > 0 ? (
               <div>
-                <p className="ce-label">Templates for {department}</p>
+                <p className="ce-label">A starting point for {department}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {templates.map((t) => (
                     <button
-                      key={t.name}
+                      key={t.id}
                       type="button"
-                      className="min-h-11 rounded-full border border-line bg-cream px-3 text-[12px] font-bold text-ink"
-                      onClick={() =>
-                        set({
-                          name: t.name,
-                          kind: t.kind,
-                          metric: t.metric,
-                          unit: t.unit ?? (t.kind === "funnel" ? "%" : ""),
-                          stages: t.stages ?? ["", "", ""],
-                        })
-                      }
+                      disabled={shapeLocked}
+                      className="min-h-11 rounded-full border border-line bg-cream px-3 text-[12px] font-bold text-ink disabled:opacity-40"
+                      onClick={() => set(applyTemplate(t))}
                     >
                       {t.name}
                     </button>
                   ))}
                 </div>
+                <p className="mt-2 text-[12px] text-soft">
+                  Or write your own — a template is a starting point, never a cage.
+                </p>
               </div>
             ) : null}
           </>
@@ -205,13 +201,57 @@ export function GoalForm({
 
         {step === 1 ? (
           <>
+            {hasHistory ? (
+              <div className="rounded-[14px] border border-gold/50 bg-gold/8 p-4">
+                <p className="text-[13px] font-bold text-ink">
+                  This goal already has {initial.entriesCount} day
+                  {initial.entriesCount === 1 ? "" : "s"} of numbers. Changing the steps will not
+                  match that history.
+                </p>
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                  {(
+                    [
+                      ["keep", "Keep the history — rename only"],
+                      ["fresh", "Archive this goal and start fresh"],
+                    ] as const
+                  ).map(([k, label]) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => {
+                        setHistoryChoice(k);
+                        if (k === "fresh" && initial.currentValue !== undefined) {
+                          set({ baseline: String(initial.currentValue) });
+                        }
+                      }}
+                      className={`min-h-11 flex-1 rounded-lg border px-3 text-[13px] font-bold ${
+                        historyChoice === k
+                          ? "border-gold bg-gold/15 text-ink"
+                          : "border-line text-soft"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {historyChoice === "fresh" ? (
+                  <p className="mt-2 text-[12px] text-soft">
+                    The old goal stays exactly as it is, archived. The new one starts from today
+                    {initial.currentValue === undefined ? "" : `'s number (${initial.currentValue})`}
+                    .
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+
             <div className="flex gap-2">
               {(["number", "funnel"] as const).map((k) => (
                 <button
                   key={k}
                   type="button"
+                  disabled={shapeLocked}
                   onClick={() => set({ kind: k })}
-                  className={`min-h-11 flex-1 rounded-lg border px-3 text-[13px] font-bold ${
+                  className={`min-h-11 flex-1 rounded-lg border px-3 text-[13px] font-bold disabled:opacity-40 ${
                     d.kind === k ? "border-gold bg-gold/12 text-ink" : "border-line text-soft"
                   }`}
                 >
@@ -256,28 +296,17 @@ export function GoalForm({
             ) : (
               <>
                 <p className="text-[13px] text-soft">
-                  Name each stage. You log raw counts every day — never a percentage.
+                  Name each step in your own words. You log raw counts every day — never a
+                  percentage.
                 </p>
-                {d.stages.map((s, i) => (
-                  <input
-                    key={i}
-                    className="ce-input h-11 w-full"
-                    value={s}
-                    onChange={(e) =>
-                      set({ stages: d.stages.map((x, j) => (j === i ? e.target.value : x)) })
-                    }
-                    placeholder={`Stage ${i + 1}`}
-                  />
-                ))}
-                <button
-                  type="button"
-                  className="rounded-full border border-line px-3 py-2 text-[12px] font-bold text-soft"
-                  onClick={() => set({ stages: [...d.stages, ""] })}
-                >
-                  + Another stage
-                </button>
+                <StageEditor
+                  stages={d.stages}
+                  renameOnly={shapeLocked}
+                  onChange={(s) => set({ stages: s })}
+                />
               </>
             )}
+
           </>
         ) : null}
 
