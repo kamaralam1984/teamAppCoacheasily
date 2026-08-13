@@ -154,7 +154,7 @@
       filter 120ms ease;
     background: var(--ce-saffBtn);
     color: var(--ce-white);
-    box-shadow: 0 4px 0 0 #8f3707;
+    box-shadow: 0 4px 0 0 color-mix(in oklab, var(--ce-saffBtn) 72%, black);
   }
 
   .btn3d:hover {
@@ -163,7 +163,7 @@
 
   .btn3d:active {
     transform: translateY(3px);
-    box-shadow: 0 1px 0 0 #8f3707;
+    box-shadow: 0 1px 0 0 color-mix(in oklab, var(--ce-saffBtn) 72%, black);
   }
 
   .btn3d:disabled {
@@ -196,21 +196,21 @@
   .btn3d-dark {
     background: var(--ce-night2);
     color: var(--ce-white);
-    box-shadow: 0 4px 0 0 #0d0819;
+    box-shadow: 0 4px 0 0 color-mix(in oklab, var(--ce-night) 70%, black);
   }
 
   .btn3d-dark:active {
-    box-shadow: 0 1px 0 0 #0d0819;
+    box-shadow: 0 1px 0 0 color-mix(in oklab, var(--ce-night) 70%, black);
   }
 
   .btn3d-danger {
     background: var(--ce-red);
     color: var(--ce-white);
-    box-shadow: 0 4px 0 0 #8c2a1e;
+    box-shadow: 0 4px 0 0 color-mix(in oklab, var(--ce-red) 72%, black);
   }
 
   .btn3d-danger:active {
-    box-shadow: 0 1px 0 0 #8c2a1e;
+    box-shadow: 0 1px 0 0 color-mix(in oklab, var(--ce-red) 72%, black);
   }
 
 
@@ -236,7 +236,7 @@
 
   .ce-input:focus {
     border-color: var(--ce-gold);
-    box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.18);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--ce-gold) 22%, transparent);
   }
 
   .ce-label {

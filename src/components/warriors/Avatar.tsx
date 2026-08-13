@@ -21,7 +21,7 @@ export function WarriorAvatar({
         width: size,
         height: size,
         fontSize: size * 0.36,
-        background: "linear-gradient(135deg, #F0C75E 0%, #C9A227 55%, #8F6307 100%)",
+        background: "linear-gradient(135deg, var(--ce-goldL) 0%, var(--ce-gold) 55%, var(--ce-goldD) 100%)",
         boxShadow: "inset 0 1px 0 rgba(255,255,255,0.5)",
       }}
     >

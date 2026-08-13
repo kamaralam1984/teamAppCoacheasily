@@ -58,7 +58,7 @@ function AuthPage() {
     <div className="flex min-h-screen flex-col bg-pearl">
       <div className="bg-night px-4 py-4">
         <div className="mx-auto flex max-w-6xl items-center gap-2.5">
-          <Mark size={34} color="#F0C75E" />
+          <Mark size={34} color="var(--ce-goldL)" />
           <span className="leading-none">
             <span className="font-display text-xl text-white">Coach</span>
             <span className="font-display text-xl text-goldL">Easily</span>
