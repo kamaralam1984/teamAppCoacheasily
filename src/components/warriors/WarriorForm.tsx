@@ -90,6 +90,10 @@ export function WarriorForm({
         manager_id: form.manager_id || null,
         role: form.role,
         weekly_off: form.weekly_off,
+        sort_order: Number.isFinite(Number(form.sort_order)) && form.sort_order.trim() !== ""
+          ? Math.trunc(Number(form.sort_order))
+          : 100,
+
         joined_on: form.joined_on || null,
         birthday: form.birthday || null,
         wedding_anniversary: form.wedding_anniversary || null,
