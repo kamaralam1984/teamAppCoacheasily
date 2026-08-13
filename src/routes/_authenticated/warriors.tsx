@@ -56,6 +56,8 @@ function WarriorsPage() {
   const all = useMemo(() => warriors ?? [], [warriors]);
   const active = useMemo(() => all.filter((p) => p.status === "active"), [all]);
   const tree = useMemo(() => buildTree(all), [all]);
+  const offToday = useMemo(() => active.filter((p) => isOffToday(p)), [active]);
+  const working = useMemo(() => active.filter((p) => !isOffToday(p)), [active]);
 
   const newJoiners = useMemo(
     () =>
