@@ -48,13 +48,6 @@ function todayParts() {
   };
 }
 
-function shortDate(iso: string) {
-  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "short",
-    timeZone: "UTC",
-  });
-}
 
 function Dashboard() {
   const { data } = useMyProfile();
