@@ -58,12 +58,12 @@ export interface MarkResult {
 export function useMarkAttendance(profileId?: string | null, orgId?: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (): Promise<MarkResult> => {
+    mutationFn: async (focus?: string): Promise<MarkResult> => {
       if (!profileId || !orgId) throw new Error("Your profile isn't set up yet.");
 
       const { data: row, error } = await supabase
         .from("attendance")
-        .insert({ profile_id: profileId, org_id: orgId })
+        .insert({ profile_id: profileId, org_id: orgId, focus: focus?.trim() || null })
         .select("date")
         .single();
       if (error) throw error;
@@ -89,6 +89,7 @@ export function useMarkAttendance(profileId?: string | null, orgId?: string | nu
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["attendance-summary"] });
       void qc.invalidateQueries({ queryKey: ["attendance-history"] });
+      void qc.invalidateQueries({ queryKey: ["presence-today"] });
     },
   });
 }

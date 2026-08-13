@@ -2,10 +2,12 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
+import { PresenceBoard } from "@/components/PresenceBoard";
 import { ExitDialog } from "@/components/warriors/ExitDialog";
 import { OrgTree } from "@/components/warriors/OrgTree";
 import { ProfileModal } from "@/components/warriors/ProfileModal";
 import { WarriorForm } from "@/components/warriors/WarriorForm";
+import { usePresenceToday } from "@/hooks/useDailyCode";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useWarriors } from "@/hooks/useWarriors";
 import {
@@ -45,19 +47,17 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 function WarriorsPage() {
   const { data: mine } = useMyProfile();
   const { data: warriors, isLoading, error } = useWarriors();
+  const { data: presence } = usePresenceToday(Boolean(mine?.profile));
   const [selected, setSelected] = useState<Profile | null>(null);
   const [editing, setEditing] = useState<Profile | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [exiting, setExiting] = useState<Profile | null>(null);
-  const [showEveryone, setShowEveryone] = useState(false);
 
   const viewer = mine?.profile ?? null;
   const canManage = isPrivileged(viewer?.role);
   const all = useMemo(() => warriors ?? [], [warriors]);
   const active = useMemo(() => all.filter((p) => p.status === "active"), [all]);
   const tree = useMemo(() => buildTree(all), [all]);
-  const offToday = useMemo(() => active.filter((p) => isOffToday(p)), [active]);
-  const working = useMemo(() => active.filter((p) => !isOffToday(p)), [active]);
 
   const newJoiners = useMemo(
     () =>
@@ -100,47 +100,8 @@ function WarriorsPage() {
           ) : null}
         </header>
 
-        <section className="ce-rise">
-          <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <SectionHeading>Who's around today</SectionHeading>
-            <p className="text-sm text-soft">
-              {working.length} working · {offToday.length} on weekly off
-            </p>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {(showEveryone ? active : active.slice(0, 8)).map((p) => {
-              const off = isOffToday(p);
-              return (
-                <span
-                  key={p.id}
-                  className={
-                    off
-                      ? "inline-flex items-center rounded-full border border-line bg-cream px-3 py-2 text-[13px] font-semibold text-soft"
-                      : "inline-flex items-center rounded-full border border-line bg-ivory px-3 py-2 text-[13px] font-semibold text-ink"
-                  }
-                >
-                  <span
-                    className={
-                      off
-                        ? "mr-2 inline-block h-1.5 w-1.5 rounded-full bg-soft/50"
-                        : "mr-2 inline-block h-1.5 w-1.5 rounded-full bg-emer"
-                    }
-                  />
-                  {p.full_name}
-                </span>
-              );
-            })}
-            {active.length > 8 ? (
-              <button
-                type="button"
-                onClick={() => setShowEveryone((v) => !v)}
-                className="inline-flex min-h-11 items-center rounded-full px-3 text-[13px] font-bold text-saffBtn underline-offset-4 hover:underline"
-              >
-                {showEveryone ? "Show fewer" : `Show all ${active.length}`}
-              </button>
-            ) : null}
-          </div>
-        </section>
+        <PresenceBoard rows={presence ?? []} />
+
 
         {canManage ? (
           <section className="ce-rise grid gap-5 md:grid-cols-2">
