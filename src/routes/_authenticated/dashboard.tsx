@@ -73,6 +73,12 @@ function Dashboard() {
 
   const marked = summary?.marked_today ?? false;
 
+  const { data: cycles } = useCycles();
+  const activeCycle = useMemo(() => cycles?.find((c) => c.status === "active") ?? null, [cycles]);
+  const { data: myGoals } = useGoalsFor(profile ? undefined : null, activeCycle?.id ?? null);
+  useEveningNudge(Boolean(profile) && marked);
+
+
   const onMark = () => {
     mark.mutate(undefined, {
       onSuccess: (res) => {
