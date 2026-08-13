@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
+import { notifyByEmail } from "@/lib/notify";
 import type { Tables } from "@/integrations/supabase/types";
 
 export type LeaveRequest = Tables<"leave_requests">;
@@ -127,6 +128,21 @@ export function useApplyLeave(profileId?: string | null, orgId?: string | null) 
         .select("*")
         .single();
       if (error) throw error;
+
+      const { data: me } = await supabase
+        .from("profiles")
+        .select("full_name, manager_id")
+        .eq("id", profileId)
+        .maybeSingle();
+      if (me?.manager_id) {
+        notifyByEmail({
+          kind: "leave_raised",
+          profileIds: [me.manager_id],
+          title: `${me.full_name} has asked for leave`,
+          body: `${input.type} leave from ${input.from_date} to ${input.to_date}. It's waiting for your decision.`,
+          link: "/approvals",
+        });
+      }
       return data;
     },
     onSuccess: () => {
@@ -162,15 +178,26 @@ export function useDecideLeave(deciderId?: string | null) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (args: { id: string; status: "approved" | "rejected" }) => {
-      const { error } = await supabase
+      const { data: row, error } = await supabase
         .from("leave_requests")
         .update({
           status: args.status,
           decided_at: new Date().toISOString(),
           decided_by: deciderId ?? null,
         })
-        .eq("id", args.id);
+        .eq("id", args.id)
+        .select("profile_id, type, from_date, to_date")
+        .maybeSingle();
       if (error) throw error;
+      if (row) {
+        notifyByEmail({
+          kind: "leave_decided",
+          profileIds: [row.profile_id],
+          title: `Your leave was ${args.status}`,
+          body: `${row.type} leave from ${row.from_date} to ${row.to_date} was ${args.status}.`,
+          link: "/leave",
+        });
+      }
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["leave-pending"] });

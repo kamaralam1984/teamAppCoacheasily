@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
+import { notifyByEmail } from "@/lib/notify";
 import type {
   Cycle,
   Goal,
@@ -34,7 +35,17 @@ export function useOpenCycle() {
         ...(args.name ? { p_name: args.name } : {}),
       });
       if (error) throw error;
-      return data as unknown as { id: string; name: string; closed: string | null };
+
+      const cycle = data as unknown as { id: string; name: string; closed: string | null };
+      const { data: people } = await supabase.from("profiles").select("id").eq("status", "active");
+      notifyByEmail({
+        kind: "cycle_opened",
+        profileIds: (people ?? []).map((p) => p.id),
+        title: `${cycle.name} is open`,
+        body: `Write your goals for this cycle. It runs to ${args.endDate}.`,
+        link: "/goals",
+      });
+      return cycle;
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["cycles"] });
