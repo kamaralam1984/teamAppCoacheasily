@@ -1557,30 +1557,18 @@ export type Database = {
         }
         Returns: string
       }
-      log_goal_entry:
-        | {
-            Args: {
-              p_counts?: number[]
-              p_date?: string
-              p_goal_id: string
-              p_note?: string
-              p_notify?: boolean
-              p_value?: number
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_amount?: number
-              p_counts?: number[]
-              p_date?: string
-              p_goal_id: string
-              p_note?: string
-              p_notify?: boolean
-              p_value?: number
-            }
-            Returns: Json
-          }
+      log_goal_entry: {
+        Args: {
+          p_amount?: number
+          p_counts?: number[]
+          p_date?: string
+          p_goal_id: string
+          p_note?: string
+          p_notify?: boolean
+          p_value?: number
+        }
+        Returns: Json
+      }
       manages: { Args: { target_id: string }; Returns: boolean }
       my_org: { Args: never; Returns: string }
       my_profile_id: { Args: never; Returns: string }
