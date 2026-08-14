@@ -24,14 +24,41 @@ function lines(payload: Record<string, unknown>): string[] {
   });
 }
 
+/** Constant-time compare so a wrong secret leaks nothing through timing. */
+function sameSecret(given: string, expected: string): boolean {
+  const a = new TextEncoder().encode(given);
+  const b = new TextEncoder().encode(expected);
+  let diff = a.length ^ b.length;
+  const n = Math.max(a.length, b.length);
+  for (let i = 0; i < n; i += 1) diff |= (a[i] ?? 0) ^ (b[i] ?? 0);
+  return diff === 0;
+}
+
 /**
  * Digest runner, called by the scheduler. Defaults to OFF — it does nothing
- * unless People & Culture switch digests on in Admin settings.
+ * unless HR switch digests on in Admin settings.
+ *
+ * The scheduled jobs must send the shared secret:
+ *   header:  x-digest-secret
+ *   value:   the DIGEST_HOOK_SECRET stored in Project Settings → Secrets
+ * Without a configured secret this endpoint refuses every request.
  */
 export const Route = createFileRoute("/api/public/hooks/digest")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const expected = process.env["DIGEST_HOOK_SECRET"];
+        if (!expected) {
+          return Response.json(
+            { ok: false, error: "Digest hook is not configured." },
+            { status: 401 },
+          );
+        }
+        const given = request.headers.get("x-digest-secret") ?? "";
+        if (!given || !sameSecret(given, expected)) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+
         const body = (await request.json().catch(() => null)) as { kind?: Kind } | null;
         const kind: Kind = body?.kind && body.kind in FN ? body.kind : "daily";
 

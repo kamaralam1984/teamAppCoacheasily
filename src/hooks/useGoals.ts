@@ -163,8 +163,47 @@ export function useArchiveGoal() {
   });
 }
 
-/** A goal written by mistake should never be permanent. Entries go with it. */
-export function useDeleteGoal() {
+/** Goals a warrior has put away. Their daily numbers are all still there. */
+export function useArchivedGoals(cycleId?: string | null, profileId?: string | null) {
+  return useQuery({
+    queryKey: ["archived-goals", profileId ?? "me", cycleId ?? "active"],
+    enabled: Boolean(cycleId),
+    queryFn: async (): Promise<Array<Goal & { entries: number }>> => {
+      let q = supabase
+        .from("goals")
+        .select("*, goal_entries(count)")
+        .eq("archived", true)
+        .eq("cycle_id", cycleId!);
+      if (profileId) q = q.eq("profile_id", profileId);
+      const { data, error } = await q.order("created_at", { ascending: true });
+      if (error) throw error;
+      return ((data ?? []) as unknown as Array<Goal & { goal_entries: { count: number }[] }>).map(
+        (g) => ({ ...g, entries: g.goal_entries?.[0]?.count ?? 0 }),
+      );
+    },
+  });
+}
+
+export function useRestoreGoal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (goalId: string) => {
+      const { error } = await supabase.from("goals").update({ archived: false }).eq("id", goalId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["goals"] });
+      void qc.invalidateQueries({ queryKey: ["archived-goals"] });
+      void qc.invalidateQueries({ queryKey: ["team-goals"] });
+    },
+  });
+}
+
+/**
+ * Permanent, and only for HR or Admin. Everyone else archives instead, so a
+ * cycle of somebody's daily numbers can never be wiped by one click.
+ */
+export function usePurgeGoal() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (goalId: string) => {
@@ -175,6 +214,7 @@ export function useDeleteGoal() {
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["goals"] });
+      void qc.invalidateQueries({ queryKey: ["archived-goals"] });
       void qc.invalidateQueries({ queryKey: ["goal-entries"] });
       void qc.invalidateQueries({ queryKey: ["team-goals"] });
     },

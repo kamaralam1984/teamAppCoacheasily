@@ -13,7 +13,13 @@ import {
 import { ImportGoals } from "@/components/goals/ImportGoals";
 import { PreviousCycleCard } from "@/components/goals/PreviousCycleCard";
 import { ReviewMode, type ReviewSlide } from "@/components/goals/ReviewMode";
-import { useCycles, useGoalsFor, useTeamGoals } from "@/hooks/useGoals";
+import {
+  useArchivedGoals,
+  useCycles,
+  useGoalsFor,
+  useRestoreGoal,
+  useTeamGoals,
+} from "@/hooks/useGoals";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useWarriors } from "@/hooks/useWarriors";
 import { allTemplates, applyTemplate, templatesFor } from "@/lib/goals";
@@ -170,6 +176,7 @@ function Page() {
             key={item.goal.id}
             item={item}
             editable
+            canPurge={role === "hr" || role === "admin"}
             onEdit={() =>
               setDraft(
                 draftFromGoal(
@@ -215,6 +222,7 @@ function Page() {
           </section>
         ) : null}
 
+        <ArchivedGoals cycleId={active?.id ?? null} />
       </div>
 
       {review && active ? (
@@ -226,5 +234,57 @@ function Page() {
         />
       ) : null}
     </AppShell>
+  );
+}
+
+/** Put away, never destroyed. Every logged number is still here. */
+function ArchivedGoals({ cycleId }: { cycleId: string | null }) {
+  const { data: archived } = useArchivedGoals(cycleId);
+  const restore = useRestoreGoal();
+  const [open, setOpen] = useState(false);
+  const list = archived ?? [];
+
+  if (list.length === 0) return null;
+
+  return (
+    <section className="ce-rise ce-card p-6">
+      <button
+        type="button"
+        className="flex w-full items-center justify-between gap-3 text-left"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span className="font-display text-2xl text-ink">Archived ({list.length})</span>
+        <span className="text-[13px] font-bold text-soft">{open ? "Hide" : "Show"}</span>
+      </button>
+      <p className="mt-1 text-[13px] text-soft">
+        Removed from your list, kept in full. Nothing you logged has been deleted.
+      </p>
+
+      {open ? (
+        <ul className="mt-4 space-y-2">
+          {list.map((g) => (
+            <li
+              key={g.id}
+              className="flex flex-wrap items-center gap-3 rounded-[12px] border border-line bg-cream/50 px-3 py-2.5"
+            >
+              <div className="min-w-[8rem] flex-1">
+                <p className="text-sm font-bold text-ink">{g.name}</p>
+                <p className="text-[12px] text-soft">
+                  {g.entries} day{g.entries === 1 ? "" : "s"} of numbers kept
+                </p>
+              </div>
+              <button
+                type="button"
+                className="min-h-11 rounded-full border border-line bg-ivory px-4 text-[12px] font-bold text-ink"
+                disabled={restore.isPending}
+                onClick={() => restore.mutate(g.id)}
+              >
+                Restore
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
   );
 }
