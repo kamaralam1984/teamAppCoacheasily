@@ -52,7 +52,7 @@ function Row({
           onClick={() => onOpen(p)}
           className="flex min-w-0 flex-1 items-center gap-3 rounded-lg text-left focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
         >
-          <WarriorAvatar name={p.full_name} />
+          <WarriorAvatar name={p.full_name} birthday={p.birthday} />
           <span className="min-w-0 flex-1">
             <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="truncate text-[15px] font-bold text-ink">{p.full_name}</span>
