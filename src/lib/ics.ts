@@ -112,7 +112,6 @@ export function buildIcs(name: string, entries: IcsEntry[]): string {
     if (e.location) lines.push(`LOCATION:${escape(e.location)}`);
     if (e.description) lines.push(`DESCRIPTION:${escape(e.description)}`);
     lines.push(e.cancelled ? "STATUS:CANCELLED" : "STATUS:CONFIRMED");
-    if (e.cancelled) lines.push("METHOD:CANCEL");
     lines.push("TRANSP:OPAQUE");
     lines.push("END:VEVENT");
   }

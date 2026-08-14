@@ -38,6 +38,8 @@ export interface OrgSettings {
   /** Yearly leave entitlements. People & Culture own these, not the code. */
   casual_quota?: number;
   sick_quota?: number;
+  /** How many casual days one person may take in a single quarter. */
+  casual_quarter_cap?: number;
 }
 
 export const DEFAULT_MEETING_TIME = "11:00";

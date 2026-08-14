@@ -49,13 +49,17 @@ export function LeaveQuotasCard() {
 
   const [casual, setCasual] = useState("8");
   const [sick, setSick] = useState("6");
+  const [cap, setCap] = useState("2");
   const [from, setFrom] = useState(`${istToday().slice(0, 4)}-01-01`);
+
+  const savedCap = (settings as { casual_quarter_cap?: number } | undefined)?.casual_quarter_cap;
 
   useEffect(() => {
     if (!settings) return;
     setCasual(String(current?.casual ?? settings.casual_quota ?? 8));
     setSick(String(current?.sick ?? settings.sick_quota ?? 6));
-  }, [settings, current?.casual, current?.sick]);
+    setCap(String(savedCap ?? 2));
+  }, [settings, current?.casual, current?.sick, savedCap]);
 
   const busy = setQuotas.isPending || saveSettings.isPending;
 
@@ -92,6 +96,17 @@ export function LeaveQuotasCard() {
           />
         </label>
         <label>
+          <span className="ce-label">Casual leave per quarter</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            className="ce-input"
+            value={cap}
+            onChange={(e) => setCap(e.target.value)}
+          />
+        </label>
+        <label>
           <span className="ce-label">Effective from</span>
           <input
             type="date"
@@ -109,12 +124,13 @@ export function LeaveQuotasCard() {
         onClick={() => {
           const c = Number(casual) || 0;
           const s = Number(sick) || 0;
+          const q = Number(cap) || 0;
           setQuotas.mutate(
             { casual: c, sick: s, from },
             {
               onSuccess: () => {
                 // Keep the flat keys in step so older readers stay correct.
-                saveSettings.mutate({ casual_quota: c, sick_quota: s });
+                saveSettings.mutate({ casual_quota: c, sick_quota: s, casual_quarter_cap: q });
                 toast.success("Entitlements saved. Balances update everywhere.");
               },
               onError: () => toast.error("That didn't save. Please try again."),
