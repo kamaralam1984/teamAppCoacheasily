@@ -243,14 +243,14 @@ export function InvitePanel({
                       className="ce-input flex-1"
                       type="email"
                       aria-label={`Work email for ${p.full_name}`}
-                      placeholder="name@coacheasily.com"
+                      placeholder={guessEmail(p.full_name) || "name@example.com"}
                       value={emails[p.id] ?? ""}
                       onChange={(e) => setEmails((m) => ({ ...m, [p.id]: e.target.value }))}
                     />
                     <button
                       type="button"
                       className="btn3d min-h-11"
-                      disabled={one.isPending || running}
+                      disabled={one.isPending || running || !validEmail(emails[p.id] ?? "")}
                       onClick={() => one.mutate(p)}
                     >
                       {one.isPending && one.variables?.id === p.id ? "Sending…" : "Invite"}
