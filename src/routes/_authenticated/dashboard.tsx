@@ -9,6 +9,7 @@ import { TodayAt } from "@/components/dashboard/TodayAt";
 import { WinTheDay } from "@/components/dashboard/WinTheDay";
 import { MyTasksCard } from "@/components/dashboard/MyTasksCard";
 import { MyGoalsCard } from "@/components/dashboard/MyGoalsCard";
+import { BirthdayCard } from "@/components/dashboard/BirthdayCard";
 import { ComingUp } from "@/components/dashboard/ComingUp";
 import { Announcements } from "@/components/dashboard/Announcements";
 import { PunctualityCard } from "@/components/Punctuality";
@@ -37,6 +38,7 @@ import {
   punchMessage,
 } from "@/lib/punctuality";
 import { shortDate } from "@/lib/warriors";
+import { birthdaysOn, firstName, isBirthdayToday, istToday } from "@/lib/birthdays";
 import { useTheme } from "@/hooks/useTheme";
 
 
@@ -134,6 +136,29 @@ function Dashboard() {
   );
 
 
+  /* ── Birthdays ─────────────────────────────────────────── */
+  const istDay = istToday();
+  const myBirthday = isBirthdayToday(profile);
+  const showBirthdays = org?.team_birthdays !== false;
+  const othersToday = useMemo(
+    () =>
+      showBirthdays
+        ? birthdaysOn(roster, istDay).filter((p) => p.id !== profile?.id)
+        : [],
+    [roster, istDay, profile?.id, showBirthdays],
+  );
+
+  /** Once a day, on first load — never on every navigation. */
+  const birthdayKey = `ce-birthday-${profile?.id ?? "me"}-${istDay}`;
+  useEffect(() => {
+    if (!profile || !myBirthday) return;
+    if (window.localStorage.getItem(birthdayKey) === "1") return;
+    window.localStorage.setItem(birthdayKey, "1");
+    setCelebration({
+      message: `Happy birthday, ${firstName(profile.full_name)}. 🎉 The whole team is glad you're here.`,
+    });
+  }, [profile, myBirthday, birthdayKey]);
+
   const onMark = (focus: string) => {
     mark.mutate(focus, {
       onError: () => undefined,
@@ -161,7 +186,20 @@ function Dashboard() {
     <AppShell>
       <div className="mx-auto max-w-3xl space-y-6 py-2">
         {/* ── Hero ───────────────────────────────────────────── */}
-        <section className="ce-rise overflow-hidden rounded-[14px] bg-night p-6 text-white shadow-[0_10px_30px_rgba(23,17,38,0.18)] sm:p-8">
+        <section
+          className="ce-rise relative overflow-hidden rounded-[14px] bg-night p-6 text-white shadow-[0_10px_30px_rgba(23,17,38,0.18)] sm:p-8"
+        >
+          {myBirthday ? (
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background:
+                  "radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--ce-goldL) 42%, transparent) 0%, transparent 70%)",
+              }}
+            />
+          ) : null}
+          <div className="relative">
           <div className="flex items-start justify-between gap-4">
             <p className="text-[11px] font-bold tracking-[0.16em] text-mist uppercase">
               {weekday} · {date}
@@ -170,8 +208,15 @@ function Dashboard() {
           </div>
 
           <h1 className="mt-5 font-display text-4xl leading-tight text-white sm:text-5xl">
-            Namaste, {profile?.full_name?.split(" ")[0] ?? "warrior"}
+            {myBirthday ? "Happy birthday, " : "Namaste, "}
+            {profile?.full_name?.split(" ")[0] ?? "warrior"}
+            {myBirthday ? " 🎂" : ""}
           </h1>
+          {myBirthday ? (
+            <p className="mt-2 text-sm font-bold text-goldL">
+              The whole team is glad you're here. Have a wonderful day.
+            </p>
+          ) : null}
           <p className="mt-2 text-sm text-mist">
             {profile?.title ? `${profile.title} · ` : ""}
             {profile?.department ?? "CoachEasily"}
@@ -230,7 +275,16 @@ function Dashboard() {
               That didn't go through. Please try again.
             </p>
           ) : null}
+          </div>
         </section>
+
+        {profile && othersToday.length > 0 ? (
+          <BirthdayCard
+            me={profile}
+            celebrants={othersToday}
+            style={{ animationDelay: "20ms" }}
+          />
+        ) : null}
 
         {theme.greeting ? (
           <section
