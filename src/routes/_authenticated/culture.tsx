@@ -73,7 +73,7 @@ function Page() {
             [
               ["wall", "Recognition wall"],
               ["shelf", "My shelf"],
-              ["energy", "Check-in"],
+              ["energy", "Ask for a check-in"],
             ] as [Tab, string][]
           ).map(([key, label]) => (
             <button
