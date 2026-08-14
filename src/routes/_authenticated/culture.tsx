@@ -121,11 +121,9 @@ function Page() {
         ) : tab === "shelf" ? (
           <MyShelf rows={feed} people={people ?? []} meId={me.id} />
         ) : (
-          <>
-            <EnergyCheckIn me={me} />
-            <TeamEnergyCard enabled={isLead} />
-          </>
+          <CheckInRequest me={me} people={people ?? []} isLead={isLead} />
         )}
+
       </div>
     </AppShell>
   );
