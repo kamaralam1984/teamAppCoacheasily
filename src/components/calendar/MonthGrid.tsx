@@ -16,6 +16,7 @@ interface Props {
   onOpen?: ((target: EditTarget) => void) | undefined;
   /** Desktop drag-to-move. Undefined means the viewer may not move things. */
   onMove?: ((target: EditTarget, toDate: string) => void) | undefined;
+  birthdayIds?: Set<string> | null;
 }
 
 export function MonthGrid({
@@ -29,6 +30,7 @@ export function MonthGrid({
   onSelect,
   onOpen,
   onMove,
+  birthdayIds = null,
 }: Props) {
   const cells = monthGrid(year, month);
 
@@ -56,7 +58,7 @@ export function MonthGrid({
 
       <div className="grid grid-cols-7">
         {cells.map((cell) => {
-          const view = buildDayView(data, cell.date, byId);
+          const view = buildDayView(data, cell.date, byId, birthdayIds);
           const items = [
             ...view.programs.map((p) => ({ key: p.id, kind: "program" as const, type: p.type, label: p.name })),
             ...view.events.map((e) => ({ key: e.id, kind: "event" as const, type: e.type, label: e.name })),
@@ -135,6 +137,12 @@ export function MonthGrid({
                   </span>
                 ) : null}
               </span>
+
+              {view.birthdays.length > 0 ? (
+                <span className="mt-0.5 block truncate text-[10px] leading-tight font-bold text-goldD">
+                  🎂 {view.birthdays.map((b) => b.full_name.split(" ")[0]).join(", ")}
+                </span>
+              ) : null}
 
               {view.leave.length > 0 ? (
                 <span className="mt-0.5 block text-[10px] text-soft">
