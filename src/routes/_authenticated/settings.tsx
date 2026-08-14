@@ -89,6 +89,33 @@ function SettingsPage() {
             </span>
           </label>
         </section>
+
+        <section className="ce-card p-5">
+          <h2 className="font-display text-2xl text-ink">Daily and weekly digests</h2>
+          <label className="mt-3 flex items-start gap-3">
+            <input
+              type="checkbox"
+              className="mt-1 h-5 w-5"
+              checked={Boolean(settings?.digests_enabled)}
+              onChange={(e) =>
+                save.mutate(
+                  { digests_enabled: e.target.checked },
+                  {
+                    onSuccess: () => toast.success("Saved."),
+                    onError: () => toast.error("That didn't save. Please try again."),
+                  },
+                )
+              }
+            />
+            <span className="text-sm text-ink">
+              Send the daily summary and the Monday manager digest by email.
+            </span>
+          </label>
+          <p className="mt-2 text-[13px] text-soft">
+            Digest emails also need the mail key configured — until it is, this switch stays
+            quiet.
+          </p>
+        </section>
       </div>
     </AppShell>
   );
