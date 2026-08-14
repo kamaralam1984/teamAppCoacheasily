@@ -125,18 +125,18 @@ export function PlaybookEditor({ orgId }: { orgId: string | null }) {
                 >
                   Edit
                 </button>
-                <button
-                  type="button"
-                  className="min-h-11 rounded-lg border border-line px-3 text-sm font-bold text-red"
-                  onClick={() =>
+                <ConfirmButton
+                  label="Remove"
+                  message={`Delete the playbook line “${item.text}”? It disappears from every ${active || "department"} warrior's daily list; the ticks already recorded stay.`}
+                  confirmLabel="Yes, delete it"
+                  pending={remove.isPending}
+                  onConfirm={() =>
                     remove.mutate(item.id, {
                       onSuccess: () => toast.success("Line removed."),
                       onError: fail,
                     })
                   }
-                >
-                  Remove
-                </button>
+                />
               </>
             )}
           </li>

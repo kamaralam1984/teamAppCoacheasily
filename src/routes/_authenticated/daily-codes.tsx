@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
+import { ConfirmButton } from "@/components/ConfirmButton";
 import { AppShell } from "@/components/AppShell";
 import {
   CODE_VALUES,
@@ -243,13 +244,13 @@ function Page() {
                 >
                   Edit
                 </button>
-                <button
-                  type="button"
+                <ConfirmButton
+                  label="Remove"
+                  message={`Delete day ${c.day_no} — “${c.title}”? The code is gone for good and the rotation shortens by one day.`}
+                  confirmLabel="Yes, delete it"
+                  onConfirm={() => remove.mutate(c.id)}
                   className="min-h-11 rounded-lg px-3 text-[13px] font-bold text-red hover:bg-cream"
-                  onClick={() => remove.mutate(c.id)}
-                >
-                  Remove
-                </button>
+                />
               </div>
             </div>
           ))}

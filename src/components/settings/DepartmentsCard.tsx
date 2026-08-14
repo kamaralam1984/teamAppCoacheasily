@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { ConfirmButton } from "@/components/ConfirmButton";
 import { useDepartments, useEditDepartments } from "@/hooks/useDepartments";
 import { useWarriors } from "@/hooks/useWarriors";
 
@@ -85,10 +86,12 @@ export function DepartmentsCard({ orgId }: { orgId: string | null }) {
                 >
                   Rename
                 </button>
-                <button
-                  type="button"
-                  className="min-h-11 rounded-lg border border-line px-3 text-sm font-bold text-red"
-                  onClick={() =>
+                <ConfirmButton
+                  label="Remove"
+                  message={`Remove the ${d.name} department? ${headcount(d.name)} warrior${headcount(d.name) === 1 ? " keeps" : "s keep"} their title, but the department's daily playbook lines go with it.`}
+                  confirmLabel="Yes, remove it"
+                  pending={remove.isPending}
+                  onConfirm={() =>
                     remove.mutate(
                       { id: d.id, name: d.name },
                       {
@@ -97,9 +100,7 @@ export function DepartmentsCard({ orgId }: { orgId: string | null }) {
                       },
                     )
                   }
-                >
-                  Remove
-                </button>
+                />
               </>
             )}
           </li>
