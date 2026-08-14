@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.log_goal_entry(uuid, date, numeric, integer[], text, boolean);
