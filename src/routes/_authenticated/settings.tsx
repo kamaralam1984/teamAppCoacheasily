@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
       {
         name: "description",
         content:
-          "Departments, leave entitlements, holidays, cycles and daily playbooks — everything People & Culture own, in one place.",
+          "Departments, leave entitlements, holidays, cycles and daily playbooks — everything HR own, in one place.",
       },
       { property: "og:title", content: "Admin settings | CoachEasily Team App" },
       {
@@ -43,7 +43,7 @@ function SettingsPage() {
     return (
       <AppShell>
         <div className="ce-card mx-auto mt-6 max-w-xl p-6 text-sm text-soft">
-          These controls belong to People & Culture. Ask Shubhangi or Supriya if something here
+          These controls belong to HR. Ask Shubhangi or Supriya if something here
           needs changing.
         </div>
       </AppShell>

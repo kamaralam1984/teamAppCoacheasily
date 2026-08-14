@@ -29,7 +29,7 @@ export function canEditProgram(p: Profile | null | undefined, _program?: Program
 
 export function whoToAsk(p: Profile | null | undefined): string {
   if (p?.role === "manager") {
-    return "You can add and change your own meetings, reviews, 1:1s, standups and training. Company programmes and holidays are kept by People & Culture and Admin — ask them for those.";
+    return "You can add and change your own meetings, reviews, 1:1s, standups and training. Company programmes and holidays are kept by HR and Admin — ask them for those.";
   }
-  return "The calendar is kept by People & Culture and Admin. Ask them to add, move or cancel anything here.";
+  return "The calendar is kept by HR and Admin. Ask them to add, move or cancel anything here.";
 }

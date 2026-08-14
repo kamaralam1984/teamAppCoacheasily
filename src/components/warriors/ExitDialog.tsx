@@ -96,7 +96,7 @@ export function ExitDialog({
 
         {lastLeader ? (
           <p className="rounded-xl bg-red/8 p-4 text-[13px] leading-relaxed text-red">
-            This is the last People &amp; Culture or Admin account. Give someone else that access
+            This is the last HR or Admin account. Give someone else that access
             level first, otherwise nobody can manage the roster.
           </p>
         ) : (

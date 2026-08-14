@@ -175,7 +175,7 @@ export function TeamPanel({ canSeePast }: { canSeePast: boolean }) {
 
       {!canSeePast ? (
         <p className="text-[13px] leading-relaxed text-soft">
-          Past-cycle team data sits with People &amp; Culture.
+          Past-cycle team data sits with HR.
         </p>
       ) : null}
     </div>

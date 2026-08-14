@@ -85,7 +85,7 @@ export function Ambient() {
         delay: -(r * 18 + i * 0.4),
         drift: (r - 0.5) * shape.drift,
         colour: colours[i % colours.length],
-        opacity: 0.16 + r * 0.24,
+        opacity: 0.3 + r * 0.28,
         spin: r2 > 0.5 ? 1 : -1,
       };
     });

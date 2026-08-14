@@ -219,7 +219,7 @@ export function EventEditor({ target, warriors, me, onClose }: Props) {
 
         {!mayEdit ? (
           <p className="mt-4 rounded-lg border border-line bg-cream p-3 text-[13px] text-soft">
-            You can see everything here, but this one is kept by People &amp; Culture and Admin.
+            You can see everything here, but this one is kept by HR and Admin.
           </p>
         ) : null}
 

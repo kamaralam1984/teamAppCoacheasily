@@ -77,7 +77,7 @@ function Page() {
         <div className="ce-card p-8">
           <h1 className="font-display text-3xl text-ink">Daily codes</h1>
           <p className="mt-3 text-sm text-soft">
-            Only People &amp; Culture and Admin can edit the codes.
+            Only HR and Admin can edit the codes.
           </p>
         </div>
       </AppShell>

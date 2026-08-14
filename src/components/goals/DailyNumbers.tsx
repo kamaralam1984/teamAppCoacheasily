@@ -30,7 +30,7 @@ export function DailyNumbers({ cycle, goals, onCelebrate, style }: Props) {
       <section className="ce-rise ce-card p-6" style={style}>
         <h2 className="font-display text-2xl text-ink">Today's numbers</h2>
         <p className="mt-2 text-sm text-soft">
-          No cycle is running yet. People &amp; Culture will open one.
+          No cycle is running yet. HR will open one.
         </p>
       </section>
     );

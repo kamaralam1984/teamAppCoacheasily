@@ -68,7 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const label = roleLabel(profile?.role);
 
   return (
-    <div className="relative z-10 min-h-screen bg-pearl/85">
+    <div className="relative z-10 min-h-screen">
       <OfflineGate />
       <header className="sticky top-0 z-40 bg-night">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
@@ -168,7 +168,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="ce-card mx-auto max-w-md p-6 text-center">
             <h2 className="font-display text-2xl text-ink">Almost there</h2>
             <p className="mt-2 text-sm text-soft">
-              Your account isn't set up yet — ask People &amp; Culture to invite you.
+              Your account isn't set up yet — ask HR to invite you.
             </p>
             <button className="btn3d btn3d-ghost mt-5" onClick={handleSignOut}>
               Sign out
