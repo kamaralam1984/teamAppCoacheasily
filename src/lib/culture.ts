@@ -14,9 +14,12 @@ export const BADGES = [
   "Fastest Learner",
 ] as const;
 
-export function energyFor(score: number | null | undefined) {
-  return ENERGY_LEVELS.find((l) => l.score === score) ?? null;
+/** A check-in request with the person's name attached, for the manager view. */
+export interface OpenCheckin extends CheckinRequest {
+  full_name?: string;
 }
+
+
 
 export function istToday(): string {
   return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
