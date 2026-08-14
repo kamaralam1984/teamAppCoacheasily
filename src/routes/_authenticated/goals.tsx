@@ -10,10 +10,12 @@ import {
   emptyDraft,
   type GoalDraft,
 } from "@/components/goals/GoalForm";
+import { ImportGoals } from "@/components/goals/ImportGoals";
 import { PreviousCycleCard } from "@/components/goals/PreviousCycleCard";
 import { ReviewMode, type ReviewSlide } from "@/components/goals/ReviewMode";
 import { useCycles, useGoalsFor, useTeamGoals } from "@/hooks/useGoals";
 import { useMyProfile } from "@/hooks/useMyProfile";
+import { useWarriors } from "@/hooks/useWarriors";
 import { allTemplates, applyTemplate, templatesFor } from "@/lib/goals";
 
 export const Route = createFileRoute("/_authenticated/goals")({
@@ -54,6 +56,8 @@ function Page() {
 
   const role = profile?.role ?? "member";
   const canOpenCycle = role === "hr" || role === "admin";
+  const canImport = role === "hr" || role === "admin";
+  const { data: warriors } = useWarriors(canImport);
   const canLead = role === "manager" || role === "hr" || role === "admin";
 
   /* Review mode — "mine" for the person presenting, "team" to walk the whole line. */
@@ -150,6 +154,15 @@ function Page() {
               + Write a goal
             </button>
           )
+        ) : null}
+
+        {canImport && active && profile ? (
+          <ImportGoals
+            cycle={active}
+            orgId={profile.org_id}
+            people={warriors ?? []}
+            style={{ animationDelay: "120ms" }}
+          />
         ) : null}
 
         {(goals ?? []).map((item, i) => (
