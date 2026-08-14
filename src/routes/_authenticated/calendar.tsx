@@ -20,6 +20,7 @@ import {
 } from "@/hooks/useCalendar";
 import { TYPE_LABEL } from "@/hooks/useLeave";
 import { useMyProfile } from "@/hooks/useMyProfile";
+import { useOrgSettings } from "@/hooks/useOrg";
 import { useWarriors } from "@/hooks/useWarriors";
 import {
   MARKER_COLOUR,
@@ -96,6 +97,19 @@ function CalendarPage() {
   const saveProgram = useSaveProgram();
 
   const byId = useMemo(() => new Map((warriors ?? []).map((w) => [w.id, w])), [warriors]);
+
+  /** Birthdays on the calendar. People & Culture own the toggle; the founder always shows. */
+  const { data: org } = useOrgSettings(Boolean(profile));
+  const birthdayIds = useMemo(() => {
+    const all = warriors ?? [];
+    const founderId = all.find((p) => p.status === "active" && !p.manager_id)?.id ?? null;
+    const show = org?.team_birthdays !== false;
+    return new Set(
+      all
+        .filter((p) => p.status === "active" && (show || p.id === founderId))
+        .map((p) => p.id),
+    );
+  }, [warriors, org]);
 
   const inMonthDates = useMemo(
     () => monthGrid(cursor.y, cursor.m).filter((c) => c.inMonth).map((c) => c.date),
@@ -411,6 +425,7 @@ function CalendarPage() {
               onSelect={setSelected}
               onOpen={setEditing}
               onMove={mayMove ? (t, d) => void moveTo(t, d) : undefined}
+              birthdayIds={birthdayIds}
             />
           ) : view === "week" ? (
             <WeekView
@@ -421,6 +436,7 @@ function CalendarPage() {
               selected={selected}
               onSelectDay={setSelected}
               onOpen={setEditing}
+              birthdayIds={birthdayIds}
             />
           ) : (
             <AgendaView
@@ -431,6 +447,7 @@ function CalendarPage() {
               today={today}
               onOpen={setEditing}
               onSelectDay={setSelected}
+              birthdayIds={birthdayIds}
             />
           )}
         </div>
@@ -442,6 +459,7 @@ function CalendarPage() {
             byId={byId}
             canSchedule={mayAdd}
             onOpen={setEditing}
+            birthdayIds={birthdayIds}
           />
         </div>
 

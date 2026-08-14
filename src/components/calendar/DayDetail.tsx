@@ -11,6 +11,7 @@ interface Props {
   byId: Map<string, Profile>;
   canSchedule: boolean;
   onOpen?: ((target: EditTarget) => void) | undefined;
+  birthdayIds?: Set<string> | null;
 }
 
 function Chip({ type }: { type: string }) {
@@ -25,11 +26,15 @@ function Chip({ type }: { type: string }) {
   );
 }
 
-export function DayDetail({ date, data, byId, canSchedule, onOpen }: Props) {
-  const view = buildDayView(data, date, byId);
+export function DayDetail({ date, data, byId, canSchedule, onOpen, birthdayIds = null }: Props) {
+  const view = buildDayView(data, date, byId, birthdayIds);
 
   const nothing =
-    !view.holiday && view.programs.length === 0 && view.events.length === 0 && view.leave.length === 0;
+    !view.holiday &&
+    view.programs.length === 0 &&
+    view.events.length === 0 &&
+    view.leave.length === 0 &&
+    view.birthdays.length === 0;
 
   return (
     <div className="ce-card p-5">
@@ -53,6 +58,15 @@ export function DayDetail({ date, data, byId, canSchedule, onOpen }: Props) {
           className="mt-3 rounded-lg border border-gold/40 bg-cream p-3 text-[13px] leading-relaxed font-semibold text-goldD"
         >
           {c}
+        </p>
+      ))}
+
+      {view.birthdays.map((b) => (
+        <p
+          key={`bday-${b.id}`}
+          className="mt-3 rounded-lg border border-gold/40 bg-gold/12 p-3 text-[13px] leading-relaxed font-bold text-goldD"
+        >
+          🎂 It's {b.full_name}'s birthday{b.title ? ` — ${b.title}` : ""}. Say something warm.
         </p>
       ))}
 

@@ -1,6 +1,7 @@
 import type { CalEvent, CalendarData, Holiday, LeaveDay, Program } from "@/hooks/useCalendar";
 import { daysBetween, niceDate, rangeLabel, weekdayName } from "@/lib/calendar";
 import type { Profile } from "@/lib/warriors";
+import { isBirthdayOn } from "@/lib/birthdays";
 
 export interface DayView {
   date: string;
@@ -8,6 +9,8 @@ export interface DayView {
   programs: Program[];
   events: CalEvent[];
   leave: LeaveDay[];
+  /** Whose birthday falls on this day — only those the viewer may see. */
+  birthdays: Profile[];
   /** Host is away while they are meant to be running something. */
   conflicts: string[];
   /** Somebody is working a holiday or their own weekly off. */
@@ -36,6 +39,8 @@ export function buildDayView(
   data: CalendarData | undefined,
   date: string,
   byId: Map<string, Profile>,
+  /** Ids whose birthday may be shown. Omit to show none. */
+  birthdayIds?: Set<string> | null,
 ): DayView {
   const view: DayView = {
     date,
@@ -43,9 +48,15 @@ export function buildDayView(
     programs: [],
     events: [],
     leave: [],
+    birthdays: [],
     conflicts: [],
     compOff: [],
   };
+  if (birthdayIds) {
+    view.birthdays = Array.from(byId.values())
+      .filter((p) => birthdayIds.has(p.id) && isBirthdayOn(p, date))
+      .sort((a, b) => a.full_name.localeCompare(b.full_name));
+  }
   if (!data) return view;
 
   view.holiday = data.holidays.find((h) => h.date === date) ?? null;

@@ -12,18 +12,32 @@ interface Props {
   today: string;
   onOpen: (target: EditTarget) => void;
   onSelectDay: (date: string) => void;
+  birthdayIds?: Set<string> | null;
 }
 
 /** A phone-first list: every day that has something, in date order. */
-export function AgendaView({ data, byId, from, to, today, onOpen, onSelectDay }: Props) {
+export function AgendaView({
+  data,
+  byId,
+  from,
+  to,
+  today,
+  onOpen,
+  onSelectDay,
+  birthdayIds = null,
+}: Props) {
   const days: string[] = [];
   for (let d = from; daysBetween(d, to) >= 0; d = addDays(d, 1)) days.push(d);
 
   const rows = days
-    .map((date) => ({ date, view: buildDayView(data, date, byId) }))
+    .map((date) => ({ date, view: buildDayView(data, date, byId, birthdayIds) }))
     .filter(
       ({ view }) =>
-        view.holiday || view.programs.length > 0 || view.events.length > 0 || view.leave.length > 0,
+        view.holiday ||
+        view.programs.length > 0 ||
+        view.events.length > 0 ||
+        view.leave.length > 0 ||
+        view.birthdays.length > 0,
     );
 
   if (rows.length === 0) {

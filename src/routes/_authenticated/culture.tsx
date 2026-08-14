@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
-import { EnergyCheckIn, TeamEnergyCard } from "@/components/culture/EnergyCheckIn";
+import { CheckInRequest } from "@/components/culture/CheckInRequest";
 import {
   GiveRecognition,
   MyShelf,
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/culture")({
   component: Page,
 });
 
-type Tab = "wall" | "shelf" | "energy";
+type Tab = "wall" | "shelf" | "checkin";
 
 function Page() {
   const { data } = useMyProfile();
@@ -73,7 +73,7 @@ function Page() {
             [
               ["wall", "Recognition wall"],
               ["shelf", "My shelf"],
-              ["energy", "Check-in"],
+              ["checkin", "Ask for a check-in"],
             ] as [Tab, string][]
           ).map(([key, label]) => (
             <button
@@ -121,11 +121,9 @@ function Page() {
         ) : tab === "shelf" ? (
           <MyShelf rows={feed} people={people ?? []} meId={me.id} />
         ) : (
-          <>
-            <EnergyCheckIn me={me} />
-            <TeamEnergyCard enabled={isLead} />
-          </>
+          <CheckInRequest me={me} people={people ?? []} isLead={isLead} />
         )}
+
       </div>
     </AppShell>
   );

@@ -12,15 +12,25 @@ interface Props {
   selected: string;
   onSelectDay: (date: string) => void;
   onOpen: (target: EditTarget) => void;
+  birthdayIds?: Set<string> | null;
 }
 
-export function WeekView({ start, data, byId, today, selected, onSelectDay, onOpen }: Props) {
+export function WeekView({
+  start,
+  data,
+  byId,
+  today,
+  selected,
+  onSelectDay,
+  onOpen,
+  birthdayIds = null,
+}: Props) {
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
 
   return (
     <div className="grid gap-2 sm:grid-cols-7">
       {days.map((date) => {
-        const view = buildDayView(data, date, byId);
+        const view = buildDayView(data, date, byId, birthdayIds);
         return (
           <div
             key={date}
@@ -47,6 +57,15 @@ export function WeekView({ start, data, byId, today, selected, onSelectDay, onOp
                   {view.holiday.name}
                 </p>
               ) : null}
+
+              {view.birthdays.map((b) => (
+                <p
+                  key={`b-${b.id}`}
+                  className="rounded border border-gold/40 bg-gold/12 px-2 py-1 text-[11px] font-bold text-goldD"
+                >
+                  🎂 {b.full_name}
+                </p>
+              ))}
 
               {view.programs.map((p) => (
                 <button
