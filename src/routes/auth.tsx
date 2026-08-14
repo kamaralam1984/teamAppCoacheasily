@@ -1,28 +1,28 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { Mark } from "@/components/Mark";
 import { supabase } from "@/integrations/supabase/client";
+import { lineOfTheDay } from "@/lib/dailyLine";
+
+const DESCRIPTION =
+  "The internal team operating system for CoachEasily warriors — attendance, leave, goals, calendar and culture in one place.";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Sign in | CoachEasily Team App" },
-      {
-        name: "description",
-        content: "Sign in to the CoachEasily internal team app. Access is invite only.",
-      },
+      { name: "description", content: DESCRIPTION },
       { property: "og:title", content: "Sign in | CoachEasily Team App" },
-      {
-        property: "og:description",
-        content: "Sign in to the CoachEasily internal team app. Access is invite only.",
-      },
+      { property: "og:description", content: DESCRIPTION },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: AuthPage,
 });
+
 
 function AuthPage() {
   const navigate = useNavigate();
