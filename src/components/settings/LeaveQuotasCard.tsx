@@ -49,13 +49,17 @@ export function LeaveQuotasCard() {
 
   const [casual, setCasual] = useState("8");
   const [sick, setSick] = useState("6");
+  const [cap, setCap] = useState("2");
   const [from, setFrom] = useState(`${istToday().slice(0, 4)}-01-01`);
+
+  const savedCap = (settings as { casual_quarter_cap?: number } | undefined)?.casual_quarter_cap;
 
   useEffect(() => {
     if (!settings) return;
     setCasual(String(current?.casual ?? settings.casual_quota ?? 8));
     setSick(String(current?.sick ?? settings.sick_quota ?? 6));
-  }, [settings, current?.casual, current?.sick]);
+    setCap(String(savedCap ?? 2));
+  }, [settings, current?.casual, current?.sick, savedCap]);
 
   const busy = setQuotas.isPending || saveSettings.isPending;
 
