@@ -57,7 +57,7 @@ function Page() {
   const role = profile?.role ?? "member";
   const canOpenCycle = role === "hr" || role === "admin";
   const canImport = role === "hr" || role === "admin";
-  const { data: warriors } = useWarriors(canImport);
+  const { data: warriors } = useWarriors();
   const canLead = role === "manager" || role === "hr" || role === "admin";
 
   /* Review mode — "mine" for the person presenting, "team" to walk the whole line. */
