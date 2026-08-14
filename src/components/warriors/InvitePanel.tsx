@@ -85,14 +85,19 @@ export function InvitePanel({
       const next = { ...prev };
       for (const p of people) {
         if (next[p.id] === undefined) {
-          next[p.id] = statuses?.get(p.id)?.email ?? guessEmail(p.full_name);
+          // Never guess an address — a wrong one burns a real login against the profile.
+          next[p.id] = statuses?.get(p.id)?.email ?? "";
         }
       }
       return next;
     });
   }, [people, statuses]);
 
+  const validEmail = (v: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.trim());
+
   const pending = people.filter((p) => !statuses?.get(p.id)?.has_login && !sent[p.id]);
+  const ready = pending.filter((p) => validEmail(emails[p.id] ?? ""));
+
 
   const sendOne = async (p: Profile) => {
     const email = (emails[p.id] ?? "").trim();
