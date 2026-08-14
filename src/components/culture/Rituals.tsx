@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ConfirmButton } from "@/components/ConfirmButton";
 
 import { useEditRituals, useRituals, useToggleRitual } from "@/hooks/useCulture";
 import type { Profile } from "@/lib/warriors";
