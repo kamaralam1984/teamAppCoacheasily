@@ -77,12 +77,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "CoachEasily Team App" },
       {
         name: "description",
-        content: "Internal team operating system for the CoachEasily warriors.",
+        content:
+          "The internal team operating system for CoachEasily warriors — attendance, leave, goals, calendar and culture in one place.",
       },
       { property: "og:title", content: "CoachEasily Team App" },
       {
         property: "og:description",
-        content: "Internal team operating system for the CoachEasily warriors.",
+        content:
+          "The internal team operating system for CoachEasily warriors — attendance, leave, goals, calendar and culture in one place.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
