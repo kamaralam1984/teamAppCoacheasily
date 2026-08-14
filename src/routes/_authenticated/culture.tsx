@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
-import { EnergyCheckIn, TeamEnergyCard } from "@/components/culture/EnergyCheckIn";
+import { CheckInRequest } from "@/components/culture/CheckInRequest";
 import {
   GiveRecognition,
   MyShelf,
