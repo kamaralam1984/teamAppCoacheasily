@@ -33,6 +33,8 @@ export interface GoalProgress {
     to_count: number;
     rate: number;
   } | null;
+  tracks_revenue: boolean;
+  amount_total: number;
   logged_today: boolean;
   last_entry_date: string | null;
   entries_count: number;
