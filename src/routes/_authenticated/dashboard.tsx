@@ -301,6 +301,15 @@ function Dashboard() {
           </section>
         ) : null}
 
+        {/* ── The code, readable all day ─────────────────────── */}
+        {todayCode ? (
+          <section className="ce-rise ce-card p-5" style={{ animationDelay: "40ms" }}>
+            <p className="ce-label">Today&rsquo;s code · {todayCode.value}</p>
+            <h2 className="mt-1 font-display text-xl leading-snug text-ink">{todayCode.title}</h2>
+            <p className="mt-2 text-[13px] leading-[1.75] text-soft">{todayCode.body}</p>
+          </section>
+        ) : null}
+
         {/* ── The twenty-second habit, high up ───────────────── */}
         {isMonday && !mondayDone ? (
           <a
@@ -310,8 +319,9 @@ function Dashboard() {
               setMondayDone(true);
             }}
             className="ce-rise ce-card block p-6"
-            style={{ animationDelay: "40ms" }}
+            style={{ animationDelay: "50ms" }}
           >
+
             <p className="ce-label">Monday</p>
             <h2 className="mt-1 font-display text-2xl text-ink">
               It's Monday — review your goals before the {prettyTime(meetingTime)} standup
