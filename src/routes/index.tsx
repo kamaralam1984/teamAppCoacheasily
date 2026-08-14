@@ -11,13 +11,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "The internal operating system for CoachEasily warriors — directory, people and culture, all in one place.",
+          "The internal team operating system for CoachEasily warriors — attendance, leave, goals, calendar and culture in one place.",
       },
       { property: "og:title", content: "CoachEasily Team App" },
       {
         property: "og:description",
         content:
-          "The internal operating system for CoachEasily warriors — directory, people and culture, all in one place.",
+          "The internal team operating system for CoachEasily warriors — attendance, leave, goals, calendar and culture in one place.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
