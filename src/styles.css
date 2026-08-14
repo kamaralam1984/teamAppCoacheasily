@@ -464,7 +464,7 @@
       opacity: 0;
     }
     12% {
-      opacity: 1;
+      opacity: var(--ce-peak, 0.12);
     }
     100% {
       transform: translate3d(var(--ce-drift, 0px), -108vh, 0) scale(1.3);
@@ -488,7 +488,7 @@
       opacity: 0;
     }
     10% {
-      opacity: 1;
+      opacity: var(--ce-peak, 0.12);
     }
     100% {
       transform: translate3d(var(--ce-drift, 0px), 118vh, 0) rotate(var(--ce-spin, 360deg));
@@ -502,7 +502,7 @@
       opacity: 0;
     }
     10% {
-      opacity: 1;
+      opacity: var(--ce-peak, 0.12);
     }
     50% {
       transform: translate3d(var(--ce-drift, 0px), 60vh, 0) rotate(24deg);
@@ -519,7 +519,7 @@
       opacity: 0;
     }
     15% {
-      opacity: 1;
+      opacity: var(--ce-peak, 0.12);
     }
     100% {
       transform: translate3d(var(--ce-drift, 0px), -104vh, 0);
@@ -533,10 +533,10 @@
       opacity: 0;
     }
     8% {
-      opacity: 1;
+      opacity: var(--ce-peak, 0.12);
     }
     70% {
-      opacity: 0.8;
+      opacity: calc(var(--ce-peak, 0.12) * 0.8);
     }
     100% {
       transform: translate3d(var(--ce-drift, 0px), -96vh, 0) scaleY(2.4);
@@ -552,7 +552,7 @@
     }
     50% {
       transform: scale(1.15);
-      opacity: 1;
+      opacity: var(--ce-peak, 0.12);
     }
   }
 

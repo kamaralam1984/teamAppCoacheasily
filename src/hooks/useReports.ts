@@ -40,6 +40,25 @@ export function useTeamHealth(enabled: boolean) {
   });
 }
 
+export interface RevenueSummary {
+  cycle: { id: string; name: string; start_date: string; end_date: string } | null;
+  total: number;
+  people: { profile_id: string; full_name: string; amount: number }[];
+}
+
+/** The only place rupees are totalled. HR and admin only. */
+export function useRevenueSummary(enabled: boolean) {
+  return useQuery({
+    queryKey: ["revenue-summary"],
+    enabled,
+    queryFn: async (): Promise<RevenueSummary | null> => {
+      const { data, error } = await supabase.rpc("revenue_summary");
+      if (error) throw error;
+      return (data as unknown as RevenueSummary) ?? null;
+    },
+  });
+}
+
 export interface Announcement {
   id: string;
   title: string;

@@ -10,6 +10,7 @@ import {
   type Cycle,
   type GoalWithProgress,
 } from "@/lib/goals";
+import { rupees } from "@/lib/money";
 
 interface Props {
   cycle: Cycle | null;
@@ -127,6 +128,8 @@ function GoalRow({
   const existing = useMemo(() => entries?.find((e) => e.date === date) ?? null, [entries, date]);
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [note, setNote] = useState("");
+  /** blank stays blank — an empty amount records nothing, which is not the same as zero */
+  const [amount, setAmount] = useState<string | null>(null);
 
   const key = (i: number) => `${goal.id}-${date}-${i}`;
   const valueFor = (i: number) => {
@@ -138,6 +141,18 @@ function GoalRow({
       return v === undefined || v === null ? "" : String(v);
     }
     return existing.value === null ? "" : String(existing.value);
+  };
+
+  const amountValue = () => {
+    if (amount !== null) return amount;
+    const a = (existing as { amount?: number | null } | null)?.amount;
+    return a === undefined || a === null ? "" : String(a);
+  };
+  const amountNumber = (): number | null => {
+    const raw = amountValue().trim();
+    if (raw === "") return null;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
   };
 
   const gaps = missingDays(entries ?? [], cycleStart, 7);
@@ -198,18 +213,25 @@ function GoalRow({
 
   const write = () => {
     const rows = raw();
-    if (rows.every((r) => r === "")) return;
+    if (rows.every((r) => r === "") && amountNumber() === null) return;
     const payload =
       goal.kind === "funnel"
         ? { counts: rows.map((r) => Number(r || 0)) }
         : { value: Number(rows[0] || 0) };
 
     log.mutate(
-      { goalId: goal.id, date, note: note || null, ...payload },
+      {
+        goalId: goal.id,
+        date,
+        note: note || null,
+        amount: amountNumber(),
+        ...payload,
+      },
       {
         onSuccess: () => {
           setDraft({});
           setNote("");
+          setAmount(null);
           setConfirmMsg(null);
           setReview(false);
           setSaved(true);
@@ -226,13 +248,17 @@ function GoalRow({
   const block = blocker();
 
   /** Exactly what is about to be written, in plain words, before it is committed. */
-  const summary = () =>
-    stages
-      .map((s, i) => `${s}: ${raw()[i] === "" ? "0" : raw()[i]}`)
-      .join(" · ");
+  const summary = () => {
+    const parts = stages.map((s, i) => `${s}: ${raw()[i] === "" ? "0" : raw()[i]}`);
+    if (goal.tracks_revenue) {
+      const a = amountNumber();
+      parts.push(a === null ? "revenue: not recorded" : `revenue: ${rupees(a)}`);
+    }
+    return parts.join(" · ");
+  };
 
   const save = () => {
-    if (raw().every((r) => r === "")) return;
+    if (raw().every((r) => r === "") && amountNumber() === null) return;
     if (block) return;
     setConfirmMsg(unusual());
     setReview(true);
@@ -268,6 +294,24 @@ function GoalRow({
             />
           </label>
         ))}
+        {goal.tracks_revenue ? (
+          <label className="block">
+            <span className="ce-label">₹ closed today</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              min={0}
+              value={amountValue()}
+              onChange={(e) => {
+                setReview(false);
+                setSaved(false);
+                setAmount(e.target.value);
+              }}
+              className="ce-input mt-1 h-12 w-full text-[17px] font-bold"
+              placeholder="Optional"
+            />
+          </label>
+        ) : null}
       </div>
 
       <p className="mt-2 text-[12px] text-soft">

@@ -126,6 +126,7 @@ export interface SaveGoalInput {
   target: number;
   stages: string[] | null;
   plan: string | null;
+  tracks_revenue?: boolean;
 }
 
 export function useSaveGoal() {
@@ -247,6 +248,8 @@ export interface LogInput {
   value?: number | null;
   counts?: number[] | null;
   note?: string | null;
+  /** rupees closed that day; undefined or null means "not recorded", not zero */
+  amount?: number | null;
 }
 
 export function useLogEntry() {
@@ -259,6 +262,9 @@ export function useLogEntry() {
         ...(input.value !== undefined && input.value !== null ? { p_value: input.value } : {}),
         ...(input.counts ? { p_counts: input.counts } : {}),
         ...(input.note ? { p_note: input.note } : {}),
+        ...(input.amount === undefined || input.amount === null
+          ? {}
+          : { p_amount: input.amount }),
       });
       if (error) throw error;
       return data;

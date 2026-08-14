@@ -579,6 +579,7 @@ export type Database = {
       }
       goal_entries: {
         Row: {
+          amount: number | null
           counts: number[] | null
           created_at: string
           date: string
@@ -590,6 +591,7 @@ export type Database = {
           value: number | null
         }
         Insert: {
+          amount?: number | null
           counts?: number[] | null
           created_at?: string
           date?: string
@@ -601,6 +603,7 @@ export type Database = {
           value?: number | null
         }
         Update: {
+          amount?: number | null
           counts?: number[] | null
           created_at?: string
           date?: string
@@ -644,6 +647,7 @@ export type Database = {
           profile_id: string
           stages: string[] | null
           target: number
+          tracks_revenue: boolean
           unit: string | null
           updated_at: string
         }
@@ -662,6 +666,7 @@ export type Database = {
           profile_id: string
           stages?: string[] | null
           target?: number
+          tracks_revenue?: boolean
           unit?: string | null
           updated_at?: string
         }
@@ -680,6 +685,7 @@ export type Database = {
           profile_id?: string
           stages?: string[] | null
           target?: number
+          tracks_revenue?: boolean
           unit?: string | null
           updated_at?: string
         }
@@ -1551,17 +1557,30 @@ export type Database = {
         }
         Returns: string
       }
-      log_goal_entry: {
-        Args: {
-          p_counts?: number[]
-          p_date?: string
-          p_goal_id: string
-          p_note?: string
-          p_notify?: boolean
-          p_value?: number
-        }
-        Returns: Json
-      }
+      log_goal_entry:
+        | {
+            Args: {
+              p_counts?: number[]
+              p_date?: string
+              p_goal_id: string
+              p_note?: string
+              p_notify?: boolean
+              p_value?: number
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_amount?: number
+              p_counts?: number[]
+              p_date?: string
+              p_goal_id: string
+              p_note?: string
+              p_notify?: boolean
+              p_value?: number
+            }
+            Returns: Json
+          }
       manages: { Args: { target_id: string }; Returns: boolean }
       my_org: { Args: never; Returns: string }
       my_profile_id: { Args: never; Returns: string }
@@ -1580,6 +1599,7 @@ export type Database = {
       }
       reconcile_roster: { Args: never; Returns: Json }
       request_checkin: { Args: { p_note?: string }; Returns: string }
+      revenue_summary: { Args: never; Returns: Json }
       set_leave_quotas: {
         Args: { p_casual: number; p_effective_from?: string; p_sick: number }
         Returns: Json
