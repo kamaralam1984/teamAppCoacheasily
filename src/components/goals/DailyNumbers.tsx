@@ -213,7 +213,7 @@ function GoalRow({
 
   const write = () => {
     const rows = raw();
-    if (rows.every((r) => r === "")) return;
+    if (rows.every((r) => r === "") && amountNumber() === null) return;
     const payload =
       goal.kind === "funnel"
         ? { counts: rows.map((r) => Number(r || 0)) }
@@ -258,7 +258,7 @@ function GoalRow({
   };
 
   const save = () => {
-    if (raw().every((r) => r === "")) return;
+    if (raw().every((r) => r === "") && amountNumber() === null) return;
     if (block) return;
     setConfirmMsg(unusual());
     setReview(true);
