@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import {
   useDeleteSeries,
   useExtendSeries,
+  useRestoreItem,
   useSeries,
   type SeriesRow,
 } from "@/hooks/useCalendar";
@@ -30,6 +31,7 @@ export function SeriesPanel({ table, seriesId, orgId, createdBy, onClose }: Prop
   const { data: rows, isLoading } = useSeries(table, seriesId);
   const extend = useExtendSeries();
   const wipe = useDeleteSeries();
+  const restore = useRestoreItem();
   const today = todayIso();
 
   const live = useMemo(() => (rows ?? []).filter((r) => r.status !== "cancelled"), [rows]);
@@ -50,6 +52,11 @@ export function SeriesPanel({ table, seriesId, orgId, createdBy, onClose }: Prop
     for (const r of live) tally.set(r.name, (tally.get(r.name) ?? 0) + 1);
     return [...tally.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "";
   }, [live]);
+
+  const cancelled = useMemo(
+    () => (rows ?? []).filter((r) => r.status === "cancelled"),
+    [rows],
+  );
 
   const past = live.filter((r) => r.date < today);
   const upcoming = live.filter((r) => r.date >= today);
@@ -139,6 +146,69 @@ export function SeriesPanel({ table, seriesId, orgId, createdBy, onClose }: Prop
           <div className="mt-4 border-t border-line pt-3">
             <p className="ce-label">Already happened</p>
             <ul>{past.map((r) => occurrence(r, true))}</ul>
+          </div>
+        ) : null}
+
+        {cancelled.length > 0 ? (
+          <div className="mt-4 rounded-lg border border-line bg-cream p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-[13px] font-bold text-ink">
+                  Cancelled ({cancelled.length})
+                </p>
+                <p className="text-[12px] text-soft">
+                  Nothing is ever really gone — bring any of these back.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="btn3d btn3d-ghost"
+                disabled={restore.isPending}
+                onClick={() =>
+                  restore.mutate(
+                    { table, ids: cancelled.map((r) => r.id) },
+                    {
+                      onSuccess: () =>
+                        setNote(
+                          `Restored ${cancelled.length} session${cancelled.length === 1 ? "" : "s"}.`,
+                        ),
+                      onError: () => setNote("That didn't restore. Try once more."),
+                    },
+                  )
+                }
+              >
+                Restore all {cancelled.length}
+              </button>
+            </div>
+            <ul className="mt-2">
+              {cancelled.map((r) => (
+                <li
+                  key={r.id}
+                  className="flex flex-wrap items-center justify-between gap-2 border-b border-line/60 py-2 text-[13px] text-soft opacity-70 last:border-b-0"
+                >
+                  <span className="line-through">
+                    {longDate(r.date)}
+                    {r.from_time ? ` · ${r.from_time.slice(0, 5)}` : ""} · {r.name}
+                  </span>
+                  <button
+                    type="button"
+                    className="min-h-11 text-[13px] font-bold text-emer underline"
+                    disabled={restore.isPending}
+                    onClick={() =>
+                      restore.mutate(
+                        { table, ids: [r.id] },
+                        {
+                          onSuccess: () => setNote("Session restored."),
+                          onError: () => setNote("That didn't restore. Try once more."),
+                        },
+                      )
+                    }
+                  >
+                    Restore
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
         ) : null}
 
