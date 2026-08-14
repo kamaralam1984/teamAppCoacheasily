@@ -56,7 +56,7 @@ function AuthPage() {
 
   return (
     <main className="relative z-10 min-h-screen w-full overflow-x-hidden bg-pearl/85">
-      <div className="mx-auto grid min-h-screen w-full max-w-6xl grid-cols-1 items-stretch gap-0 lg:grid-cols-2">
+      <div className="mx-auto grid w-full max-w-6xl lg:min-h-screen grid-cols-1 items-stretch gap-0 lg:grid-cols-2">
         {/* ── The office you are walking into ─────────────────── */}
         <section className="ce-rise flex flex-col justify-center bg-night px-6 py-10 sm:px-10 lg:rounded-l-[20px]">
           <div className="flex items-center gap-3">
