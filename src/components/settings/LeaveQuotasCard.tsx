@@ -96,6 +96,17 @@ export function LeaveQuotasCard() {
           />
         </label>
         <label>
+          <span className="ce-label">Casual leave per quarter</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            className="ce-input"
+            value={cap}
+            onChange={(e) => setCap(e.target.value)}
+          />
+        </label>
+        <label>
           <span className="ce-label">Effective from</span>
           <input
             type="date"
@@ -113,12 +124,13 @@ export function LeaveQuotasCard() {
         onClick={() => {
           const c = Number(casual) || 0;
           const s = Number(sick) || 0;
+          const q = Number(cap) || 0;
           setQuotas.mutate(
             { casual: c, sick: s, from },
             {
               onSuccess: () => {
                 // Keep the flat keys in step so older readers stay correct.
-                saveSettings.mutate({ casual_quota: c, sick_quota: s });
+                saveSettings.mutate({ casual_quota: c, sick_quota: s, casual_quarter_cap: q });
                 toast.success("Entitlements saved. Balances update everywhere.");
               },
               onError: () => toast.error("That didn't save. Please try again."),
