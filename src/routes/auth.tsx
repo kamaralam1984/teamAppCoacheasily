@@ -23,7 +23,6 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-
 function AuthPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -58,74 +57,78 @@ function AuthPage() {
 
   return (
     <main className="relative z-10 min-h-screen w-full overflow-x-hidden">
-      <div className="mx-auto grid w-full max-w-6xl grid-cols-1 items-stretch gap-0 lg:min-h-screen lg:grid-cols-2">
+      {/* Full bleed: the dark panel meets the left edge, the form the right.
+          The reading measure is held by the inner column, not by the page. */}
+      <div className="grid w-full grid-cols-1 items-stretch gap-0 lg:min-h-screen lg:grid-cols-2">
         {/* ── The office you are walking into ─────────────────── */}
-        <section className="ce-rise flex flex-col justify-center bg-night px-6 py-10 sm:px-10 lg:rounded-l-[20px]">
-          <div className="flex items-center gap-3">
-            <Mark size={56} color="var(--ce-goldL)" className="ce-float" />
-            <span className="leading-none">
-              <span className="font-display text-3xl text-white">Coach</span>
-              <span className="font-display text-3xl text-goldL">Easily</span>
-              <span className="mt-1 block text-[10px] font-bold tracking-[0.24em] text-mist">
-                TEAM APP
+        <section className="ce-rise flex flex-col justify-center bg-night px-6 py-10 sm:px-10 lg:items-end lg:px-12 xl:px-16">
+          <div className="w-full max-w-xl">
+            <div className="flex items-center gap-3">
+              <Mark size={56} color="var(--ce-goldL)" className="ce-float" />
+              <span className="leading-none">
+                <span className="font-display text-3xl text-white">Coach</span>
+                <span className="font-display text-3xl text-goldL">Easily</span>
+                <span className="mt-1 block text-[10px] font-bold tracking-[0.24em] text-mist">
+                  TEAM APP
+                </span>
               </span>
-            </span>
-          </div>
+            </div>
 
-          <h2 className="mt-8 font-display text-3xl leading-tight text-white sm:text-4xl">
-            Honesty. Dedication. Genuine care.
-          </h2>
-          <p className="mt-3 max-w-md text-[15px] leading-relaxed text-mist">
-            We coach people to change their lives, and we hold ourselves to the same bar. This is
-            where we mark the day, move one honest number, and look after each other while we do
-            it.
-          </p>
-
-          <ul className="mt-7 space-y-3 text-[14px] text-mist">
-            <li className="flex items-start gap-2.5">
-              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-goldL" />
-              <span>
-                <span className="font-semibold text-white">Honesty</span> — the number is the
-                number, even when it is small.
-              </span>
-            </li>
-            <li className="flex items-start gap-2.5">
-              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-goldL" />
-              <span>
-                <span className="font-semibold text-white">Dedication</span> — show up, finish the
-                unglamorous part, do it again tomorrow.
-              </span>
-            </li>
-            <li className="flex items-start gap-2.5">
-              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-goldL" />
-              <span>
-                <span className="font-semibold text-white">Genuine care</span> — for the people we
-                coach, and for each other.
-              </span>
-            </li>
-          </ul>
-
-          {/* One line, new every morning, same for everyone. */}
-          <div className="mt-8 max-w-md rounded-[16px] border border-white/12 bg-white/6 px-5 py-4">
-            <p className="text-[10px] font-bold tracking-[0.2em] text-mist/80 uppercase">
-              Today&rsquo;s code · {today.value}
+            <h2 className="mt-8 font-display text-3xl leading-tight text-white sm:text-4xl">
+              Honesty. Dedication. Genuine care.
+            </h2>
+            <p className="mt-3 max-w-md text-[15px] leading-relaxed text-mist">
+              We coach people to change their lives, and we hold ourselves to the same bar. This is
+              where we mark the day, move one honest number, and look after each other while we do
+              it.
             </p>
-            <p className="mt-2 font-display text-xl leading-snug text-white sm:text-2xl">
-              &ldquo;{today.line}&rdquo;
+
+            <ul className="mt-7 space-y-3 text-[14px] text-mist">
+              <li className="flex items-start gap-2.5">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-goldL" />
+                <span>
+                  <span className="font-semibold text-white">Honesty</span> — the number is the
+                  number, even when it is small.
+                </span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-goldL" />
+                <span>
+                  <span className="font-semibold text-white">Dedication</span> — show up, finish the
+                  unglamorous part, do it again tomorrow.
+                </span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-goldL" />
+                <span>
+                  <span className="font-semibold text-white">Genuine care</span> — for the people we
+                  coach, and for each other.
+                </span>
+              </li>
+            </ul>
+
+            {/* One line, new every morning, same for everyone. */}
+            <div className="mt-8 max-w-md rounded-[16px] border border-white/12 bg-white/6 px-5 py-4">
+              <p className="text-[10px] font-bold tracking-[0.2em] text-mist/80 uppercase">
+                Today&rsquo;s code · {today.value}
+              </p>
+              <p className="mt-2 font-display text-xl leading-snug text-white sm:text-2xl">
+                &ldquo;{today.line}&rdquo;
+              </p>
+            </div>
+
+            <p className="mt-8 text-[12px] tracking-[0.16em] text-mist/70 uppercase">
+              Mumbai · IST
             </p>
           </div>
-
-          <p className="mt-8 text-[12px] tracking-[0.16em] text-mist/70 uppercase">Mumbai · IST</p>
         </section>
 
-
         {/* ── Sign in ─────────────────────────────────────────── */}
-        <section className="flex items-center justify-center px-4 py-10 sm:px-8">
+        <section className="flex items-center justify-center px-4 py-10 sm:px-8 lg:justify-start lg:px-12 xl:px-16">
           <form onSubmit={onSubmit} className="ce-card ce-rise w-full max-w-md p-6">
             <h1 className="font-display text-3xl text-ink">Welcome back, warrior</h1>
             <p className="mt-1 text-sm text-soft">
-              Sign in with the email HR invited you with. The team is already
-              here.
+              Sign in with the email HR invited you with. The team is already here.
             </p>
 
             <label className="mt-6 block text-sm font-semibold text-ink" htmlFor="email">
