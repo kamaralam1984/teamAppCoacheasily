@@ -382,14 +382,14 @@ function Dashboard() {
           me={profile}
           showTeamBirthdays={Boolean(org?.team_birthdays)}
           founderId={founderId}
-          style={{ animationDelay: "150ms" }}
+          style={{ animationDelay: "130ms" }}
         />
 
-        <Announcements items={announcements} style={{ animationDelay: "160ms" }} />
+        <Announcements items={announcements} style={{ animationDelay: "140ms" }} />
 
         {/* ── Recent attendance, newest first ────────────────── */}
         {history && history.length > 0 ? (
-          <section className="ce-rise ce-card p-6" style={{ animationDelay: "170ms" }}>
+          <section className="ce-rise ce-card p-6" style={{ animationDelay: "150ms" }}>
             <h2 className="font-display text-2xl text-ink">Your recent days</h2>
             <ul className="mt-4 space-y-2.5">
               {history.map((row) => (
