@@ -22,6 +22,7 @@ export interface GoalDraft {
   target: string;
   stages: string[];
   plan: string;
+  tracksRevenue: boolean;
   /** how many days of numbers this goal already carries */
   entriesCount?: number;
   /** today's number, used when they choose to start a fresh goal */
@@ -38,6 +39,7 @@ export function emptyDraft(): GoalDraft {
     target: "",
     stages: ["", "", ""],
     plan: "",
+    tracksRevenue: false,
   };
 }
 
@@ -52,6 +54,7 @@ export function draftFromGoal(g: Goal, entriesCount = 0, currentValue?: number):
     target: String(g.target),
     stages: g.stages?.length ? g.stages : ["", "", ""],
     plan: g.plan ?? "",
+    tracksRevenue: Boolean(g.tracks_revenue),
     entriesCount,
     ...(currentValue === undefined ? {} : { currentValue }),
   };
@@ -131,6 +134,7 @@ export function GoalForm({
       target,
       stages: d.kind === "funnel" ? stages : null,
       plan: d.plan.trim() || null,
+      tracks_revenue: d.tracksRevenue,
     };
     save.mutate(input, {
       onSuccess: onDone,
@@ -336,6 +340,23 @@ export function GoalForm({
                 onChange={(e) => set({ target: e.target.value })}
                 placeholder="0"
               />
+            </label>
+            <label className="flex items-start gap-3 rounded-[14px] border border-line bg-cream/50 p-3">
+              <input
+                type="checkbox"
+                className="mt-1 h-5 w-5 shrink-0"
+                checked={d.tracksRevenue}
+                onChange={(e) => set({ tracksRevenue: e.target.checked })}
+              />
+              <span>
+                <span className="text-[14px] font-bold text-ink">
+                  This goal brings in revenue
+                </span>
+                <span className="mt-1 block text-[13px] text-soft">
+                  A rupee field appears on your daily log so you can record what closed that day.
+                  It stays optional.
+                </span>
+              </span>
             </label>
             <label className="block">
               <span className="ce-label">How you'll get there (optional)</span>
