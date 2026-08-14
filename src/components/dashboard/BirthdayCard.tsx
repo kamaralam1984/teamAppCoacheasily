@@ -3,7 +3,6 @@ import { toast } from "sonner";
 
 import { useGiveRecognition, useRecognitions } from "@/hooks/useCulture";
 import { firstName } from "@/lib/birthdays";
-import { istToday } from "@/lib/culture";
 import type { Profile } from "@/lib/warriors";
 
 /** One tap, not a form. Wishes land on the recognition wall and notify them. */
@@ -18,15 +17,14 @@ export function BirthdayCard({
 }) {
   const { data: rows } = useRecognitions(200);
   const give = useGiveRecognition(me.org_id, me.id);
-  const today = istToday();
-
+  /** Wished within the day — a timestamp window, so late-evening IST still counts. */
   const alreadyWished = (id: string) =>
     (rows ?? []).some(
       (r) =>
         r.from_id === me.id &&
         r.to_id === id &&
         r.text.startsWith("🎂") &&
-        r.created_at.slice(0, 10) === today,
+        Date.now() - new Date(r.created_at).getTime() < 20 * 60 * 60 * 1000,
     );
 
   if (celebrants.length === 0) return null;
