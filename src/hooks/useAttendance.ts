@@ -96,6 +96,21 @@ export function useMarkAttendance(profileId?: string | null, orgId?: string | nu
         daysMarked: days,
       };
     },
+    // The punch must feel instant — flip the summary now, roll back on failure.
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: ["attendance-summary"] });
+      const snapshot = qc.getQueriesData<AttendanceSummary | null>({
+        queryKey: ["attendance-summary"],
+      });
+      for (const [key, value] of snapshot) {
+        if (!value) continue;
+        qc.setQueryData<AttendanceSummary>(key, { ...value, marked_today: true });
+      }
+      return { snapshot };
+    },
+    onError: (_error, _vars, context) => {
+      for (const [key, value] of context?.snapshot ?? []) qc.setQueryData(key, value);
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["attendance-summary"] });
       void qc.invalidateQueries({ queryKey: ["attendance-history"] });

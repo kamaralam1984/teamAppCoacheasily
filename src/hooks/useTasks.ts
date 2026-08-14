@@ -76,7 +76,23 @@ export function useUpdateTask() {
       const { error } = await supabase.from("tasks").update(patch).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ["tasks"] }),
+    // The tick has to land the instant it is pressed; the server catches up after.
+    onMutate: async ({ id, patch }: { id: string; patch: Partial<Task> }) => {
+      await qc.cancelQueries({ queryKey: ["tasks"] });
+      const snapshot = qc.getQueriesData<Task[]>({ queryKey: ["tasks"] });
+      for (const [key, rows] of snapshot) {
+        if (!rows) continue;
+        qc.setQueryData<Task[]>(
+          key,
+          rows.map((t) => (t.id === id ? { ...t, ...patch } : t)),
+        );
+      }
+      return { snapshot };
+    },
+    onError: (_error, _vars, context) => {
+      for (const [key, rows] of context?.snapshot ?? []) qc.setQueryData(key, rows);
+    },
+    onSettled: () => void qc.invalidateQueries({ queryKey: ["tasks"] }),
   });
 }
 

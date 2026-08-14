@@ -10,6 +10,7 @@
 export const PATCH_KEYS = [
   "pearl",
   "ivory",
+  "cream",
   "night",
   "night2",
   "line",
@@ -25,11 +26,22 @@ export type PatchKey = (typeof PATCH_KEYS)[number];
 /** Colours a theme is allowed to set. Text tokens are deliberately absent. */
 export type ThemePatch = Partial<Record<PatchKey, string>>;
 
-export type Particles = "embers" | "colour" | "sparkle" | "none";
+export type Particles =
+  | "embers"
+  | "colour"
+  | "sparkle"
+  | "diya"
+  | "tricolour"
+  | "petals"
+  | "marigold"
+  | "grain"
+  | "sparks"
+  | "none";
 
 export interface Theme {
   key: string;
   name: string;
+  /** An emoji character, or the sentinel "mark" to render the CoachEasily logo. */
   emoji: string;
   greeting: string;
   /** MM-DD strings this theme auto-selects on. */
@@ -55,7 +67,7 @@ export const FALLBACK_THEMES: Theme[] = [
   {
     key: "everyday",
     name: "Everyday",
-    emoji: "🪔",
+    emoji: "mark",
     greeting: "Show up, mark the day, move one number.",
     dates: [],
     patch: {},

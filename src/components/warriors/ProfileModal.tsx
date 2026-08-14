@@ -103,18 +103,15 @@ export function ProfileModal({
 
         <div className="mt-6 border-t border-line pt-5">
           {canSeePrivate ? (
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="rounded-xl bg-cream p-3 text-center">
                 <p className="font-display text-2xl text-ink">{days !== null && days >= 0 ? days : "—"}</p>
                 <p className="text-[11px] font-semibold text-soft">Days worked</p>
               </div>
               <div className="rounded-xl bg-cream p-3 text-center">
+                {/* The opening figure only. Live balances come from leave_balances(). */}
                 <p className="font-display text-2xl text-ink">{profile.opening_earned_leave}</p>
-                <p className="text-[11px] font-semibold text-soft">Leave balance</p>
-              </div>
-              <div className="rounded-xl bg-cream p-3 text-center">
-                <p className="font-display text-2xl text-ink">—</p>
-                <p className="text-[11px] font-semibold text-soft">Goals</p>
+                <p className="text-[11px] font-semibold text-soft">Opening earned leave</p>
               </div>
             </div>
           ) : (

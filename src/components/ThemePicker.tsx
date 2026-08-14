@@ -1,6 +1,7 @@
 import { Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
+import { ThemeIcon } from "@/components/ThemeIcon";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,7 +25,7 @@ export function ThemePicker({ canSetDefault }: { canSetDefault: boolean }) {
           aria-label={`Theme: ${theme.name}`}
           className="flex h-11 w-11 items-center justify-center rounded-lg text-lg transition-colors hover:bg-night2"
         >
-          <span aria-hidden>{theme.emoji}</span>
+          <ThemeIcon emoji={theme.emoji} size={22} />
         </button>
       </DropdownMenuTrigger>
 
@@ -56,7 +57,7 @@ export function ThemePicker({ canSetDefault }: { canSetDefault: boolean }) {
             }}
             className="flex items-center gap-2"
           >
-            <span aria-hidden>{t.emoji}</span>
+            <ThemeIcon emoji={t.emoji} size={18} color="var(--ce-goldD)" />
             <span className="flex-1">
               {t.name}
               {t.key === autoKey ? <span className="text-soft"> · today</span> : null}

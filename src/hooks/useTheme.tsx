@@ -56,29 +56,45 @@ interface ThemeCtx {
 
 const Ctx = createContext<ThemeCtx | null>(null);
 
+/** The company default, kept fresh so an admin's choice reaches everybody. */
+function useCompanyDefault() {
+  return useQuery({
+    queryKey: ["org-settings", "default_theme"],
+    staleTime: 60_000,
+    refetchOnWindowFocus: true,
+    queryFn: async (): Promise<string | null> => {
+      const { data } = await supabase.rpc("org_settings");
+      return (data as { default_theme?: string } | null)?.default_theme ?? null;
+    },
+  });
+}
+
+/** Only People & Culture and Admin may deviate from the company theme. */
+function useCanChooseTheme() {
+  const { data } = useQuery({
+    queryKey: ["my-role"],
+    staleTime: 5 * 60_000,
+    queryFn: async (): Promise<string | null> => {
+      const { data: role } = await supabase.rpc("my_role");
+      return (role as string | null) ?? null;
+    },
+  });
+  return data === "hr" || data === "admin";
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const { data: rows } = useThemeRows();
-  const [manualKey, setManual] = useState<string | null>(null);
-  const [defaultKey, setDefaultKey] = useState<string | null>(null);
+  const { data: companyKey } = useCompanyDefault();
+  const canChoose = useCanChooseTheme();
+  const [stored, setStored] = useState<string | null>(null);
 
   useEffect(() => {
-    setManual(window.localStorage.getItem(THEME_STORAGE_KEY));
+    setStored(window.localStorage.getItem(THEME_STORAGE_KEY));
   }, []);
 
-  // The company default lives in org settings; missing settings are fine.
-  useEffect(() => {
-    let alive = true;
-    void supabase
-      .rpc("org_settings")
-      .then(({ data }) => {
-        if (!alive) return;
-        const key = (data as { default_theme?: string } | null)?.default_theme;
-        if (key) setDefaultKey(key);
-      });
-    return () => {
-      alive = false;
-    };
-  }, []);
+  const defaultKey = companyKey ?? null;
+  // A personal pick is honoured only for the people who own the office theme.
+  const manualKey = canChoose ? stored : null;
 
   const themes = rows && rows.length > 0 ? rows : FALLBACK_THEMES;
   const autoTheme = resolveTheme(themes, { defaultKey });
@@ -89,7 +105,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [theme]);
 
   const setThemeKey = useCallback((key: string | null) => {
-    setManual(key);
+    setStored(key);
     if (key) window.localStorage.setItem(THEME_STORAGE_KEY, key);
     else window.localStorage.removeItem(THEME_STORAGE_KEY);
   }, []);
