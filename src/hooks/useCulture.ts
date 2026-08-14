@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
-import type { EnergyLog, Recognition, Ritual, SopItem, TeamEnergy } from "@/lib/culture";
+import type { OpenCheckin, Recognition, Ritual, SopItem } from "@/lib/culture";
 import { istToday } from "@/lib/culture";
 
 /* ─────────────── Recognition ─────────────── */
@@ -47,58 +47,65 @@ export function useGiveRecognition(orgId?: string | null, fromId?: string | null
   });
 }
 
-/* ─────────────── Energy — private ─────────────── */
+/* ─────────────── The doorbell: "I'd like a check-in" ─────────────── */
 
-/** RLS returns only your own rows here. Nobody else's can ever arrive. */
-export function useMyEnergy(profileId?: string | null, days = 7) {
+/**
+ * RLS lets exactly four kinds of eyes see a row: the person who asked,
+ * their manager chain, People & Culture and Admin. Never a peer.
+ * No mood, no reason, no history — a doorbell, not a dataset.
+ */
+export function useCheckins(enabled = true) {
   return useQuery({
-    queryKey: ["energy", profileId ?? "none", days],
-    enabled: Boolean(profileId),
-    queryFn: async (): Promise<EnergyLog[]> => {
+    queryKey: ["checkins"],
+    enabled,
+    queryFn: async (): Promise<OpenCheckin[]> => {
       const { data, error } = await supabase
-        .from("energy_logs")
+        .from("checkin_requests")
         .select("*")
-        .order("date", { ascending: false })
-        .limit(days);
+        .order("requested_at", { ascending: false })
+        .limit(100);
       if (error) throw error;
-      return (data ?? []).reverse(); // oldest → newest, left to right
+      return data ?? [];
     },
   });
 }
 
-export function useLogEnergy(orgId?: string | null, profileId?: string | null) {
+export function useRequestCheckin() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ score, note }: { score: number; note?: string }) => {
-      if (!orgId || !profileId) throw new Error("Your profile isn't set up yet.");
-      const { error } = await supabase.from("energy_logs").upsert(
-        {
-          org_id: orgId,
-          profile_id: profileId,
-          date: istToday(),
-          score,
-          note: note?.trim() || null,
-        },
-        { onConflict: "profile_id,date" },
-      );
+    mutationFn: async (note?: string) => {
+      const { error } = await supabase.rpc("request_checkin", {
+        p_note: note?.trim() || "",
+      });
       if (error) throw error;
     },
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["energy"] });
-      void qc.invalidateQueries({ queryKey: ["team-energy"] });
+      void qc.invalidateQueries({ queryKey: ["checkins"] });
+      void qc.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }
 
-export function useTeamEnergy(enabled: boolean) {
-  return useQuery({
-    queryKey: ["team-energy"],
-    enabled,
-    queryFn: async (): Promise<TeamEnergy | null> => {
-      const { data, error } = await supabase.rpc("team_energy_today");
+/** Only ever your own, and only while nobody has acted on it. */
+export function useCancelCheckin() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("checkin_requests").delete().eq("id", id);
       if (error) throw error;
-      return (data as unknown as TeamEnergy) ?? null;
     },
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["checkins"] }),
+  });
+}
+
+export function useMarkTalked() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.rpc("checkin_talked", { p_id: id });
+      if (error) throw error;
+    },
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["checkins"] }),
   });
 }
 
