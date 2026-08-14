@@ -193,6 +193,7 @@ function GoalRow({
   };
 
   const [confirmMsg, setConfirmMsg] = useState<string | null>(null);
+  const [review, setReview] = useState(false);
   const [saved, setSaved] = useState(false);
 
   const write = () => {
@@ -210,6 +211,7 @@ function GoalRow({
           setDraft({});
           setNote("");
           setConfirmMsg(null);
+          setReview(false);
           setSaved(true);
           onCelebrate(
             date === istToday()
@@ -223,15 +225,17 @@ function GoalRow({
 
   const block = blocker();
 
+  /** Exactly what is about to be written, in plain words, before it is committed. */
+  const summary = () =>
+    stages
+      .map((s, i) => `${s}: ${raw()[i] === "" ? "0" : raw()[i]}`)
+      .join(" · ");
+
   const save = () => {
     if (raw().every((r) => r === "")) return;
     if (block) return;
-    const ask = unusual();
-    if (ask) {
-      setConfirmMsg(ask);
-      return;
-    }
-    write();
+    setConfirmMsg(unusual());
+    setReview(true);
   };
 
 
@@ -255,6 +259,7 @@ function GoalRow({
               value={valueFor(i)}
               onChange={(e) => {
                 setConfirmMsg(null);
+                setReview(false);
                 setSaved(false);
                 setDraft((d) => ({ ...d, [key(i)]: e.target.value }));
               }}
@@ -275,9 +280,18 @@ function GoalRow({
         </p>
       ) : null}
 
-      {confirmMsg && !block ? (
+      {review && !block ? (
         <div className="mt-2 rounded-[12px] border border-gold/50 bg-gold/10 px-3 py-3">
-          <p className="text-[13px] font-semibold text-ink">{confirmMsg}</p>
+          <p className="ce-label">About to record</p>
+          <p className="mt-1 text-[13px] leading-relaxed font-bold text-ink">
+            {dayLabel(date)} — {summary()}
+            {note.trim() ? ` · note: “${note.trim()}”` : ""}
+          </p>
+          {confirmMsg ? (
+            <p className="mt-2 text-[13px] font-semibold text-[color:var(--ce-saffBtn)]">
+              {confirmMsg}
+            </p>
+          ) : null}
           <div className="mt-2 flex flex-wrap gap-2">
             <button
               type="button"
@@ -290,7 +304,10 @@ function GoalRow({
             <button
               type="button"
               className="min-h-11 rounded-lg border border-line px-3 text-[13px] font-bold text-soft"
-              onClick={() => setConfirmMsg(null)}
+              onClick={() => {
+                setReview(false);
+                setConfirmMsg(null);
+              }}
             >
               Let me check
             </button>

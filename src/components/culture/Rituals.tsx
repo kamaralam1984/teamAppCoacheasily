@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ConfirmButton } from "@/components/ConfirmButton";
 
 import { useEditRituals, useRituals, useToggleRitual } from "@/hooks/useCulture";
 import type { Profile } from "@/lib/warriors";
@@ -75,14 +76,14 @@ export function Rituals({
                 <span className={done ? "line-through opacity-70" : ""}>{r.text}</span>
               </button>
               {adding ? (
-                <button
-                  type="button"
-                  aria-label={`Remove ${r.text}`}
+                <ConfirmButton
+                  label="✕"
+                  ariaLabel={`Remove ${r.text}`}
+                  message={`Remove the ritual “${r.text}”? Everyone loses it from today's checklist; the ticks already recorded stay.`}
+                  confirmLabel="Yes, remove it"
+                  onConfirm={() => remove.mutate(r.id)}
                   className="min-h-12 min-w-12 rounded-[14px] border border-line text-[15px] text-red"
-                  onClick={() => remove.mutate(r.id)}
-                >
-                  ✕
-                </button>
+                />
               ) : null}
             </li>
           );

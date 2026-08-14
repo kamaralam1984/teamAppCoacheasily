@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Trash2 } from "lucide-react";
 
 import {
@@ -26,6 +27,8 @@ export function TaskRow({
   onToggle,
   onDelete,
 }: TaskRowProps) {
+  const [armed, setArmed] = useState(false);
+
   return (
     <div className="flex gap-3 rounded-[12px] border border-line bg-ivory p-3.5">
       <button
@@ -90,14 +93,34 @@ export function TaskRow({
       </div>
 
       {onDelete ? (
-        <button
-          type="button"
-          aria-label={`Remove ${task.title}`}
-          onClick={() => onDelete(task)}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-soft hover:bg-cream hover:text-red"
-        >
-          <Trash2 size={16} />
-        </button>
+        armed ? (
+          <div className="flex shrink-0 flex-col gap-1">
+            <button
+              type="button"
+              className="min-h-9 rounded-lg bg-red px-2 text-[11px] font-bold text-white"
+              onClick={() => onDelete(task)}
+            >
+              Delete
+            </button>
+            <button
+              type="button"
+              className="min-h-9 rounded-lg border border-line px-2 text-[11px] font-bold text-soft"
+              onClick={() => setArmed(false)}
+            >
+              Keep
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            aria-label={`Remove ${task.title}`}
+            title={`Delete "${task.title}" for good`}
+            onClick={() => setArmed(true)}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-soft hover:bg-cream hover:text-red"
+          >
+            <Trash2 size={16} />
+          </button>
+        )
       ) : null}
     </div>
   );
