@@ -64,6 +64,7 @@ export function PreviousCycleCard({
                   target: "",
                   stages: goal.stages?.length ? goal.stages : ["", "", ""],
                   plan: "",
+                  tracksRevenue: Boolean(goal.tracks_revenue),
                 })
               }
             >
