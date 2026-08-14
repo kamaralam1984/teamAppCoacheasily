@@ -129,7 +129,7 @@ export function InvitePanel({
 
   const sendAll = async () => {
     setRunning(true);
-    for (const p of pending) {
+    for (const p of ready) {
       // eslint-disable-next-line no-await-in-loop
       await sendOne(p);
     }
