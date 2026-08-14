@@ -301,7 +301,6 @@ function Dashboard() {
           </section>
         ) : null}
 
-        {/* ── Work meter (no leave balances here — we celebrate work) ─ */}
         {/* ── The twenty-second habit, high up ───────────────── */}
         {isMonday && !mondayDone ? (
           <a
@@ -323,21 +322,6 @@ function Dashboard() {
           </a>
         ) : null}
 
-        <DailyNumbers
-          cycle={activeCycle}
-          goals={myGoals ?? []}
-          onCelebrate={(m: string) => setCelebration({ message: m })}
-          style={{ animationDelay: "60ms" }}
-        />
-
-        <PunctualityCard
-          me={punc}
-          meetingTime={prettyTime(meetingTime)}
-          style={{ animationDelay: "70ms" }}
-        />
-
-        <WorkMeter summary={summary} style={{ animationDelay: "80ms" }} />
-
         <div className="grid gap-6 md:grid-cols-2">
           <WinTheDay
             tasks={tasks}
@@ -348,13 +332,13 @@ function Dashboard() {
                 patch: { done: !t.done, done_at: t.done ? null : new Date().toISOString() },
               })
             }
-            style={{ animationDelay: "100ms" }}
+            style={{ animationDelay: "50ms" }}
           />
           {profile ? (
             <Rituals
               me={profile}
               onCelebrate={(m: string) => setCelebration({ message: m })}
-              style={{ animationDelay: "110ms" }}
+              style={{ animationDelay: "60ms" }}
             />
           ) : null}
         </div>
@@ -364,16 +348,33 @@ function Dashboard() {
           data={cal}
           presence={presence ?? []}
           people={roster}
-          style={{ animationDelay: "120ms" }}
+          style={{ animationDelay: "70ms" }}
         />
 
-        <MyTasksCard tasks={tasks} meId={profile?.id ?? null} style={{ animationDelay: "130ms" }} />
+        <DailyNumbers
+          cycle={activeCycle}
+          goals={myGoals ?? []}
+          onCelebrate={(m: string) => setCelebration({ message: m })}
+          style={{ animationDelay: "80ms" }}
+        />
+
+        <PunctualityCard
+          me={punc}
+          meetingTime={prettyTime(meetingTime)}
+          style={{ animationDelay: "90ms" }}
+        />
+
+        {/* ── Work meter (no leave balances here — we celebrate work) ─ */}
+        <WorkMeter summary={summary} style={{ animationDelay: "100ms" }} />
+
+        <MyTasksCard tasks={tasks} meId={profile?.id ?? null} style={{ animationDelay: "110ms" }} />
 
         <MyGoalsCard
           goals={myGoals ?? []}
           cycle={activeCycle}
-          style={{ animationDelay: "140ms" }}
+          style={{ animationDelay: "120ms" }}
         />
+
 
         <ComingUp
           data={cal}
