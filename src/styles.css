@@ -363,17 +363,28 @@
     animation-timing-function: cubic-bezier(0.4, 0, 0.5, 1);
   }
 
-  /* Everyday — rising embers */
+  /* Everyday — our own mark, rising like embers off the flame.
+     The span is a coloured block; the logo silhouette is a mask, so the
+     active theme's tokens still paint it. */
   .ce-p-ember {
-    border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
-    filter: blur(0.4px);
-    animation-name: ce-rise-drift;
+    border-radius: 0;
+    filter: blur(0.5px);
+    animation-name: ce-mark-rise;
+    animation-timing-function: linear;
+    -webkit-mask-image: url(/ce-mark.svg);
+    mask-image: url(/ce-mark.svg);
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
   }
 
   /* Diwali — slow warm diya lights glowing as they float */
   .ce-p-diya {
     border-radius: 50%;
-    filter: blur(3px);
+    filter: blur(4px);
     animation-name: ce-rise-drift, ce-glow;
     animation-timing-function: linear, ease-in-out;
     animation-iteration-count: infinite, infinite;
@@ -383,6 +394,7 @@
   /* Freedom — tricolour bands drifting upward */
   .ce-p-band {
     border-radius: 2px;
+    filter: blur(1.2px);
     animation-name: ce-rise-drift;
     animation-timing-function: linear;
   }
@@ -390,6 +402,7 @@
   /* Holi — tumbling colour petals */
   .ce-p-petal {
     border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
+    filter: blur(1.4px);
     animation-name: ce-fall-tumble;
     animation-timing-function: ease-in-out;
   }
@@ -397,7 +410,7 @@
   /* Dussehra and Ganesh — marigold petals falling with a sway */
   .ce-p-marigold {
     border-radius: 50% 50% 45% 55% / 55% 45% 55% 45%;
-    filter: blur(0.3px);
+    filter: blur(1.4px);
     animation-name: ce-fall-sway;
     animation-timing-function: ease-in-out;
   }
@@ -405,7 +418,7 @@
   /* Gudi Padwa — light grain drifting sideways */
   .ce-p-grain {
     border-radius: 50%;
-    filter: blur(0.6px);
+    filter: blur(1.1px);
     animation-name: ce-drift-across;
     animation-timing-function: linear;
   }
@@ -413,6 +426,7 @@
   /* Shiv Jayanti — slow steel-gold sparks */
   .ce-p-spark {
     border-radius: 1px;
+    filter: blur(0.9px);
     animation-name: ce-spark-rise;
     animation-timing-function: cubic-bezier(0.2, 0.8, 0.4, 1);
   }
@@ -420,9 +434,28 @@
   /* New Year — twinkling sparkles that stay put */
   .ce-p-sparkle {
     border-radius: 50%;
-    box-shadow: 0 0 6px currentColor;
+    filter: blur(0.8px);
     animation-name: ce-twinkle;
     animation-timing-function: ease-in-out;
+  }
+
+  /* The mark never turns past a few degrees — the flame stays upright. */
+  @keyframes ce-mark-rise {
+    0% {
+      transform: translate3d(0, 0, 0) rotate(calc(var(--ce-tilt, 3deg) * -1)) scale(0.85);
+      opacity: 0;
+    }
+    14% {
+      opacity: var(--ce-peak, 0.16);
+    }
+    82% {
+      opacity: var(--ce-peak, 0.16);
+    }
+    100% {
+      transform: translate3d(var(--ce-drift, 0px), -112vh, 0) rotate(var(--ce-tilt, 3deg))
+        scale(1.05);
+      opacity: 0;
+    }
   }
 
   @keyframes ce-rise-drift {

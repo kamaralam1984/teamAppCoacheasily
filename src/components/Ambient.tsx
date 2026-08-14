@@ -44,19 +44,26 @@ interface Shape {
   fast: number;
   /** horizontal travel, px */
   drift: number;
+  /** brightest this kind is ever allowed to be */
+  peak: number;
 }
 
+/**
+ * Atmosphere, not decoration. Counts are low, motion is slow and the opacity
+ * range is deliberately faint — you should notice this layer only if you look
+ * for it. `peak` is the brightest a particle of this kind ever gets.
+ */
 const SHAPES: Record<Particles, Shape> = {
-  none: { className: "", count: 0, min: 0, max: 0, slow: 0, fast: 0, drift: 0 },
-  embers: { className: "ce-p-ember", count: 24, min: 6, max: 18, slow: 8, fast: 22, drift: 140 },
-  diya: { className: "ce-p-diya", count: 14, min: 14, max: 30, slow: 16, fast: 34, drift: 60 },
-  tricolour: { className: "ce-p-band", count: 21, min: 8, max: 16, slow: 10, fast: 24, drift: 90 },
-  petals: { className: "ce-p-petal", count: 26, min: 9, max: 20, slow: 9, fast: 20, drift: 220 },
-  marigold: { className: "ce-p-marigold", count: 22, min: 8, max: 16, slow: 11, fast: 24, drift: 160 },
-  grain: { className: "ce-p-grain", count: 34, min: 3, max: 7, slow: 14, fast: 30, drift: 260 },
-  sparks: { className: "ce-p-spark", count: 20, min: 3, max: 8, slow: 6, fast: 14, drift: 70 },
-  sparkle: { className: "ce-p-sparkle", count: 30, min: 4, max: 10, slow: 2.4, fast: 5.5, drift: 0 },
-  colour: { className: "ce-p-petal", count: 26, min: 9, max: 20, slow: 9, fast: 20, drift: 200 },
+  none: { className: "", count: 0, min: 0, max: 0, slow: 0, fast: 0, drift: 0, peak: 0 },
+  embers: { className: "ce-p-ember", count: 13, min: 10, max: 26, slow: 22, fast: 46, drift: 70, peak: 0.12 },
+  diya: { className: "ce-p-diya", count: 9, min: 16, max: 34, slow: 26, fast: 52, drift: 50, peak: 0.14 },
+  tricolour: { className: "ce-p-band", count: 12, min: 8, max: 16, slow: 20, fast: 40, drift: 70, peak: 0.11 },
+  petals: { className: "ce-p-petal", count: 14, min: 9, max: 20, slow: 18, fast: 34, drift: 180, peak: 0.11 },
+  marigold: { className: "ce-p-marigold", count: 12, min: 8, max: 16, slow: 20, fast: 38, drift: 130, peak: 0.12 },
+  grain: { className: "ce-p-grain", count: 16, min: 3, max: 7, slow: 26, fast: 48, drift: 220, peak: 0.13 },
+  sparks: { className: "ce-p-spark", count: 12, min: 3, max: 8, slow: 12, fast: 24, drift: 55, peak: 0.13 },
+  sparkle: { className: "ce-p-sparkle", count: 16, min: 4, max: 9, slow: 4, fast: 8, drift: 0, peak: 0.14 },
+  colour: { className: "ce-p-petal", count: 14, min: 9, max: 20, slow: 18, fast: 34, drift: 170, peak: 0.11 },
 };
 
 /**
@@ -85,7 +92,7 @@ export function Ambient() {
         delay: -(r * 18 + i * 0.4),
         drift: (r - 0.5) * shape.drift,
         colour: colours[i % colours.length],
-        opacity: 0.3 + r * 0.28,
+        opacity: shape.peak * (0.5 + r * 0.5),
         spin: r2 > 0.5 ? 1 : -1,
       };
     });
@@ -106,15 +113,17 @@ export function Ambient() {
           style={{
             left: `${b.left}%`,
             ...(still ? { top: `${b.top}%` } : falling ? { top: "-12vh" } : { bottom: "-8vh" }),
-            width: b.size,
-            height:
-              kind === "embers" ? b.size * 1.5 : kind === "tricolour" ? b.size * 0.5 : b.size,
+            /* The mark's aspect ratio is fixed at 0.694 — never squash it. */
+            width: kind === "embers" ? b.size * 0.694 : b.size,
+            height: kind === "tricolour" ? b.size * 0.5 : b.size,
             background: b.colour,
             opacity: b.opacity,
             animationDuration: `${b.duration}s`,
             animationDelay: `${b.delay}s`,
             ["--ce-drift" as string]: `${b.drift}px`,
             ["--ce-spin" as string]: `${b.spin * 360}deg`,
+            ["--ce-tilt" as string]: `${b.spin * (2 + b.size / 12)}deg`,
+            ["--ce-peak" as string]: b.opacity,
           }}
         />
       ))}
