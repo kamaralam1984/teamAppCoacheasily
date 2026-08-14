@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { ConfirmButton } from "@/components/ConfirmButton";
 import { useAddHoliday, useAllHolidays, useRemoveHoliday } from "@/hooks/useCalendar";
 import { longDate, todayIso, weekdayName } from "@/lib/calendar";
 
@@ -37,14 +38,15 @@ export function HolidaysCard({
               </p>
             </div>
             {canManage ? (
-              <button
-                type="button"
-                aria-label={`Remove ${h.name}`}
-                onClick={() => remove.mutate(h.id)}
+              <ConfirmButton
+                label="✕"
+                ariaLabel={`Remove ${h.name}`}
+                message={`Remove the ${h.name} holiday on ${longDate(h.date)}? Everyone's calendar and any comp-off rule for that day changes with it.`}
+                confirmLabel="Yes, remove it"
+                pending={remove.isPending}
+                onConfirm={() => remove.mutate(h.id)}
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-soft"
-              >
-                ✕
-              </button>
+              />
             ) : null}
           </li>
         ))}
