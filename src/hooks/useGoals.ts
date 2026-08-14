@@ -159,7 +159,11 @@ export function useArchiveGoal() {
       const { error } = await supabase.from("goals").update({ archived: true }).eq("id", goalId);
       if (error) throw error;
     },
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ["goals"] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["goals"] });
+      void qc.invalidateQueries({ queryKey: ["archived-goals"] });
+      void qc.invalidateQueries({ queryKey: ["team-goals"] });
+    },
   });
 }
 
