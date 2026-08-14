@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { ConfirmButton } from "@/components/ConfirmButton";
 import { useEditPlaybook, usePlaybook, useTogglePlaybook } from "@/hooks/useCulture";
 import type { Profile } from "@/lib/warriors";
 
@@ -76,14 +77,14 @@ export function Playbook({
                   <span className={done ? "line-through opacity-70" : ""}>{item.text}</span>
                 </button>
                 {editing ? (
-                  <button
-                    type="button"
-                    aria-label={`Remove ${item.text}`}
+                  <ConfirmButton
+                    label="✕"
+                    ariaLabel={`Remove ${item.text}`}
+                    message={`Delete the playbook line “${item.text}”? It disappears from every warrior in this department; the ticks already recorded stay.`}
+                    confirmLabel="Yes, delete it"
+                    onConfirm={() => remove.mutate(item.id)}
                     className="min-h-12 min-w-12 rounded-[14px] border border-line text-[15px] text-red"
-                    onClick={() => remove.mutate(item.id)}
-                  >
-                    ✕
-                  </button>
+                  />
                 ) : null}
               </li>
             );
