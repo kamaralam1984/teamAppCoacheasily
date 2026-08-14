@@ -1,7 +1,7 @@
 import type { Tables } from "@/integrations/supabase/types";
 
 export type Recognition = Tables<"recognitions">;
-export type EnergyLog = Tables<"energy_logs">;
+export type CheckinRequest = Tables<"checkin_requests">;
 export type Ritual = Tables<"rituals">;
 export type SopItem = Tables<"sop_items">;
 
@@ -13,21 +13,6 @@ export const BADGES = [
   "Team Player",
   "Fastest Learner",
 ] as const;
-
-export const ENERGY_LEVELS = [
-  { score: 1, emoji: "😞", label: "Running on empty" },
-  { score: 2, emoji: "😕", label: "Heavy" },
-  { score: 3, emoji: "😐", label: "Okay" },
-  { score: 4, emoji: "🙂", label: "Good" },
-  { score: 5, emoji: "🔥", label: "Flying" },
-] as const;
-
-/** The one number leadership may see — and only when it cannot point at a person. */
-export interface TeamEnergy {
-  enough: boolean;
-  checked_in: number;
-  average: number | null;
-}
 
 export function energyFor(score: number | null | undefined) {
   return ENERGY_LEVELS.find((l) => l.score === score) ?? null;
