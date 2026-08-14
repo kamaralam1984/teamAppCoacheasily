@@ -170,13 +170,13 @@ export function InvitePanel({
             {confirmAll ? (
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <p className="flex-1 text-[13px] font-semibold text-ink">
-                  Send {pending.length} invite{pending.length === 1 ? "" : "s"} now? Each person gets
+                  Send {ready.length} invite{ready.length === 1 ? "" : "s"} now? Each person gets
                   an email straight away.
                 </p>
                 <button
                   type="button"
                   className="btn3d min-h-11"
-                  disabled={running}
+                  disabled={running || ready.length === 0}
                   onClick={() => void sendAll()}
                 >
                   {running ? "Sending…" : "Yes, send them"}
@@ -193,12 +193,14 @@ export function InvitePanel({
               <button
                 type="button"
                 className="btn3d min-h-11 w-full sm:w-auto"
-                disabled={pending.length === 0}
+                disabled={ready.length === 0}
                 onClick={() => setConfirmAll(true)}
               >
                 {pending.length === 0
                   ? "Everyone has a login"
-                  : `Invite everyone without a login (${pending.length})`}
+                  : ready.length === 0
+                    ? "Type an email to invite"
+                    : `Invite everyone with an email typed in (${ready.length})`}
               </button>
             )}
           </div>
