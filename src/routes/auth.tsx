@@ -113,8 +113,10 @@ function AuthPage() {
                 Today&rsquo;s code · {today.value}
               </p>
               <p className="mt-2 font-display text-xl leading-snug text-white sm:text-2xl">
-                &ldquo;{today.line}&rdquo;
+                &ldquo;{today.title}&rdquo;
               </p>
+              <p className="mt-3 text-[13px] leading-[1.75] text-mist">{today.body}</p>
+
             </div>
 
             <p className="mt-8 text-[12px] tracking-[0.16em] text-mist/70 uppercase">
