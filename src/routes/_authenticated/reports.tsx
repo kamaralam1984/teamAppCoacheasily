@@ -8,6 +8,7 @@ import { postAnnouncement, sendTestEmail } from "@/lib/email.functions";
 
 import { AppShell } from "@/components/AppShell";
 import { AppraisalTable } from "@/components/reports/AppraisalTable";
+import { RevenueCard } from "@/components/reports/RevenueCard";
 import { LeaveLedgerTable } from "@/components/reports/LeaveLedgerTable";
 import { TeamHealthRow } from "@/components/reports/TeamHealthRow";
 import { useMyProfile } from "@/hooks/useMyProfile";
@@ -16,7 +17,12 @@ import {
   usePunctualityRows,
   useSaveOrgSettings,
 } from "@/hooks/useOrg";
-import { useAppraisal, useLeaveLedger, useTeamHealth } from "@/hooks/useReports";
+import {
+  useAppraisal,
+  useLeaveLedger,
+  useRevenueSummary,
+  useTeamHealth,
+} from "@/hooks/useReports";
 import {
   DEFAULT_MEETING_TIME,
   prettyTime,
@@ -74,6 +80,7 @@ function Page() {
   const { data: appraisal } = useAppraisal(Boolean(profile) && isHr);
   const { data: ledger } = useLeaveLedger(Boolean(profile) && isHr);
   const { data: health } = useTeamHealth(Boolean(profile) && isHr);
+  const { data: revenue } = useRevenueSummary(Boolean(profile) && isHr);
 
   const sorted: PunctualityRow[] = useMemo(
     () => [...(rows ?? [])].sort((a, b) => b.pct_early - a.pct_early),
@@ -115,6 +122,8 @@ function Page() {
             HR only. Everything below is in Mumbai time.
           </p>
         </header>
+
+        <RevenueCard data={revenue} style={{ animationDelay: "20ms" }} />
 
         <TeamHealthRow health={health} style={{ animationDelay: "40ms" }} />
 
