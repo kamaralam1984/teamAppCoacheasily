@@ -84,7 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
 
           <div className="ml-auto flex items-center gap-2">
-            <ThemePicker canSetDefault={role === "hr" || role === "admin"} />
+            {role === "hr" || role === "admin" ? <ThemePicker canSetDefault /> : null}
 
             <NotificationBell enabled={Boolean(profile)} />
 
