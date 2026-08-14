@@ -342,13 +342,13 @@ function Dashboard() {
                 patch: { done: !t.done, done_at: t.done ? null : new Date().toISOString() },
               })
             }
-            style={{ animationDelay: "50ms" }}
+            style={{ animationDelay: "60ms" }}
           />
           {profile ? (
             <Rituals
               me={profile}
               onCelebrate={(m: string) => setCelebration({ message: m })}
-              style={{ animationDelay: "60ms" }}
+              style={{ animationDelay: "70ms" }}
             />
           ) : null}
         </div>
@@ -358,31 +358,31 @@ function Dashboard() {
           data={cal}
           presence={presence ?? []}
           people={roster}
-          style={{ animationDelay: "70ms" }}
+          style={{ animationDelay: "80ms" }}
         />
 
         <DailyNumbers
           cycle={activeCycle}
           goals={myGoals ?? []}
           onCelebrate={(m: string) => setCelebration({ message: m })}
-          style={{ animationDelay: "80ms" }}
+          style={{ animationDelay: "90ms" }}
         />
 
         <PunctualityCard
           me={punc}
           meetingTime={prettyTime(meetingTime)}
-          style={{ animationDelay: "90ms" }}
+          style={{ animationDelay: "100ms" }}
         />
 
         {/* ── Work meter (no leave balances here — we celebrate work) ─ */}
-        <WorkMeter summary={summary} style={{ animationDelay: "100ms" }} />
+        <WorkMeter summary={summary} style={{ animationDelay: "110ms" }} />
 
-        <MyTasksCard tasks={tasks} meId={profile?.id ?? null} style={{ animationDelay: "110ms" }} />
+        <MyTasksCard tasks={tasks} meId={profile?.id ?? null} style={{ animationDelay: "120ms" }} />
 
         <MyGoalsCard
           goals={myGoals ?? []}
           cycle={activeCycle}
-          style={{ animationDelay: "120ms" }}
+          style={{ animationDelay: "130ms" }}
         />
 
 
@@ -392,14 +392,14 @@ function Dashboard() {
           me={profile}
           showTeamBirthdays={Boolean(org?.team_birthdays)}
           founderId={founderId}
-          style={{ animationDelay: "130ms" }}
+          style={{ animationDelay: "140ms" }}
         />
 
-        <Announcements items={announcements} style={{ animationDelay: "140ms" }} />
+        <Announcements items={announcements} style={{ animationDelay: "150ms" }} />
 
         {/* ── Recent attendance, newest first ────────────────── */}
         {history && history.length > 0 ? (
-          <section className="ce-rise ce-card p-6" style={{ animationDelay: "150ms" }}>
+          <section className="ce-rise ce-card p-6" style={{ animationDelay: "160ms" }}>
             <h2 className="font-display text-2xl text-ink">Your recent days</h2>
             <ul className="mt-4 space-y-2.5">
               {history.map((row) => (
