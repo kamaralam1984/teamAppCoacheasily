@@ -146,6 +146,58 @@ export type Database = {
           },
         ]
       }
+      checkin_requests: {
+        Row: {
+          actioned_at: string | null
+          actioned_by: string | null
+          created_at: string
+          id: string
+          org_id: string
+          profile_id: string
+          requested_at: string
+        }
+        Insert: {
+          actioned_at?: string | null
+          actioned_by?: string | null
+          created_at?: string
+          id?: string
+          org_id: string
+          profile_id: string
+          requested_at?: string
+        }
+        Update: {
+          actioned_at?: string | null
+          actioned_by?: string | null
+          created_at?: string
+          id?: string
+          org_id?: string
+          profile_id?: string
+          requested_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkin_requests_actioned_by_fkey"
+            columns: ["actioned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkin_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkin_requests_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comp_off_credits: {
         Row: {
           consumed: boolean
@@ -378,54 +430,6 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organisations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      energy_logs: {
-        Row: {
-          created_at: string
-          date: string
-          id: string
-          note: string | null
-          org_id: string
-          profile_id: string
-          score: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          date?: string
-          id?: string
-          note?: string | null
-          org_id: string
-          profile_id: string
-          score: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          date?: string
-          id?: string
-          note?: string | null
-          org_id?: string
-          profile_id?: string
-          score?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "energy_logs_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "organisations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "energy_logs_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1469,11 +1473,13 @@ export type Database = {
     Functions: {
       appraisal_matrix: { Args: never; Returns: Json }
       attendance_summary: { Args: { p_profile_id?: string }; Returns: Json }
+      birthday_nudges: { Args: never; Returns: number }
       calendar_feed: { Args: { p_token: string }; Returns: Json }
       calendar_leave: { Args: { p_from: string; p_to: string }; Returns: Json }
       calendar_prep_nudges: { Args: never; Returns: number }
       can_keep_calendar: { Args: never; Returns: boolean }
       can_read_goal: { Args: { p_goal_id: string }; Returns: boolean }
+      checkin_talked: { Args: { p_id: string }; Returns: undefined }
       daily_code_today: { Args: never; Returns: Json }
       digest_daily: {
         Args: never
@@ -1568,9 +1574,17 @@ export type Database = {
       presence_today: { Args: never; Returns: Json }
       punctuality_me: { Args: never; Returns: Json }
       punctuality_rows: { Args: { p_month?: string }; Returns: Json }
+      quota_for: {
+        Args: { p_settings: Json; p_type: string; p_year: number }
+        Returns: number
+      }
       reconcile_roster: { Args: never; Returns: Json }
+      request_checkin: { Args: { p_note?: string }; Returns: string }
+      set_leave_quotas: {
+        Args: { p_casual: number; p_effective_from?: string; p_sick: number }
+        Returns: Json
+      }
       tasks_blocked_nudges: { Args: never; Returns: number }
-      team_energy_today: { Args: never; Returns: Json }
       team_goals: { Args: { p_cycle_id?: string }; Returns: Json }
       team_health: { Args: never; Returns: Json }
       theme_patch_is_safe: { Args: { p: Json }; Returns: boolean }
