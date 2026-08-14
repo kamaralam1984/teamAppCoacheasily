@@ -266,7 +266,7 @@ function GoalRow({
       </div>
 
       <p className="mt-2 text-[12px] text-soft">
-        Real numbers only. This is for your growth, not for anyone&rsquo;s approval.
+        Real numbers only — they are for your growth first. Your manager sees each entry and the note you add, so write it the way you would say it out loud.
       </p>
 
       {block ? (
