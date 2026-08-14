@@ -88,7 +88,7 @@ export const sendTestEmail = createServerFn({ method: "POST" })
       .eq("auth_user_id", context.userId)
       .maybeSingle();
     if (profile?.role !== "admin" && profile?.role !== "hr") {
-      throw new Error("Only People & Culture can send a test email.");
+      throw new Error("Only HR can send a test email.");
     }
     if (!process.env["RESEND_API_KEY"]) {
       return { sent: false, message: "No email key is set yet, so nothing was sent." };
@@ -126,7 +126,7 @@ export const postAnnouncement = createServerFn({ method: "POST" })
       .eq("auth_user_id", context.userId)
       .maybeSingle();
     if (!me || (me.role !== "admin" && me.role !== "hr")) {
-      throw new Error("Only People & Culture can post an announcement.");
+      throw new Error("Only HR can post an announcement.");
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

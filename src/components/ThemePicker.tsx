@@ -53,7 +53,7 @@ export function ThemePicker({ canSetDefault }: { canSetDefault: boolean }) {
             key={t.key}
             onSelect={() => {
               setThemeKey(t.key);
-              toast.success(`${t.emoji} ${t.name} theme on`);
+              toast.success(`${t.name} theme on`);
             }}
             className="flex items-center gap-2"
           >

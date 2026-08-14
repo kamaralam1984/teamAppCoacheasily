@@ -117,7 +117,7 @@ export function ProfileModal({
           ) : (
             <p className="rounded-xl bg-cream p-4 text-[13px] leading-relaxed text-soft">
               Goals, attendance and leave are private — visible to the person, their manager,
-              People &amp; Culture and Admin.
+              HR and Admin.
             </p>
           )}
         </div>

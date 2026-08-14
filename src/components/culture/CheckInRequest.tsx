@@ -13,7 +13,7 @@ import type { Profile } from "@/lib/warriors";
 /**
  * A doorbell, not a dataset.
  *
- * One tap tells this person's manager and People & Culture that they would
+ * One tap tells this person's manager and HR that they would
  * like a conversation. No mood score, no category, no reason stored, no
  * history shown to anyone. It must never become a metric.
  */
@@ -47,7 +47,7 @@ export function CheckInRequest({
         <h2 className="mt-1 font-display text-2xl text-ink">I'd like a check-in</h2>
         <p className="mt-1 text-[13px] leading-relaxed text-soft">
           Everyone has heavy weeks. Ask for a conversation — no explanation needed. Your manager
-          and People &amp; Culture are told that you'd like to talk this week, and nothing else.
+          and HR are told that you'd like to talk this week, and nothing else.
           No score, no reason, no record of why.
         </p>
 

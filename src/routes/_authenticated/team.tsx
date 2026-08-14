@@ -47,7 +47,7 @@ function Page() {
           <TeamPanel canSeePast={role === "hr" || role === "admin"} />
         ) : (
           <p className="ce-card p-6 text-sm text-soft">
-            This view is for managers and People &amp; Culture.
+            This view is for managers and HR.
           </p>
         )}
       </div>

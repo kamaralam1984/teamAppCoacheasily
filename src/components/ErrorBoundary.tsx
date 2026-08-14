@@ -26,7 +26,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
         <h1 className="mt-3 font-display text-2xl text-ink">This part didn't load</h1>
         <p className="mt-2 text-[14px] leading-relaxed text-soft">
           Something went wrong on our side — nothing you did. Your data is safe. Try again, and if
-          it keeps happening tell People &amp; Culture.
+          it keeps happening tell HR.
         </p>
         <button
           type="button"

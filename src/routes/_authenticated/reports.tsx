@@ -31,13 +31,13 @@ export const Route = createFileRoute("/_authenticated/reports")({
       {
         name: "description",
         content:
-          "The People & Culture record: goal achievement by cycle, timeliness, the leave ledger and today's team health.",
+          "The HR record: goal achievement by cycle, timeliness, the leave ledger and today's team health.",
       },
       { property: "og:title", content: "Reports | CoachEasily Team App" },
       {
         property: "og:description",
         content:
-          "The People & Culture record: goal achievement by cycle, timeliness, the leave ledger and today's team health.",
+          "The HR record: goal achievement by cycle, timeliness, the leave ledger and today's team health.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -98,7 +98,7 @@ function Page() {
         <div className="mx-auto max-w-2xl py-10">
           <h1 className="font-display text-3xl text-ink">Reports</h1>
           <p className="mt-2 text-sm text-soft">
-            This record is kept by People &amp; Culture. Managers coach their live team — you'll
+            This record is kept by HR. Managers coach their live team — you'll
             find everything you need on the Team tab.
           </p>
         </div>
@@ -112,7 +112,7 @@ function Page() {
         <header className="ce-rise">
           <h1 className="font-display text-4xl text-ink">Reports</h1>
           <p className="mt-1 text-sm text-soft">
-            People &amp; Culture only. Everything below is in Mumbai time.
+            HR only. Everything below is in Mumbai time.
           </p>
         </header>
 
@@ -357,7 +357,7 @@ function AnnouncementCard() {
 
   return (
     <section className="ce-rise ce-card p-6" style={{ animationDelay: "140ms" }}>
-      <p className="ce-label">People &amp; Culture</p>
+      <p className="ce-label">HR</p>
       <h2 className="mt-1 font-display text-2xl text-ink">Post an announcement</h2>
       <p className="mt-1 text-[13px] text-soft">
         It appears on everybody's dashboard and in their bell straight away.
