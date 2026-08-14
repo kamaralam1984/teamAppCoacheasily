@@ -34,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/culture")({
   component: Page,
 });
 
-type Tab = "wall" | "shelf" | "energy";
+type Tab = "wall" | "shelf" | "checkin";
 
 function Page() {
   const { data } = useMyProfile();
@@ -73,7 +73,7 @@ function Page() {
             [
               ["wall", "Recognition wall"],
               ["shelf", "My shelf"],
-              ["energy", "Ask for a check-in"],
+              ["checkin", "Ask for a check-in"],
             ] as [Tab, string][]
           ).map(([key, label]) => (
             <button
