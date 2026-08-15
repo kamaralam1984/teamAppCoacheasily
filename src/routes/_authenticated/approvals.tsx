@@ -13,7 +13,7 @@ import { useTasksByIds } from "@/hooks/useTasks";
 import { useWarriors } from "@/hooks/useWarriors";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { rangeLabel } from "@/lib/calendar";
-import { shortDate } from "@/lib/warriors";
+import { roleLabel, shortDate } from "@/lib/warriors";
 
 export const Route = createFileRoute("/_authenticated/approvals")({
   head: () => ({
