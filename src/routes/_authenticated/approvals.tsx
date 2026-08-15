@@ -13,7 +13,7 @@ import { useTasksByIds } from "@/hooks/useTasks";
 import { useWarriors } from "@/hooks/useWarriors";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { rangeLabel } from "@/lib/calendar";
-import { shortDate } from "@/lib/warriors";
+import { roleLabel, shortDate } from "@/lib/warriors";
 
 export const Route = createFileRoute("/_authenticated/approvals")({
   head: () => ({
@@ -113,6 +113,20 @@ function HandoverPreview({ request }: { request: PendingRequest }) {
   );
 }
 
+function WaitingWith({ request }: { request: PendingRequest }) {
+  const { data: warriors } = useWarriors();
+  const approver = (warriors ?? []).find((w) => w.id === request.approver_id);
+  const label = approver ? roleLabel(approver.role) : null;
+
+  return (
+    <p className="mt-4 rounded-lg border border-line bg-pearl p-3 text-[13px] font-semibold text-soft">
+      This is your own request, so somebody else decides it. Waiting with{" "}
+      <span className="text-ink">{approver?.full_name ?? "HR"}</span>
+      {label ? ` (${label})` : ""}.
+    </p>
+  );
+}
+
 function RequestCard({
   request,
   index,
@@ -124,6 +138,7 @@ function RequestCard({
 }) {
   const decide = useDecideLeave(deciderId);
   const applicant = request.applicant;
+  const isMine = Boolean(deciderId) && request.profile_id === deciderId;
 
   return (
     <li className="ce-rise ce-card p-5" style={{ animationDelay: `${index * 60}ms` }}>
@@ -163,33 +178,39 @@ function RequestCard({
         </p>
       </div>
 
-      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-        <button
-          type="button"
-          className="btn3d w-full sm:w-auto"
-          disabled={decide.isPending}
-          onClick={() => decide.mutate({ id: request.id, status: "approved" })}
-        >
-          Approve
-        </button>
-        <button
-          type="button"
-          className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-line bg-white px-5 text-[15px] font-bold text-ink sm:w-auto"
-          disabled={decide.isPending}
-          onClick={() => decide.mutate({ id: request.id, status: "rejected" })}
-        >
-          Reject
-        </button>
-      </div>
+      {isMine ? (
+        <WaitingWith request={request} />
+      ) : (
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+          <button
+            type="button"
+            className="btn3d w-full sm:w-auto"
+            disabled={decide.isPending}
+            onClick={() => decide.mutate({ id: request.id, status: "approved" })}
+          >
+            Approve
+          </button>
+          <button
+            type="button"
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-line bg-white px-5 text-[15px] font-bold text-ink sm:w-auto"
+            disabled={decide.isPending}
+            onClick={() => decide.mutate({ id: request.id, status: "rejected" })}
+          >
+            Reject
+          </button>
+        </div>
+      )}
 
       {decide.isError ? (
         <p className="mt-3 text-[13px] font-semibold text-red">
-          That didn't go through. Please try again.
+          That decision wasn't allowed. A leave request has to be decided by somebody other than
+          the person who applied.
         </p>
       ) : null}
     </li>
   );
 }
+
 
 function Approvals() {
   const { data } = useMyProfile();

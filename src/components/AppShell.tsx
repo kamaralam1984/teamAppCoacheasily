@@ -30,10 +30,13 @@ const BASE_TABS = [
 const LEAD_TABS = [
   { label: "Team", to: "/team" },
   { label: "Approvals", to: "/approvals" },
-  { label: "Reports", to: "/reports" },
 ] as const;
 
-const HR_TABS = [{ label: "Settings", to: "/settings" }] as const;
+const HR_TABS = [
+  { label: "Reports", to: "/reports" },
+  { label: "Settings", to: "/settings" },
+] as const;
+
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { data, isLoading } = useMyProfile();
