@@ -4,9 +4,13 @@ import type { Tables } from "@/integrations/supabase/types";
 
 export type Profile = Tables<"profiles">;
 
+const TEN_MINUTES = 10 * 60 * 1000;
+
 export function useMyProfile() {
   return useQuery({
     queryKey: ["my-profile"],
+    staleTime: TEN_MINUTES,
+    gcTime: TEN_MINUTES,
     queryFn: async (): Promise<{
       user: { id: string; email?: string | undefined } | null;
       profile: Profile | null;
