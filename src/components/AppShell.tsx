@@ -163,7 +163,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
 
       <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))]">
-        {isLoading ? (
+        {isLoading && !data ? (
           <div className="ce-card p-6 text-sm text-soft">Loading your workspace…</div>
         ) : profile ? (
           children
