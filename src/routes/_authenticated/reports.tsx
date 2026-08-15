@@ -102,16 +102,14 @@ function Page() {
   if (!isHr) {
     return (
       <AppShell>
-        <div className="mx-auto max-w-2xl py-10">
-          <h1 className="font-display text-3xl text-ink">Reports</h1>
-          <p className="mt-2 text-sm text-soft">
-            This record is kept by HR. Managers coach their live team — you'll
-            find everything you need on the Team tab.
-          </p>
+        <div className="ce-card mx-auto mt-6 max-w-xl p-6 text-sm text-soft">
+          These controls belong to HR. Managers coach their live team — you'll find
+          everything you need on the Team tab.
         </div>
       </AppShell>
     );
   }
+
 
   return (
     <AppShell>
