@@ -125,6 +125,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-52">
                 <DropdownMenuItem asChild>
+                  <Link to="/whats-new" className="flex items-center gap-2">
+                    <Sparkles size={16} /> What's new
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link to="/change-password" className="flex items-center gap-2">
                     <KeyRound size={16} /> Change password
                   </Link>
