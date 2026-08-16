@@ -18,6 +18,7 @@ import { WhatsNewDialog } from "@/components/releases/WhatsNewDialog";
 import { PunctualityCard } from "@/components/Punctuality";
 import { DailyNumbers } from "@/components/goals/DailyNumbers";
 import { Mark } from "@/components/Mark";
+import { ThemeIcon } from "@/components/ThemeIcon";
 import { WorkMeter } from "@/components/WorkMeter";
 import { Rituals } from "@/components/culture/Rituals";
 
@@ -300,9 +301,7 @@ function Dashboard() {
             className="ce-rise ce-card flex items-start gap-3 p-5"
             style={{ animationDelay: "30ms" }}
           >
-            <span aria-hidden className="text-2xl leading-none">
-              {theme.emoji}
-            </span>
+            <ThemeIcon emoji={theme.emoji} size={24} color="var(--ce-goldD)" />
             <div>
               <p className="ce-label">{theme.name}</p>
               <p className="font-display text-xl leading-snug text-ink">{theme.greeting}</p>

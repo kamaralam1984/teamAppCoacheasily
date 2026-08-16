@@ -73,12 +73,19 @@ const SHAPES: Record<Particles, Shape> = {
  */
 export function Ambient() {
   const { theme } = useTheme();
+  if (!theme) return null;
+
   const kind = theme.particles;
+  if (!kind || kind === "none") return null;
+
+  const shape = SHAPES[kind];
+  if (!shape || shape.count === 0) return null;
+
   const colours = palette(kind);
-  const shape = SHAPES[kind] ?? SHAPES.embers;
+  if (!colours || colours.length === 0) return null;
 
   const bits = useMemo(() => {
-    if (shape.count === 0) return [];
+    if (!shape || shape.count === 0) return [];
     return Array.from({ length: shape.count }, (_, i) => {
       const seed = (i * 9301 + 49297) % 233280;
       const r = seed / 233280;
@@ -99,7 +106,7 @@ export function Ambient() {
     // colours and shape both change with the theme
   }, [colours.join("|"), shape]);
 
-  if (kind === "none" || bits.length === 0) return null;
+  if (!bits || bits.length === 0) return null;
 
   const falling = kind === "petals" || kind === "marigold" || kind === "colour";
   const still = kind === "sparkle";

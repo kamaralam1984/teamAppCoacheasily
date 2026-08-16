@@ -145,14 +145,14 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <Ambient />
-        <ErrorBoundary>
+      <ErrorBoundary>
+        <ThemeProvider>
+          <Ambient />
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
-        </ErrorBoundary>
-        <Toaster position="top-center" richColors closeButton />
-      </ThemeProvider>
+        </ThemeProvider>
+      </ErrorBoundary>
+      <Toaster position="top-center" richColors closeButton />
     </QueryClientProvider>
   );
 }
