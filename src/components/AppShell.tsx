@@ -91,6 +91,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="ml-auto flex items-center gap-2">
             {role === "hr" || role === "admin" ? <ThemePicker canSetDefault /> : null}
 
+            <SubmitIdea enabled={Boolean(profile)} />
+
             <NotificationBell enabled={Boolean(profile)} />
 
             <DropdownMenu>
