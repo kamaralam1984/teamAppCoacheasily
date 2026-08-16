@@ -13,6 +13,8 @@ import { BirthdayCard } from "@/components/dashboard/BirthdayCard";
 import { ComingUp } from "@/components/dashboard/ComingUp";
 import { Announcements } from "@/components/dashboard/Announcements";
 import { RecentlyShipped } from "@/components/dashboard/RecentlyShipped";
+import { PulseCard } from "@/components/dashboard/PulseCard";
+import { WhatsNewDialog } from "@/components/releases/WhatsNewDialog";
 import { PunctualityCard } from "@/components/Punctuality";
 import { DailyNumbers } from "@/components/goals/DailyNumbers";
 import { Mark } from "@/components/Mark";
