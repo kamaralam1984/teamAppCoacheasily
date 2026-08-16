@@ -13,6 +13,8 @@ import { BirthdayCard } from "@/components/dashboard/BirthdayCard";
 import { ComingUp } from "@/components/dashboard/ComingUp";
 import { Announcements } from "@/components/dashboard/Announcements";
 import { RecentlyShipped } from "@/components/dashboard/RecentlyShipped";
+import { PulseCard } from "@/components/dashboard/PulseCard";
+import { WhatsNewDialog } from "@/components/releases/WhatsNewDialog";
 import { PunctualityCard } from "@/components/Punctuality";
 import { DailyNumbers } from "@/components/goals/DailyNumbers";
 import { Mark } from "@/components/Mark";
@@ -34,6 +36,7 @@ import { useWarriors } from "@/hooks/useWarriors";
 import { useNextDays } from "@/hooks/useCalendar";
 import { useAnnouncements } from "@/hooks/useReports";
 import { useIdeas } from "@/hooks/useIdeas";
+import { useLatestUnseenRelease, useMarkReleaseSeen } from "@/hooks/useReleases";
 import {
   DEFAULT_MEETING_TIME,
   prettyTime,
@@ -132,6 +135,9 @@ function Dashboard() {
   const { data: cal } = useNextDays(45);
   const { data: announcements } = useAnnouncements(Boolean(profile));
   const { data: ideas } = useIdeas(Boolean(profile));
+  const { data: unseenRelease } = useLatestUnseenRelease(Boolean(profile));
+  const markSeen = useMarkReleaseSeen();
+  const [releaseClosed, setReleaseClosed] = useState(false);
   const roster = people ?? [];
   const founderId = useMemo(
     () => roster.find((p) => p.status === "active" && !p.manager_id)?.id ?? null,
@@ -400,11 +406,13 @@ function Dashboard() {
 
         <RecentlyShipped items={ideas} style={{ animationDelay: "150ms" }} />
 
-        <Announcements items={announcements} style={{ animationDelay: "160ms" }} />
+        <PulseCard enabled={Boolean(profile)} style={{ animationDelay: "160ms" }} />
+
+        <Announcements items={announcements} style={{ animationDelay: "170ms" }} />
 
         {/* ── Recent attendance, newest first ────────────────── */}
         {history && history.length > 0 ? (
-          <section className="ce-rise ce-card p-6" style={{ animationDelay: "160ms" }}>
+          <section className="ce-rise ce-card p-6" style={{ animationDelay: "180ms" }}>
             <h2 className="font-display text-2xl text-ink">Your recent days</h2>
             <ul className="mt-4 space-y-2.5">
               {history.map((row) => (
@@ -424,6 +432,17 @@ function Dashboard() {
           </section>
         ) : null}
       </div>
+
+      {unseenRelease && !releaseClosed && !codeOpen ? (
+        <WhatsNewDialog
+          release={unseenRelease}
+          closing={markSeen.isPending}
+          onClose={() => {
+            setReleaseClosed(true);
+            markSeen.mutate(unseenRelease.id);
+          }}
+        />
+      ) : null}
 
       {codeOpen ? (
         <DailyCodeModal

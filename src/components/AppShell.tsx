@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, KeyRound, LogOut } from "lucide-react";
+import { ChevronDown, KeyRound, LogOut, Sparkles } from "lucide-react";
 
 import { Mark } from "@/components/Mark";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -124,6 +124,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuItem asChild>
+                  <Link to="/whats-new" className="flex items-center gap-2">
+                    <Sparkles size={16} /> What's new
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/change-password" className="flex items-center gap-2">
                     <KeyRound size={16} /> Change password

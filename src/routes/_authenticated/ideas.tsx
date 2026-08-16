@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
+import { PulseResultsPanel } from "@/components/ideas/PulseResults";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import {
   KIND_LABEL,
@@ -138,6 +139,8 @@ function Page() {
             </button>
           ) : null}
         </section>
+
+        {isHr ? <PulseResultsPanel enabled /> : null}
 
         <div className="space-y-2">
           <div className="flex gap-2 overflow-x-auto">
