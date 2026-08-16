@@ -134,6 +134,9 @@ function Dashboard() {
   const { data: cal } = useNextDays(45);
   const { data: announcements } = useAnnouncements(Boolean(profile));
   const { data: ideas } = useIdeas(Boolean(profile));
+  const { data: unseenRelease } = useLatestUnseenRelease(Boolean(profile));
+  const markSeen = useMarkReleaseSeen();
+  const [releaseClosed, setReleaseClosed] = useState(false);
   const roster = people ?? [];
   const founderId = useMemo(
     () => roster.find((p) => p.status === "active" && !p.manager_id)?.id ?? null,
