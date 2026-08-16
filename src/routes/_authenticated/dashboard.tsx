@@ -400,7 +400,9 @@ function Dashboard() {
 
         <RecentlyShipped items={ideas} style={{ animationDelay: "150ms" }} />
 
-        <Announcements items={announcements} style={{ animationDelay: "160ms" }} />
+        <PulseCard enabled={Boolean(profile)} style={{ animationDelay: "160ms" }} />
+
+        <Announcements items={announcements} style={{ animationDelay: "170ms" }} />
 
         {/* ── Recent attendance, newest first ────────────────── */}
         {history && history.length > 0 ? (
