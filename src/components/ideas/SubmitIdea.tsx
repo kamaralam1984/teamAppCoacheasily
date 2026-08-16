@@ -3,7 +3,6 @@ import { Lightbulb, X } from "lucide-react";
 import { useRouterState } from "@tanstack/react-router";
 
 import {
-  KIND_LABEL,
   similarIdeas,
   useIdeas,
   useSubmitIdea,
