@@ -31,9 +31,14 @@ export function RecentlyShipped({
           </li>
         ))}
       </ul>
-      <Link to="/ideas" className="mt-4 inline-block text-[13px] font-bold text-goldD">
-        See the whole board →
-      </Link>
+      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+        <Link to="/ideas" className="text-[13px] font-bold text-goldD">
+          See the whole board →
+        </Link>
+        <Link to="/whats-new" className="text-[13px] font-bold text-goldD">
+          What's new →
+        </Link>
+      </div>
     </section>
   );
 }
