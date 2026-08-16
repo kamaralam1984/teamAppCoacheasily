@@ -1219,6 +1219,112 @@ export type Database = {
           },
         ]
       }
+      pulse_done: {
+        Row: {
+          done_on: string
+          profile_id: string
+          round_id: string
+        }
+        Insert: {
+          done_on?: string
+          profile_id: string
+          round_id: string
+        }
+        Update: {
+          done_on?: string
+          profile_id?: string
+          round_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pulse_done_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pulse_done_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "pulse_rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pulse_responses: {
+        Row: {
+          answers: Json
+          id: string
+          round_id: string
+          submitted_on: string
+        }
+        Insert: {
+          answers: Json
+          id?: string
+          round_id: string
+          submitted_on?: string
+        }
+        Update: {
+          answers?: Json
+          id?: string
+          round_id?: string
+          submitted_on?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pulse_responses_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "pulse_rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pulse_rounds: {
+        Row: {
+          active: boolean
+          closes_on: string | null
+          created_at: string
+          id: string
+          kind: string
+          label: string
+          opens_on: string
+          org_id: string
+          questions: Json
+        }
+        Insert: {
+          active?: boolean
+          closes_on?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          label: string
+          opens_on: string
+          org_id: string
+          questions: Json
+        }
+        Update: {
+          active?: boolean
+          closes_on?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          label?: string
+          opens_on?: string
+          org_id?: string
+          questions?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pulse_rounds_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recognitions: {
         Row: {
           badge_name: string | null
@@ -1270,6 +1376,141 @@ export type Database = {
             columns: ["to_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      release_items: {
+        Row: {
+          created_at: string
+          how_to_use: string | null
+          id: string
+          idea_id: string | null
+          release_id: string
+          sort_order: number
+          title: string
+          what_it_does: string | null
+          why_it_helps: string | null
+        }
+        Insert: {
+          created_at?: string
+          how_to_use?: string | null
+          id?: string
+          idea_id?: string | null
+          release_id: string
+          sort_order?: number
+          title: string
+          what_it_does?: string | null
+          why_it_helps?: string | null
+        }
+        Update: {
+          created_at?: string
+          how_to_use?: string | null
+          id?: string
+          idea_id?: string | null
+          release_id?: string
+          sort_order?: number
+          title?: string
+          what_it_does?: string | null
+          why_it_helps?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_items_idea_id_fkey"
+            columns: ["idea_id"]
+            isOneToOne: false
+            referencedRelation: "ideas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "release_items_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "releases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      release_seen: {
+        Row: {
+          profile_id: string
+          release_id: string
+          seen_at: string
+        }
+        Insert: {
+          profile_id: string
+          release_id: string
+          seen_at?: string
+        }
+        Update: {
+          profile_id?: string
+          release_id?: string
+          seen_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_seen_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "release_seen_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "releases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      releases: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          org_id: string
+          published: boolean
+          published_at: string | null
+          summary: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id: string
+          published?: boolean
+          published_at?: string | null
+          summary?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id?: string
+          published?: boolean
+          published_at?: string | null
+          summary?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "releases_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "releases_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
         ]
@@ -1639,6 +1880,7 @@ export type Database = {
       has_fixed_weekly_off: { Args: { p_off: string }; Returns: boolean }
       ideas_board: { Args: never; Returns: Json }
       is_ordinary_event_type: { Args: { p_type: string }; Returns: boolean }
+      latest_unseen_release: { Args: never; Returns: Json }
       leave_approver_for: { Args: { p_profile_id: string }; Returns: string }
       leave_balances: { Args: { p_profile_id?: string }; Returns: Json }
       leave_check: {
@@ -1683,8 +1925,10 @@ export type Database = {
         Returns: Json
       }
       manages: { Args: { target_id: string }; Returns: boolean }
+      mark_release_seen: { Args: { p_release_id: string }; Returns: undefined }
       my_org: { Args: never; Returns: string }
       my_profile_id: { Args: never; Returns: string }
+      my_pulse: { Args: never; Returns: Json }
       my_role: { Args: never; Returns: string }
       open_cycle: {
         Args: { p_end_date: string; p_name?: string }
@@ -1692,6 +1936,7 @@ export type Database = {
       }
       org_settings: { Args: never; Returns: Json }
       presence_today: { Args: never; Returns: Json }
+      pulse_results: { Args: { p_round_id: string }; Returns: Json }
       punctuality_me: { Args: never; Returns: Json }
       punctuality_rows: { Args: { p_month?: string }; Returns: Json }
       quota_for: {
@@ -1699,6 +1944,7 @@ export type Database = {
         Returns: number
       }
       reconcile_roster: { Args: never; Returns: Json }
+      release_history: { Args: never; Returns: Json }
       request_checkin: { Args: { p_note?: string }; Returns: string }
       revenue_summary: { Args: never; Returns: Json }
       set_idea_status: {
@@ -1719,6 +1965,10 @@ export type Database = {
           p_title: string
         }
         Returns: string
+      }
+      submit_pulse: {
+        Args: { p_answers: Json; p_round_id: string }
+        Returns: undefined
       }
       tasks_blocked_nudges: { Args: never; Returns: number }
       team_goals: { Args: { p_cycle_id?: string }; Returns: Json }
