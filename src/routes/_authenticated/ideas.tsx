@@ -139,6 +139,8 @@ function Page() {
           ) : null}
         </section>
 
+        {isHr ? <PulseResultsPanel enabled /> : null}
+
         <div className="space-y-2">
           <div className="flex gap-2 overflow-x-auto">
             {(["all", ...STATUSES] as (IdeaStatus | "all")[]).map((s) => (
