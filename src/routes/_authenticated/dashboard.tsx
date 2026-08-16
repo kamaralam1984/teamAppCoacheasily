@@ -408,7 +408,7 @@ function Dashboard() {
 
         {/* ── Recent attendance, newest first ────────────────── */}
         {history && history.length > 0 ? (
-          <section className="ce-rise ce-card p-6" style={{ animationDelay: "160ms" }}>
+          <section className="ce-rise ce-card p-6" style={{ animationDelay: "180ms" }}>
             <h2 className="font-display text-2xl text-ink">Your recent days</h2>
             <ul className="mt-4 space-y-2.5">
               {history.map((row) => (
