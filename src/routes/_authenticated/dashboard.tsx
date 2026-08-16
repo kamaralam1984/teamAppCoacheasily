@@ -36,6 +36,7 @@ import { useWarriors } from "@/hooks/useWarriors";
 import { useNextDays } from "@/hooks/useCalendar";
 import { useAnnouncements } from "@/hooks/useReports";
 import { useIdeas } from "@/hooks/useIdeas";
+import { useLatestUnseenRelease, useMarkReleaseSeen } from "@/hooks/useReleases";
 import {
   DEFAULT_MEETING_TIME,
   prettyTime,
