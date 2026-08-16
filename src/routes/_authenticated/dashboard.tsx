@@ -12,6 +12,7 @@ import { MyGoalsCard } from "@/components/dashboard/MyGoalsCard";
 import { BirthdayCard } from "@/components/dashboard/BirthdayCard";
 import { ComingUp } from "@/components/dashboard/ComingUp";
 import { Announcements } from "@/components/dashboard/Announcements";
+import { RecentlyShipped } from "@/components/dashboard/RecentlyShipped";
 import { PunctualityCard } from "@/components/Punctuality";
 import { DailyNumbers } from "@/components/goals/DailyNumbers";
 import { Mark } from "@/components/Mark";
@@ -32,6 +33,7 @@ import { useTasks, useUpdateTask } from "@/hooks/useTasks";
 import { useWarriors } from "@/hooks/useWarriors";
 import { useNextDays } from "@/hooks/useCalendar";
 import { useAnnouncements } from "@/hooks/useReports";
+import { useIdeas } from "@/hooks/useIdeas";
 import {
   DEFAULT_MEETING_TIME,
   prettyTime,
@@ -395,7 +397,9 @@ function Dashboard() {
           style={{ animationDelay: "140ms" }}
         />
 
-        <Announcements items={announcements} style={{ animationDelay: "150ms" }} />
+        <RecentlyShipped items={ideas} style={{ animationDelay: "150ms" }} />
+
+        <Announcements items={announcements} style={{ animationDelay: "160ms" }} />
 
         {/* ── Recent attendance, newest first ────────────────── */}
         {history && history.length > 0 ? (
