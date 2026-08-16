@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
+import { PulseResultsPanel } from "@/components/ideas/PulseResults";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import {
   KIND_LABEL,
