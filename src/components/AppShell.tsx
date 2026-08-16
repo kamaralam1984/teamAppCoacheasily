@@ -5,6 +5,7 @@ import { ChevronDown, KeyRound, LogOut } from "lucide-react";
 
 import { Mark } from "@/components/Mark";
 import { NotificationBell } from "@/components/NotificationBell";
+import { SubmitIdea } from "@/components/ideas/SubmitIdea";
 import { OfflineGate } from "@/components/OfflineGate";
 import { ThemePicker } from "@/components/ThemePicker";
 import {
@@ -25,6 +26,7 @@ const BASE_TABS = [
   { label: "Culture", to: "/culture" },
   { label: "Leave", to: "/leave" },
   { label: "Warriors", to: "/warriors" },
+  { label: "Ideas", to: "/ideas" },
 ] as const;
 
 const LEAD_TABS = [
