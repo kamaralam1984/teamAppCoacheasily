@@ -73,20 +73,18 @@ const SHAPES: Record<Particles, Shape> = {
  */
 export function Ambient() {
   const { theme } = useTheme();
-  if (!theme) return null;
 
-  const kind = theme.particles;
-  if (!kind || kind === "none") return null;
+  const state = useMemo(() => {
+    const kind = theme?.particles;
+    if (!kind || kind === "none") return null;
 
-  const shape = SHAPES[kind];
-  if (!shape || shape.count === 0) return null;
+    const shape = SHAPES[kind];
+    if (!shape || shape.count === 0) return null;
 
-  const colours = palette(kind);
-  if (!colours || colours.length === 0) return null;
+    const colours = palette(kind);
+    if (!colours || colours.length === 0) return null;
 
-  const bits = useMemo(() => {
-    if (!shape || shape.count === 0) return [];
-    return Array.from({ length: shape.count }, (_, i) => {
+    const bits = Array.from({ length: shape.count }, (_, i) => {
       const seed = (i * 9301 + 49297) % 233280;
       const r = seed / 233280;
       const r2 = ((i * 7919 + 104729) % 233280) / 233280;
@@ -103,10 +101,12 @@ export function Ambient() {
         spin: r2 > 0.5 ? 1 : -1,
       };
     });
-    // colours and shape both change with the theme
-  }, [colours.join("|"), shape]);
 
-  if (!bits || bits.length === 0) return null;
+    return { kind, shape, bits };
+  }, [theme?.particles]);
+
+  if (!state) return null;
+  const { kind, shape, bits } = state;
 
   const falling = kind === "petals" || kind === "marigold" || kind === "colour";
   const still = kind === "sparkle";
