@@ -745,6 +745,118 @@ export type Database = {
           },
         ]
       }
+      idea_votes: {
+        Row: {
+          created_at: string
+          idea_id: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          idea_id: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          idea_id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "idea_votes_idea_id_fkey"
+            columns: ["idea_id"]
+            isOneToOne: false
+            referencedRelation: "ideas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "idea_votes_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ideas: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          detail: string | null
+          device: string | null
+          id: string
+          is_anonymous: boolean
+          kind: string
+          org_id: string
+          profile_id: string | null
+          screen: string | null
+          source: string
+          status: string
+          status_note: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          detail?: string | null
+          device?: string | null
+          id?: string
+          is_anonymous?: boolean
+          kind: string
+          org_id: string
+          profile_id?: string | null
+          screen?: string | null
+          source?: string
+          status?: string
+          status_note?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          detail?: string | null
+          device?: string | null
+          id?: string
+          is_anonymous?: boolean
+          kind?: string
+          org_id?: string
+          profile_id?: string | null
+          screen?: string | null
+          source?: string
+          status?: string
+          status_note?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ideas_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ideas_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ideas_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leave_requests: {
         Row: {
           approver_id: string | null
@@ -1525,6 +1637,7 @@ export type Database = {
       }
       goals_remind_pending: { Args: { p_cycle_id?: string }; Returns: number }
       has_fixed_weekly_off: { Args: { p_off: string }; Returns: boolean }
+      ideas_board: { Args: never; Returns: Json }
       is_ordinary_event_type: { Args: { p_type: string }; Returns: boolean }
       leave_approver_for: { Args: { p_profile_id: string }; Returns: string }
       leave_balances: { Args: { p_profile_id?: string }; Returns: Json }
@@ -1588,15 +1701,31 @@ export type Database = {
       reconcile_roster: { Args: never; Returns: Json }
       request_checkin: { Args: { p_note?: string }; Returns: string }
       revenue_summary: { Args: never; Returns: Json }
+      set_idea_status: {
+        Args: { p_idea_id: string; p_note?: string; p_status: string }
+        Returns: Json
+      }
       set_leave_quotas: {
         Args: { p_casual: number; p_effective_from?: string; p_sick: number }
         Returns: Json
+      }
+      submit_idea: {
+        Args: {
+          p_anonymous?: boolean
+          p_detail?: string
+          p_device?: string
+          p_kind: string
+          p_screen?: string
+          p_title: string
+        }
+        Returns: string
       }
       tasks_blocked_nudges: { Args: never; Returns: number }
       team_goals: { Args: { p_cycle_id?: string }; Returns: Json }
       team_health: { Args: never; Returns: Json }
       theme_patch_is_safe: { Args: { p: Json }; Returns: boolean }
       update_org_settings: { Args: { p_patch: Json }; Returns: Json }
+      vote_idea: { Args: { p_idea_id: string }; Returns: number }
     }
     Enums: {
       [_ in never]: never

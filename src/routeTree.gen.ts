@@ -19,6 +19,7 @@ import { Route as AuthenticatedCultureRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDailyCodesRouteImport } from './routes/_authenticated/daily-codes'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated/goals'
+import { Route as AuthenticatedIdeasRouteImport } from './routes/_authenticated/ideas'
 import { Route as AuthenticatedLeaveRouteImport } from './routes/_authenticated/leave'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -78,6 +79,11 @@ const AuthenticatedGoalsRoute = AuthenticatedGoalsRouteImport.update({
   path: '/goals',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedIdeasRoute = AuthenticatedIdeasRouteImport.update({
+  id: '/ideas',
+  path: '/ideas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedLeaveRoute = AuthenticatedLeaveRouteImport.update({
   id: '/leave',
   path: '/leave',
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/daily-codes': typeof AuthenticatedDailyCodesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/goals': typeof AuthenticatedGoalsRoute
+  '/ideas': typeof AuthenticatedIdeasRoute
   '/leave': typeof AuthenticatedLeaveRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -148,6 +155,7 @@ export interface FileRoutesByTo {
   '/daily-codes': typeof AuthenticatedDailyCodesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/goals': typeof AuthenticatedGoalsRoute
+  '/ideas': typeof AuthenticatedIdeasRoute
   '/leave': typeof AuthenticatedLeaveRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -169,6 +177,7 @@ export interface FileRoutesById {
   '/_authenticated/daily-codes': typeof AuthenticatedDailyCodesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/goals': typeof AuthenticatedGoalsRoute
+  '/_authenticated/ideas': typeof AuthenticatedIdeasRoute
   '/_authenticated/leave': typeof AuthenticatedLeaveRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -190,6 +199,7 @@ export interface FileRouteTypes {
     | '/daily-codes'
     | '/dashboard'
     | '/goals'
+    | '/ideas'
     | '/leave'
     | '/reports'
     | '/settings'
@@ -209,6 +219,7 @@ export interface FileRouteTypes {
     | '/daily-codes'
     | '/dashboard'
     | '/goals'
+    | '/ideas'
     | '/leave'
     | '/reports'
     | '/settings'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/_authenticated/daily-codes'
     | '/_authenticated/dashboard'
     | '/_authenticated/goals'
+    | '/_authenticated/ideas'
     | '/_authenticated/leave'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
@@ -319,6 +331,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedGoalsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ideas': {
+      id: '/_authenticated/ideas'
+      path: '/ideas'
+      fullPath: '/ideas'
+      preLoaderRoute: typeof AuthenticatedIdeasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/leave': {
       id: '/_authenticated/leave'
       path: '/leave'
@@ -386,6 +405,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDailyCodesRoute: typeof AuthenticatedDailyCodesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedGoalsRoute: typeof AuthenticatedGoalsRoute
+  AuthenticatedIdeasRoute: typeof AuthenticatedIdeasRoute
   AuthenticatedLeaveRoute: typeof AuthenticatedLeaveRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -402,6 +422,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDailyCodesRoute: AuthenticatedDailyCodesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedGoalsRoute: AuthenticatedGoalsRoute,
+  AuthenticatedIdeasRoute: AuthenticatedIdeasRoute,
   AuthenticatedLeaveRoute: AuthenticatedLeaveRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
