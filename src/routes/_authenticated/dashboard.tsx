@@ -433,6 +433,17 @@ function Dashboard() {
         ) : null}
       </div>
 
+      {unseenRelease && !releaseClosed && !codeOpen ? (
+        <WhatsNewDialog
+          release={unseenRelease}
+          closing={markSeen.isPending}
+          onClose={() => {
+            setReleaseClosed(true);
+            markSeen.mutate(unseenRelease.id);
+          }}
+        />
+      ) : null}
+
       {codeOpen ? (
         <DailyCodeModal
           code={todayCode ?? null}
