@@ -98,7 +98,7 @@ export function WarriorForm({
           : 100,
 
         joined_on: form.joined_on || null,
-        birthday: form.birthday || null,
+        date_of_birth: form.date_of_birth || null,
         wedding_anniversary: form.wedding_anniversary || null,
         new_badge: form.new_badge,
         opening_earned_leave:
