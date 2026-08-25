@@ -55,15 +55,16 @@ interface Shape {
  */
 const SHAPES: Record<Particles, Shape> = {
   none: { className: "", count: 0, min: 0, max: 0, slow: 0, fast: 0, drift: 0, peak: 0 },
-  embers: { className: "ce-p-ember", count: 13, min: 10, max: 26, slow: 22, fast: 46, drift: 70, peak: 0.12 },
-  diya: { className: "ce-p-diya", count: 9, min: 16, max: 34, slow: 26, fast: 52, drift: 50, peak: 0.14 },
-  tricolour: { className: "ce-p-band", count: 12, min: 8, max: 16, slow: 20, fast: 40, drift: 70, peak: 0.11 },
-  petals: { className: "ce-p-petal", count: 14, min: 9, max: 20, slow: 18, fast: 34, drift: 180, peak: 0.11 },
-  marigold: { className: "ce-p-marigold", count: 12, min: 8, max: 16, slow: 20, fast: 38, drift: 130, peak: 0.12 },
-  grain: { className: "ce-p-grain", count: 16, min: 3, max: 7, slow: 26, fast: 48, drift: 220, peak: 0.13 },
-  sparks: { className: "ce-p-spark", count: 12, min: 3, max: 8, slow: 12, fast: 24, drift: 55, peak: 0.13 },
-  sparkle: { className: "ce-p-sparkle", count: 16, min: 4, max: 9, slow: 4, fast: 8, drift: 0, peak: 0.14 },
-  colour: { className: "ce-p-petal", count: 14, min: 9, max: 20, slow: 18, fast: 34, drift: 170, peak: 0.11 },
+  embers: { className: "ce-p-ember", count: 13, min: 10, max: 26, slow: 22, fast: 46, drift: 70, peak: 0.18 },
+  diya: { className: "ce-p-diya", count: 9, min: 16, max: 34, slow: 26, fast: 52, drift: 50, peak: 0.21 },
+  tricolour: { className: "ce-p-band", count: 12, min: 8, max: 16, slow: 20, fast: 40, drift: 70, peak: 0.17 },
+  petals: { className: "ce-p-petal", count: 14, min: 9, max: 20, slow: 18, fast: 34, drift: 180, peak: 0.17 },
+  marigold: { className: "ce-p-marigold", count: 12, min: 8, max: 16, slow: 20, fast: 38, drift: 130, peak: 0.18 },
+  grain: { className: "ce-p-grain", count: 16, min: 3, max: 7, slow: 26, fast: 48, drift: 220, peak: 0.2 },
+  sparks: { className: "ce-p-spark", count: 12, min: 3, max: 8, slow: 12, fast: 24, drift: 55, peak: 0.2 },
+  sparkle: { className: "ce-p-sparkle", count: 16, min: 4, max: 9, slow: 4, fast: 8, drift: 0, peak: 0.21 },
+  colour: { className: "ce-p-petal", count: 14, min: 9, max: 20, slow: 18, fast: 34, drift: 170, peak: 0.17 },
+
 };
 
 /**
