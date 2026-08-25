@@ -1035,6 +1035,7 @@ export type Database = {
           birthday: string | null
           can_manage_calendar: boolean
           created_at: string
+          date_of_birth: string | null
           department: string | null
           exited_on: string | null
           full_name: string
@@ -1060,6 +1061,7 @@ export type Database = {
           birthday?: string | null
           can_manage_calendar?: boolean
           created_at?: string
+          date_of_birth?: string | null
           department?: string | null
           exited_on?: string | null
           full_name: string
@@ -1085,6 +1087,7 @@ export type Database = {
           birthday?: string | null
           can_manage_calendar?: boolean
           created_at?: string
+          date_of_birth?: string | null
           department?: string | null
           exited_on?: string | null
           full_name?: string
@@ -1896,6 +1899,16 @@ export type Database = {
       leave_cover_conflicts: {
         Args: { p_from: string; p_profile_id: string; p_to: string }
         Returns: Json
+      }
+      leave_days_for: {
+        Args: {
+          p_from: string
+          p_half: boolean
+          p_profile_id: string
+          p_to: string
+          p_type: string
+        }
+        Returns: number
       }
       leave_host_conflicts: {
         Args: { p_from: string; p_profile_id: string; p_to: string }
