@@ -79,6 +79,8 @@ export function InvitePanel({
   const [failed, setFailed] = useState<Record<string, string>>({});
   const [running, setRunning] = useState(false);
   const [confirmAll, setConfirmAll] = useState(false);
+  const [copied, setCopied] = useState(false);
+
 
   useEffect(() => {
     setEmails((prev) => {
