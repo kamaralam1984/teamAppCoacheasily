@@ -141,6 +141,18 @@ function LeavePage() {
         {/* a) the work meter comes first — leave is earned by showing up */}
         <WorkMeter summary={summary} />
 
+        {testingActive ? (
+          <section className="ce-rise rounded-[14px] border border-gold/50 bg-cream p-4">
+            <p className="text-sm leading-relaxed text-ink">
+              Your balances were brought across from HR's leave tracker this week. Please
+              check them against your own record — the entitlement, what you have used and
+              what is left. If anything is different, tell HR before you rely on it.
+            </p>
+          </section>
+        ) : null}
+
+
+
         {/* b) what you have this year */}
         <section className="ce-rise ce-card p-6" style={{ animationDelay: "80ms" }}>
           <h2 className="font-display text-2xl text-ink">What you have this year</h2>
