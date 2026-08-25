@@ -168,6 +168,13 @@ function AuthPage() {
             <p className="mt-4 text-center text-xs text-soft">
               Access is invite only. There is no public sign-up.
             </p>
+            <p className="mt-2 text-center text-[13px] text-soft">
+              First time here?{" "}
+              <a href="/join" className="font-semibold text-ink underline-offset-4 hover:underline">
+                Set up your login.
+              </a>
+            </p>
+
           </form>
         </section>
       </div>
