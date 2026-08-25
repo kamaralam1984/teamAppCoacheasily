@@ -109,7 +109,10 @@ export function WarriorForm({
         can_manage_calendar: form.can_manage_calendar,
         responsibilities: form.responsibilities.trim() || null,
         fun_fact: form.fun_fact.trim() || null,
+        email: form.email.trim().toLowerCase() || null,
+        phone: form.phone.trim() || null,
       };
+
 
       let profileId = editing?.id ?? null;
 
