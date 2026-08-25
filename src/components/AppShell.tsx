@@ -15,7 +15,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useMyProfile } from "@/hooks/useMyProfile";
+import { useOrgSettings } from "@/hooks/useOrg";
 import { supabase } from "@/integrations/supabase/client";
+import { isTestingActive, prettyTestingDate } from "@/lib/testing";
 import { roleLabel } from "@/lib/warriors";
 
 const BASE_TABS = [
@@ -47,6 +49,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [signingOut, setSigningOut] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navRef = useRef<HTMLDivElement | null>(null);
+  const { data: orgSettings } = useOrgSettings(Boolean(data?.profile));
 
   const profile = data?.profile ?? null;
   const role = profile?.role ?? "member";
@@ -71,6 +74,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   const label = roleLabel(profile?.role);
+  const testingActive = isTestingActive(orgSettings?.testing_until);
+  const testingLabel = prettyTestingDate(orgSettings?.testing_until);
+
 
   return (
     <div className="relative z-10 min-h-screen">
@@ -169,7 +175,21 @@ export function AppShell({ children }: { children: ReactNode }) {
             })}
           </div>
         </nav>
+
+        {testingActive ? (
+          <div className="border-t border-gold/40 bg-gold/15">
+            <p className="mx-auto max-w-6xl px-4 py-1.5 text-[12px] leading-snug font-semibold text-goldL sm:text-[13px]">
+              Testing week — until {testingLabel} we are checking every number. If something
+              looks wrong, especially your leave balance, please{" "}
+              <Link to="/ideas" className="underline underline-offset-2">
+                tell us
+              </Link>
+              .
+            </p>
+          </div>
+        ) : null}
       </header>
+
 
       <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))]">
         {isLoading && !data ? (

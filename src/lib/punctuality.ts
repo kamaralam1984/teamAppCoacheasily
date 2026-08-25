@@ -40,6 +40,8 @@ export interface OrgSettings {
   sick_quota?: number;
   /** How many casual days one person may take in a single quarter. */
   casual_quarter_cap?: number;
+  /** Launch-week testing notice. YYYY-MM-DD; empty or past switches it off. */
+  testing_until?: string | null;
 }
 
 export const DEFAULT_MEETING_TIME = "11:00";

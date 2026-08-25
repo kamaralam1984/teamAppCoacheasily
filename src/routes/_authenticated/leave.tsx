@@ -16,7 +16,9 @@ import {
 } from "@/hooks/useLeave";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useWarriors } from "@/hooks/useWarriors";
+import { useOrgSettings } from "@/hooks/useOrg";
 import { useTasksInWindow } from "@/hooks/useTasks";
+import { isTestingActive } from "@/lib/testing";
 import { shortDate } from "@/lib/warriors";
 
 export const Route = createFileRoute("/_authenticated/leave")({
@@ -68,6 +70,8 @@ function LeavePage() {
   const { data: balances } = useLeaveBalances(profile ? undefined : null);
   const { data: history } = useMyLeave(profile?.id ?? null);
   const { data: warriors } = useWarriors();
+  const { data: orgSettings } = useOrgSettings(Boolean(profile));
+  const testingActive = isTestingActive(orgSettings?.testing_until);
   const apply = useApplyLeave(profile?.id ?? null, profile?.org_id ?? null);
 
   const today = todayIso();
@@ -140,6 +144,18 @@ function LeavePage() {
       <div className="mx-auto max-w-3xl space-y-6 py-2">
         {/* a) the work meter comes first — leave is earned by showing up */}
         <WorkMeter summary={summary} />
+
+        {testingActive ? (
+          <section className="ce-rise rounded-[14px] border border-gold/50 bg-cream p-4">
+            <p className="text-sm leading-relaxed text-ink">
+              Your balances were brought across from HR's leave tracker this week. Please
+              check them against your own record — the entitlement, what you have used and
+              what is left. If anything is different, tell HR before you rely on it.
+            </p>
+          </section>
+        ) : null}
+
+
 
         {/* b) what you have this year */}
         <section className="ce-rise ce-card p-6" style={{ animationDelay: "80ms" }}>

@@ -91,6 +91,29 @@ function SettingsPage() {
         </section>
 
         <section className="ce-card p-5">
+          <h2 className="font-display text-2xl text-ink">Testing period ends</h2>
+          <input
+            type="date"
+            className="mt-3 min-h-11 rounded-[12px] border border-line bg-pearl px-3 text-sm text-ink"
+            value={settings?.testing_until ?? ""}
+            onChange={(e) =>
+              save.mutate(
+                { testing_until: e.target.value === "" ? null : e.target.value },
+                {
+                  onSuccess: () => toast.success("Saved."),
+                  onError: () => toast.error("That didn't save. Please try again."),
+                },
+              )
+            }
+          />
+          <p className="mt-2 text-[13px] text-soft">
+            The testing banner and the note on the Leave screen both disappear on their own
+            after this date. Clear the field to switch them off straight away.
+          </p>
+        </section>
+
+        <section className="ce-card p-5">
+
           <h2 className="font-display text-2xl text-ink">Daily and weekly digests</h2>
           <label className="mt-3 flex items-start gap-3">
             <input
