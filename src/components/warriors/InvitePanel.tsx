@@ -256,6 +256,14 @@ export function InvitePanel({
                   ) : null}
                 </div>
 
+                <p className="mt-1 text-[12px] text-soft">
+                  {p.email ?? "No work email on the profile yet"}
+                  {p.phone ? ` · ${p.phone}` : ""}
+                  {!s?.has_login && !sent[p.id] ? " · hasn't joined yet" : ""}
+                </p>
+
+
+
                 {done ? (
                   <p className="mt-1.5 text-[13px] text-soft">
                     {sent[p.id] ?? s?.email ?? "Login linked."}
