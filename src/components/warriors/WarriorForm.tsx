@@ -315,15 +315,20 @@ export function WarriorForm({
           </label>
 
           <label>
-            <Label>Birthday (MM-DD)</Label>
+            <Label>Date of birth</Label>
             <input
+              type="date"
               className="ce-input"
-              placeholder="04-19"
-              pattern="\d{2}-\d{2}"
-              value={form.birthday}
-              onChange={(e) => set("birthday", e.target.value)}
+              value={form.date_of_birth}
+              onChange={(e) => set("date_of_birth", e.target.value)}
             />
+            {!form.date_of_birth && editing?.birthday ? (
+              <span className="mt-2 block text-[13px] leading-relaxed text-soft">
+                On record: {editing.birthday} (day and month only). Add the full date here.
+              </span>
+            ) : null}
           </label>
+
 
           <label>
             <Label>Wedding anniversary (MM-DD)</Label>
