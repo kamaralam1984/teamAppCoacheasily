@@ -213,7 +213,7 @@ function LeavePage() {
                 value={type}
                 onChange={(e) => setType(e.target.value as LeaveType)}
               >
-                {LEAVE_TYPES.map((t) => (
+                {leaveTypes.map((t) => (
                   <option key={t.value} value={t.value}>
                     {t.label}
                     {t.note ? ` — ${t.note}` : ""}
