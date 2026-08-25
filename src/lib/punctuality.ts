@@ -42,6 +42,8 @@ export interface OrgSettings {
   casual_quarter_cap?: number;
   /** Launch-week testing notice. YYYY-MM-DD; empty or past switches it off. */
   testing_until?: string | null;
+  /** Compensatory off. Absent or false means the whole feature stays hidden. */
+  comp_off_enabled?: boolean;
 }
 
 export const DEFAULT_MEETING_TIME = "11:00";
