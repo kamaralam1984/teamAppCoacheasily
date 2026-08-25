@@ -63,7 +63,9 @@ export function WarriorForm({
     new_badge: editing?.new_badge ?? "auto",
     responsibilities: editing?.responsibilities ?? "",
     fun_fact: editing?.fun_fact ?? "",
-    email: "",
+    email: editing?.email ?? "",
+    phone: editing?.phone ?? "",
+
   });
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
