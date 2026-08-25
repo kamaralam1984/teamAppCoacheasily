@@ -58,7 +58,7 @@ export function WarriorForm({
     can_manage_calendar: Boolean(editing?.can_manage_calendar),
 
     joined_on: editing?.joined_on ?? "",
-    birthday: editing?.birthday ?? "",
+    date_of_birth: editing?.date_of_birth ?? "",
     wedding_anniversary: editing?.wedding_anniversary ?? "",
     new_badge: editing?.new_badge ?? "auto",
     responsibilities: editing?.responsibilities ?? "",
@@ -98,7 +98,7 @@ export function WarriorForm({
           : 100,
 
         joined_on: form.joined_on || null,
-        birthday: form.birthday || null,
+        date_of_birth: form.date_of_birth || null,
         wedding_anniversary: form.wedding_anniversary || null,
         new_badge: form.new_badge,
         opening_earned_leave:
@@ -315,15 +315,20 @@ export function WarriorForm({
           </label>
 
           <label>
-            <Label>Birthday (MM-DD)</Label>
+            <Label>Date of birth</Label>
             <input
+              type="date"
               className="ce-input"
-              placeholder="04-19"
-              pattern="\d{2}-\d{2}"
-              value={form.birthday}
-              onChange={(e) => set("birthday", e.target.value)}
+              value={form.date_of_birth}
+              onChange={(e) => set("date_of_birth", e.target.value)}
             />
+            {!form.date_of_birth && editing?.birthday ? (
+              <span className="mt-2 block text-[13px] leading-relaxed text-soft">
+                On record: {editing.birthday} (day and month only). Add the full date here.
+              </span>
+            ) : null}
           </label>
+
 
           <label>
             <Label>Wedding anniversary (MM-DD)</Label>

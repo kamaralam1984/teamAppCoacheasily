@@ -109,9 +109,26 @@ function LeavePage() {
   const nameOf = (id: string | null) =>
     id ? ((warriors ?? []).find((w) => w.id === id)?.full_name ?? null) : null;
 
-  const plaques = (balances ?? []).filter(
-    (b) => b.type !== "comp_off" || b.entitled > 0 || b.balance > 0,
+  const compOffOn = orgSettings?.comp_off_enabled === true;
+
+  const leaveTypes = useMemo(
+    () => LEAVE_TYPES.filter((t) => compOffOn || t.value !== "comp_off"),
+    [compOffOn],
   );
+
+  const plaques = (balances ?? [])
+    .filter((b) => compOffOn || b.type !== "comp_off")
+    .filter((b) => b.type !== "comp_off" || b.entitled > 0 || b.balance > 0);
+
+  /** Calendar days in the chosen range — only ever used to explain the charged figure. */
+  const calendarDays = useMemo(() => {
+    if (halfDay || !from || !effectiveTo) return 0;
+    const a = Date.parse(`${from}T00:00:00Z`);
+    const b = Date.parse(`${effectiveTo}T00:00:00Z`);
+    if (!Number.isFinite(a) || !Number.isFinite(b) || b < a) return 0;
+    return Math.round((b - a) / 86400000) + 1;
+  }, [from, effectiveTo, halfDay]);
+
 
   const onSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -196,7 +213,7 @@ function LeavePage() {
                 value={type}
                 onChange={(e) => setType(e.target.value as LeaveType)}
               >
-                {LEAVE_TYPES.map((t) => (
+                {leaveTypes.map((t) => (
                   <option key={t.value} value={t.value}>
                     {t.label}
                     {t.note ? ` — ${t.note}` : ""}
@@ -333,9 +350,19 @@ function LeavePage() {
               />
             </div>
 
-            <p className="text-[13px] font-semibold text-ink">
-              {days} day{days === 1 ? "" : "s"} requested
-            </p>
+            <div>
+              <p className="text-[13px] font-semibold text-ink">
+                {days} day{days === 1 ? "" : "s"} requested
+              </p>
+              {calendarDays > 0 && days > 0 && days < calendarDays ? (
+                <p className="mt-1 text-[12px] leading-relaxed text-soft">
+                  {calendarDays} days selected · {days} leave day{days === 1 ? "" : "s"} — your
+                  weekly off and any public holiday inside this period are not working days, so
+                  they are not counted.
+                </p>
+              ) : null}
+            </div>
+
 
             {errors.map((message) => (
               <p
