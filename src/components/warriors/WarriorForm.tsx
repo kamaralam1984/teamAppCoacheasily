@@ -374,18 +374,33 @@ export function WarriorForm({
             />
           </label>
 
-          {!editing ? (
-            <label className="sm:col-span-2">
-              <Label>Work email (sends their invite)</Label>
-              <input
-                type="email"
-                className="ce-input"
-                value={form.email}
-                onChange={(e) => set("email", e.target.value)}
-                placeholder="name@coacheasily.com"
-              />
-            </label>
-          ) : null}
+          <label className="sm:col-span-2">
+            <Label>Work email</Label>
+            <input
+              type="email"
+              className="ce-input"
+              value={form.email}
+              onChange={(e) => set("email", e.target.value)}
+              placeholder="name@coacheasily.com"
+            />
+            <span className="mt-2 block text-[13px] leading-relaxed text-soft">
+              This is the allow list. Only somebody whose work email is here can set up their own
+              login at /join.
+            </span>
+          </label>
+
+          <label className="sm:col-span-2">
+            <Label>Phone</Label>
+            <input
+              type="tel"
+              inputMode="tel"
+              className="ce-input"
+              value={form.phone}
+              onChange={(e) => set("phone", e.target.value)}
+              placeholder="+91 98200 00000"
+            />
+          </label>
+
 
           <div className="flex flex-wrap gap-3 sm:col-span-2">
             <button type="submit" className="btn3d" disabled={saving}>
