@@ -166,7 +166,27 @@ export function InvitePanel({
           </button>
         </div>
 
+        <div className="mt-4 flex flex-col gap-2 rounded-[12px] border border-line bg-white p-3.5 sm:flex-row sm:items-center">
+          <p className="flex-1 text-[13px] leading-relaxed text-soft">
+            Anyone whose work email is on their profile can set their own password themselves —
+            send them this link on WhatsApp.
+          </p>
+          <button
+            type="button"
+            className="min-h-11 rounded-full border border-line px-4 text-[13px] font-bold text-ink hover:bg-cream"
+            onClick={() => {
+              const link = `${window.location.origin}/join`;
+              void navigator.clipboard?.writeText(link);
+              setCopied(true);
+              window.setTimeout(() => setCopied(false), 2000);
+            }}
+          >
+            {copied ? "Link copied" : "Copy join link"}
+          </button>
+        </div>
+
         {!only ? (
+
           <div className="mt-4 rounded-[12px] border border-line bg-pearl p-3.5">
             {confirmAll ? (
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
