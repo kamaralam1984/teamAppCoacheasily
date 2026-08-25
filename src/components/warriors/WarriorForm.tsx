@@ -58,7 +58,7 @@ export function WarriorForm({
     can_manage_calendar: Boolean(editing?.can_manage_calendar),
 
     joined_on: editing?.joined_on ?? "",
-    birthday: editing?.birthday ?? "",
+    date_of_birth: editing?.date_of_birth ?? "",
     wedding_anniversary: editing?.wedding_anniversary ?? "",
     new_badge: editing?.new_badge ?? "auto",
     responsibilities: editing?.responsibilities ?? "",
