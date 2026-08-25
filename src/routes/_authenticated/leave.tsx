@@ -109,9 +109,26 @@ function LeavePage() {
   const nameOf = (id: string | null) =>
     id ? ((warriors ?? []).find((w) => w.id === id)?.full_name ?? null) : null;
 
-  const plaques = (balances ?? []).filter(
-    (b) => b.type !== "comp_off" || b.entitled > 0 || b.balance > 0,
+  const compOffOn = orgSettings?.comp_off_enabled === true;
+
+  const leaveTypes = useMemo(
+    () => LEAVE_TYPES.filter((t) => compOffOn || t.value !== "comp_off"),
+    [compOffOn],
   );
+
+  const plaques = (balances ?? [])
+    .filter((b) => compOffOn || b.type !== "comp_off")
+    .filter((b) => b.type !== "comp_off" || b.entitled > 0 || b.balance > 0);
+
+  /** Calendar days in the chosen range — only ever used to explain the charged figure. */
+  const calendarDays = useMemo(() => {
+    if (halfDay || !from || !effectiveTo) return 0;
+    const a = Date.parse(`${from}T00:00:00Z`);
+    const b = Date.parse(`${effectiveTo}T00:00:00Z`);
+    if (!Number.isFinite(a) || !Number.isFinite(b) || b < a) return 0;
+    return Math.round((b - a) / 86400000) + 1;
+  }, [from, effectiveTo, halfDay]);
+
 
   const onSubmit = (event: React.FormEvent) => {
     event.preventDefault();
