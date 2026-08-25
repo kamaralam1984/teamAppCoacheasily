@@ -350,9 +350,19 @@ function LeavePage() {
               />
             </div>
 
-            <p className="text-[13px] font-semibold text-ink">
-              {days} day{days === 1 ? "" : "s"} requested
-            </p>
+            <div>
+              <p className="text-[13px] font-semibold text-ink">
+                {days} day{days === 1 ? "" : "s"} requested
+              </p>
+              {calendarDays > 0 && days > 0 && days < calendarDays ? (
+                <p className="mt-1 text-[12px] leading-relaxed text-soft">
+                  {calendarDays} days selected · {days} leave day{days === 1 ? "" : "s"} — your
+                  weekly off and any public holiday inside this period are not working days, so
+                  they are not counted.
+                </p>
+              ) : null}
+            </div>
+
 
             {errors.map((message) => (
               <p
