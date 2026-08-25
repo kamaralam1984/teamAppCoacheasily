@@ -70,6 +70,8 @@ function LeavePage() {
   const { data: balances } = useLeaveBalances(profile ? undefined : null);
   const { data: history } = useMyLeave(profile?.id ?? null);
   const { data: warriors } = useWarriors();
+  const { data: orgSettings } = useOrgSettings(Boolean(profile));
+  const testingActive = isTestingActive(orgSettings?.testing_until);
   const apply = useApplyLeave(profile?.id ?? null, profile?.org_id ?? null);
 
   const today = todayIso();
