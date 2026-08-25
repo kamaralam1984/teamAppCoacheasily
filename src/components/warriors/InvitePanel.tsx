@@ -86,12 +86,13 @@ export function InvitePanel({
       for (const p of people) {
         if (next[p.id] === undefined) {
           // Never guess an address — a wrong one burns a real login against the profile.
-          next[p.id] = statuses?.get(p.id)?.email ?? "";
+          next[p.id] = statuses?.get(p.id)?.email ?? p.email ?? "";
         }
       }
       return next;
     });
   }, [people, statuses]);
+
 
   const validEmail = (v: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.trim());
 
