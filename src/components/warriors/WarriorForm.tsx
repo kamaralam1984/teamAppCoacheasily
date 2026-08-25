@@ -131,22 +131,13 @@ export function WarriorForm({
         profileId = data.id;
       }
 
-      let inviteNote = "";
-      if (!editing && profileId && form.email.trim()) {
-        try {
-          await invite({
-            data: {
-              profileId,
-              email: form.email.trim(),
-              redirectTo: `${window.location.origin}/change-password`,
-            },
-          });
-          inviteNote = " · invite sent";
-        } catch (err) {
-          inviteNote = " · invite could not be sent";
-          console.error(err);
-        }
-      }
+      // Nothing is emailed from here any more: the email above is the allow
+      // list, and the person sets their own password at /join. The old invite
+      // remains available from Logins & invites.
+      const inviteNote = "";
+      void invite;
+      void profileId;
+
 
       const { data: recon } = await supabase.rpc("reconcile_roster");
       const fixedCount =
