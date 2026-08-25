@@ -13,6 +13,7 @@ import {
 import { ImportGoals } from "@/components/goals/ImportGoals";
 import { PreviousCycleCard } from "@/components/goals/PreviousCycleCard";
 import { ReviewMode, type ReviewSlide } from "@/components/goals/ReviewMode";
+import { WeeklyUpdate } from "@/components/goals/WeeklyUpdate";
 import {
   useArchivedGoals,
   useCycles,
