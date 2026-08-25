@@ -13,6 +13,7 @@ import {
 import { ImportGoals } from "@/components/goals/ImportGoals";
 import { PreviousCycleCard } from "@/components/goals/PreviousCycleCard";
 import { ReviewMode, type ReviewSlide } from "@/components/goals/ReviewMode";
+import { WeeklyUpdate } from "@/components/goals/WeeklyUpdate";
 import {
   useArchivedGoals,
   useCycles,
@@ -134,6 +135,15 @@ function Page() {
         ) : null}
 
         <CyclePanel cycle={active} canOpen={Boolean(canOpenCycle)} style={{ animationDelay: "60ms" }} />
+
+        {active && profile ? (
+          <WeeklyUpdate
+            profile={profile}
+            cycle={active}
+            goals={goals ?? []}
+            style={{ animationDelay: "80ms" }}
+          />
+        ) : null}
 
         {active && previous && profile ? (
           <PreviousCycleCard
