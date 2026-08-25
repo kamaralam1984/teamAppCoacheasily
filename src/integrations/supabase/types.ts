@@ -1047,6 +1047,7 @@ export type Database = {
           new_badge: string
           opening_earned_leave: number
           org_id: string
+          phone: string | null
           responsibilities: string | null
           role: string
           sort_order: number
@@ -1073,6 +1074,7 @@ export type Database = {
           new_badge?: string
           opening_earned_leave?: number
           org_id: string
+          phone?: string | null
           responsibilities?: string | null
           role?: string
           sort_order?: number
@@ -1099,6 +1101,7 @@ export type Database = {
           new_badge?: string
           opening_earned_leave?: number
           org_id?: string
+          phone?: string | null
           responsibilities?: string | null
           role?: string
           sort_order?: number
@@ -1828,6 +1831,61 @@ export type Database = {
           },
         ]
       }
+      weekly_reviews: {
+        Row: {
+          created_at: string
+          cycle_id: string | null
+          id: string
+          note: string | null
+          org_id: string
+          profile_id: string
+          updated_at: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          cycle_id?: string | null
+          id?: string
+          note?: string | null
+          org_id: string
+          profile_id: string
+          updated_at?: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          cycle_id?: string | null
+          id?: string
+          note?: string | null
+          org_id?: string
+          profile_id?: string
+          updated_at?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_reviews_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_reviews_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_reviews_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1960,6 +2018,10 @@ export type Database = {
       release_history: { Args: never; Returns: Json }
       request_checkin: { Args: { p_note?: string }; Returns: string }
       revenue_summary: { Args: never; Returns: Json }
+      save_weekly_review: {
+        Args: { p_note: string; p_week_start?: string }
+        Returns: string
+      }
       set_idea_status: {
         Args: { p_idea_id: string; p_note?: string; p_status: string }
         Returns: Json
@@ -1989,6 +2051,7 @@ export type Database = {
       theme_patch_is_safe: { Args: { p: Json }; Returns: boolean }
       update_org_settings: { Args: { p_patch: Json }; Returns: Json }
       vote_idea: { Args: { p_idea_id: string }; Returns: number }
+      week_start_ist: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
