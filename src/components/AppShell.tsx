@@ -74,6 +74,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   const label = roleLabel(profile?.role);
+  const testingActive = isTestingActive(orgSettings?.testing_until);
+  const testingLabel = prettyTestingDate(orgSettings?.testing_until);
+
 
   return (
     <div className="relative z-10 min-h-screen">
