@@ -49,6 +49,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [signingOut, setSigningOut] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navRef = useRef<HTMLDivElement | null>(null);
+  const { data: orgSettings } = useOrgSettings(Boolean(data?.profile));
 
   const profile = data?.profile ?? null;
   const role = profile?.role ?? "member";
