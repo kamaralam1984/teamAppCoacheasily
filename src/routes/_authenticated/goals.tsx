@@ -136,6 +136,15 @@ function Page() {
 
         <CyclePanel cycle={active} canOpen={Boolean(canOpenCycle)} style={{ animationDelay: "60ms" }} />
 
+        {active && profile ? (
+          <WeeklyUpdate
+            profile={profile}
+            cycle={active}
+            goals={goals ?? []}
+            style={{ animationDelay: "80ms" }}
+          />
+        ) : null}
+
         {active && previous && profile ? (
           <PreviousCycleCard
             cycle={previous}
