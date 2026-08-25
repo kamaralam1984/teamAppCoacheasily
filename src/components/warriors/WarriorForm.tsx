@@ -63,7 +63,9 @@ export function WarriorForm({
     new_badge: editing?.new_badge ?? "auto",
     responsibilities: editing?.responsibilities ?? "",
     fun_fact: editing?.fun_fact ?? "",
-    email: "",
+    email: editing?.email ?? "",
+    phone: editing?.phone ?? "",
+
   });
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
@@ -109,7 +111,10 @@ export function WarriorForm({
         can_manage_calendar: form.can_manage_calendar,
         responsibilities: form.responsibilities.trim() || null,
         fun_fact: form.fun_fact.trim() || null,
+        email: form.email.trim().toLowerCase() || null,
+        phone: form.phone.trim() || null,
       };
+
 
       let profileId = editing?.id ?? null;
 
@@ -126,22 +131,13 @@ export function WarriorForm({
         profileId = data.id;
       }
 
-      let inviteNote = "";
-      if (!editing && profileId && form.email.trim()) {
-        try {
-          await invite({
-            data: {
-              profileId,
-              email: form.email.trim(),
-              redirectTo: `${window.location.origin}/change-password`,
-            },
-          });
-          inviteNote = " · invite sent";
-        } catch (err) {
-          inviteNote = " · invite could not be sent";
-          console.error(err);
-        }
-      }
+      // Nothing is emailed from here any more: the email above is the allow
+      // list, and the person sets their own password at /join. The old invite
+      // remains available from Logins & invites.
+      const inviteNote = "";
+      void invite;
+      void profileId;
+
 
       const { data: recon } = await supabase.rpc("reconcile_roster");
       const fixedCount =
@@ -374,18 +370,33 @@ export function WarriorForm({
             />
           </label>
 
-          {!editing ? (
-            <label className="sm:col-span-2">
-              <Label>Work email (sends their invite)</Label>
-              <input
-                type="email"
-                className="ce-input"
-                value={form.email}
-                onChange={(e) => set("email", e.target.value)}
-                placeholder="name@coacheasily.com"
-              />
-            </label>
-          ) : null}
+          <label className="sm:col-span-2">
+            <Label>Work email</Label>
+            <input
+              type="email"
+              className="ce-input"
+              value={form.email}
+              onChange={(e) => set("email", e.target.value)}
+              placeholder="name@coacheasily.com"
+            />
+            <span className="mt-2 block text-[13px] leading-relaxed text-soft">
+              This is the allow list. Only somebody whose work email is here can set up their own
+              login at /join.
+            </span>
+          </label>
+
+          <label className="sm:col-span-2">
+            <Label>Phone</Label>
+            <input
+              type="tel"
+              inputMode="tel"
+              className="ce-input"
+              value={form.phone}
+              onChange={(e) => set("phone", e.target.value)}
+              placeholder="+91 98200 00000"
+            />
+          </label>
+
 
           <div className="flex flex-wrap gap-3 sm:col-span-2">
             <button type="submit" className="btn3d" disabled={saving}>

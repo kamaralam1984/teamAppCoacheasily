@@ -1037,6 +1037,7 @@ export type Database = {
           created_at: string
           date_of_birth: string | null
           department: string | null
+          email: string | null
           exited_on: string | null
           full_name: string
           fun_fact: string | null
@@ -1064,6 +1065,7 @@ export type Database = {
           created_at?: string
           date_of_birth?: string | null
           department?: string | null
+          email?: string | null
           exited_on?: string | null
           full_name: string
           fun_fact?: string | null
@@ -1091,6 +1093,7 @@ export type Database = {
           created_at?: string
           date_of_birth?: string | null
           department?: string | null
+          email?: string | null
           exited_on?: string | null
           full_name?: string
           fun_fact?: string | null
@@ -1900,6 +1903,7 @@ export type Database = {
       can_keep_calendar: { Args: never; Returns: boolean }
       can_read_goal: { Args: { p_goal_id: string }; Returns: boolean }
       checkin_talked: { Args: { p_id: string }; Returns: undefined }
+      claim_invite: { Args: { p_email: string }; Returns: Json }
       daily_code_today: { Args: never; Returns: Json }
       digest_daily: {
         Args: never
@@ -1983,6 +1987,7 @@ export type Database = {
         }
         Returns: string
       }
+      link_claimed_profile: { Args: never; Returns: Json }
       log_goal_entry: {
         Args: {
           p_amount?: number
