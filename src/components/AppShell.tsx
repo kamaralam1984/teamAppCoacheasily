@@ -172,7 +172,21 @@ export function AppShell({ children }: { children: ReactNode }) {
             })}
           </div>
         </nav>
+
+        {testingActive ? (
+          <div className="border-t border-gold/40 bg-gold/15">
+            <p className="mx-auto max-w-6xl px-4 py-1.5 text-[12px] leading-snug font-semibold text-goldL sm:text-[13px]">
+              Testing week — until {testingLabel} we are checking every number. If something
+              looks wrong, especially your leave balance, please{" "}
+              <Link to="/ideas" className="underline underline-offset-2">
+                tell us
+              </Link>
+              .
+            </p>
+          </div>
+        ) : null}
       </header>
+
 
       <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))]">
         {isLoading && !data ? (
