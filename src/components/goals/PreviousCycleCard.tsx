@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import { ProgressNumbers } from "@/components/goals/ProgressNumbers";
 import { useGoalsFor, useLogEntry } from "@/hooks/useGoals";
 import { fmt, type Cycle, type GoalWithProgress } from "@/lib/goals";
 import { shortDate } from "@/lib/warriors";
@@ -65,12 +66,12 @@ export function PreviousCycleCard({
                 : "border-line bg-cream/50"
             }`}
           >
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <p className="text-[14px] font-bold text-ink">{goal.name}</p>
-              <span className="text-[12px] font-bold text-goldD">
-                {(progress?.entries_count ?? 0) > 0 ? `${fmt(progress?.pct ?? 0)}%` : "not recorded"}
-              </span>
-            </div>
+            <p className="text-[14px] font-bold text-ink">{goal.name}</p>
+            {(progress?.entries_count ?? 0) > 0 ? (
+              <ProgressNumbers progress={progress} className="mt-1" />
+            ) : (
+              <p className="mt-1 text-[13px] font-semibold text-soft">not recorded</p>
+            )}
             <p className="mt-1 text-[13px] text-soft">
               {fmt(goal.baseline)} → {fmt(progress?.current_value ?? goal.baseline)} → target{" "}
               {fmt(goal.target)} {goal.unit ?? ""}
