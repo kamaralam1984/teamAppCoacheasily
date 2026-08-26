@@ -60,6 +60,12 @@ function Page() {
 
   const { data: goals } = useGoalsFor(profile ? undefined : null, active?.id ?? null);
   const [draft, setDraft] = useState<GoalDraft | null>(null);
+  const draftRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!draft) return;
+    draftRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [draft]);
+
 
   const role = profile?.role ?? "member";
   const canOpenCycle = role === "hr" || role === "admin";
