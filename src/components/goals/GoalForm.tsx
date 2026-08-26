@@ -111,14 +111,11 @@ export function GoalForm({
   const submit = () => {
     const baseline = Number(d.baseline);
     const target = Number(d.target);
-    if (baseline === target) {
-      setError("Where you are and where you're going cannot be the same number.");
-      return;
-    }
     if (d.kind === "funnel" && (stages.length < 2 || stages.length > 5)) {
       setError("A funnel needs between two and five steps.");
       return;
     }
+
 
     /* A fork never rewrites history — the old goal stays exactly as it is. */
     const input: SaveGoalInput = {
