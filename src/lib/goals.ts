@@ -330,3 +330,54 @@ export function missingDays(
   }
   return out;
 }
+
+/* ── two figures, each explained ───────────────────────────────
+   Movement stays the headline. "Of target" sits beside it, quieter.
+   Nothing here computes a percentage — both come from goal_progress. */
+
+export const PROGRESS_EXPLAINER = [
+  "Moved this cycle is how far you travelled from where you started towards your target. It only counts what changed in these 45 days.",
+  "Of target is how close you are to the finish line. It includes where you already were when the cycle began.",
+  "Both matter. Moving from 0 to 7 is real work even when the target is 20 — that is why we lead with movement.",
+];
+
+export interface ProgressWords {
+  /** the leading figure, always with its words */
+  lead: string;
+  /** the quieter second figure, or null when there is no movement to show */
+  aside: string | null;
+  /** one plain sentence for this situation */
+  sentence: string;
+  holding: boolean;
+}
+
+export function progressWords(p: GoalProgress | null | undefined): ProgressWords {
+  const pct = p?.pct ?? 0;
+  const ofTarget = p?.of_target ?? 0;
+
+  if (p?.hold_the_line) {
+    return {
+      lead: `${fmt(ofTarget)}% of target`,
+      aside: null,
+      holding: true,
+      sentence:
+        ofTarget >= 100
+          ? "Held the line all cycle, exactly as asked."
+          : "Slipped below the level you were holding.",
+    };
+  }
+
+  let sentence: string;
+  if (pct >= 100) sentence = "Target reached. Well done.";
+  else if (pct <= 0 && ofTarget >= 70)
+    sentence = `You held at ${fmt(p?.current_value)} all cycle. Strong position, but the number did not move.`;
+  else if (pct <= 0) sentence = "The number has not moved yet. Worth asking what is in the way.";
+  else sentence = "Some ground gained. Still a way to the target.";
+
+  return {
+    lead: `${fmt(pct)}% moved this cycle`,
+    aside: `${fmt(ofTarget)}% of target`,
+    holding: false,
+    sentence,
+  };
+}
