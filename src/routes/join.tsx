@@ -76,27 +76,33 @@ function JoinPage() {
     setBusy(true);
     setError(null);
 
-    const { error: signUpError } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-    });
-
-    if (signUpError) {
+    let result: { ok: boolean; error?: string };
+    try {
+      result = await createLoginFn({ data: { email: email.trim(), password } });
+    } catch {
       setBusy(false);
-      setError(
-        "It looks like a login already exists for this address. Please sign in instead — you can reset your password there.",
-      );
+      setError("We couldn't finish setting you up just now. Please try again.");
       return;
     }
 
-    const { error: linkError } = await supabase.rpc("link_claimed_profile");
+    if (!result.ok) {
+      setBusy(false);
+      setError(result.error ?? "We couldn't finish setting you up.");
+      return;
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    });
     setBusy(false);
-    if (linkError) {
-      setError("We couldn't finish setting you up. Please ask HR to check your work email.");
+    if (signInError) {
+      setError("Your login is ready. Please sign in on the sign-in page.");
       return;
     }
     navigate({ to: "/dashboard", replace: true });
   }
+
 
   return (
     <main className="relative z-10 min-h-screen w-full overflow-x-hidden">
