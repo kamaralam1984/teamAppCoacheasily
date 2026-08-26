@@ -2,7 +2,9 @@ import { useMemo, useState } from "react";
 import { Lightbulb, X } from "lucide-react";
 import { useRouterState } from "@tanstack/react-router";
 
+import { FilePicker } from "@/components/FilePicker";
 import {
+  SCREENSHOT_MAX_BYTES,
   SCREENSHOT_TYPES,
   similarIdeas,
   uploadIdeaScreenshot,
@@ -188,36 +190,25 @@ function Sheet({ onClose }: { onClose: () => void }) {
             <div className="rounded-lg border border-line bg-ivory p-3">
               <p className="text-[13px] font-bold text-ink">Add a screenshot (optional)</p>
               <p className="mt-0.5 text-[12px] text-soft">
-                PNG, JPG or WEBP, up to 5MB. It helps us see exactly what you are seeing.
+                It helps us see exactly what you are seeing.
               </p>
-              <input
-                type="file"
-                accept={SCREENSHOT_TYPES.join(",")}
-                onChange={(e) => pick(e.target.files?.[0] ?? null)}
-                className="mt-2 block w-full text-[12px] text-soft"
-              />
-              {shotUrl ? (
-                <div className="mt-3 flex items-center gap-3">
-                  <img
-                    src={shotUrl}
-                    alt="Your screenshot"
-                    className="h-20 w-auto rounded-lg border border-line"
-                  />
-                  <button
-                    type="button"
-                    className="min-h-9 rounded-full border border-line px-3 text-[12px] font-bold text-soft"
-                    onClick={() => pick(null)}
-                  >
-                    Remove
-                  </button>
-                </div>
-              ) : null}
+              <div className="mt-2">
+                <FilePicker
+                  label="Add a screenshot"
+                  accept={SCREENSHOT_TYPES.join(",")}
+                  maxBytes={SCREENSHOT_MAX_BYTES}
+                  uploading={uploading}
+                  hint="PNG, JPG or WEBP, up to 5MB."
+                  onSelect={(f) => pick(f)}
+                />
+              </div>
               {shotFailed ? (
                 <p className="mt-2 text-[12px] font-semibold text-goldD">
                   The picture would not upload — we sent your words through anyway.
                 </p>
               ) : null}
             </div>
+
 
             <label className="flex items-start gap-3 text-[13px] text-ink">
               <input

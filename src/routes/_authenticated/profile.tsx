@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
+import { FilePicker } from "@/components/FilePicker";
 import { WarriorAvatar } from "@/components/warriors/Avatar";
 import { useAttendanceSummary } from "@/hooks/useAttendance";
 import {
@@ -126,7 +127,6 @@ function ProfilePage() {
   const [savingPersonal, setSavingPersonal] = useState(false);
   const [edu, setEdu] = useState({ institution: "", qualification: "", field: "", start_year: "", end_year: "" });
   const [emp, setEmp] = useState({ employer: "", designation: "", from_date: "", to_date: "", notes: "" });
-  const fileRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!profile) return;
@@ -166,7 +166,6 @@ function ProfilePage() {
       toast.error(message(e));
     } finally {
       setBusy(false);
-      if (fileRef.current) fileRef.current.value = "";
     }
   }
 
@@ -245,27 +244,44 @@ function ProfilePage() {
           </p>
         </header>
 
-        <Section
-          title="Who you are"
-          note="Your name, role, department and reporting line are looked after by HR — ask them if anything here is wrong."
-        >
-          <div className="flex flex-wrap items-center gap-4">
+        <Section title="Your photo" note="A clear face helps the team put a name to a person.">
+          <div className="flex flex-col items-center gap-4">
             <WarriorAvatar
               name={profile.full_name}
-              size={76}
+              size={132}
               birthday={profile.birthday}
               path={profile.avatar_url}
               src={preview}
             />
-            <div className="min-w-0">
-              <p className="font-display text-2xl leading-tight text-ink">{profile.full_name}</p>
-              <p className="mt-0.5 text-sm text-soft">{profile.title ?? "—"}</p>
-              {label ? (
-                <span className="mt-2 inline-block rounded-full bg-cream px-2 py-0.5 text-[10px] font-bold tracking-wider text-goldD uppercase">
-                  {label}
-                </span>
-              ) : null}
+            <div className="w-full max-w-md">
+              <FilePicker
+                label={profile.avatar_url ? "Change your photo" : "Add your photo"}
+                accept="image/jpeg,image/png,image/webp"
+                maxBytes={3 * 1024 * 1024}
+                uploading={busy}
+                uploadingLabel="Uploading…"
+                hint="JPEG, PNG or WEBP, up to 3MB. It is shrunk before upload."
+                onSelect={(f) => {
+                  if (f) void onPickPhoto(f);
+                }}
+                {...(profile.avatar_url ? { onRemove: onRemovePhoto } : {})}
+              />
             </div>
+          </div>
+        </Section>
+
+        <Section
+          title="Who you are"
+          note="Your name, role, department and reporting line are looked after by HR — ask them if anything here is wrong."
+        >
+          <div className="min-w-0">
+            <p className="font-display text-2xl leading-tight text-ink">{profile.full_name}</p>
+            <p className="mt-0.5 text-sm text-soft">{profile.title ?? "—"}</p>
+            {label ? (
+              <span className="mt-2 inline-block rounded-full bg-cream px-2 py-0.5 text-[10px] font-bold tracking-wider text-goldD uppercase">
+                {label}
+              </span>
+            ) : null}
           </div>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <Read label="Department" value={profile.department ?? "—"} />
@@ -275,34 +291,6 @@ function ProfilePage() {
           </div>
         </Section>
 
-        <Section title="Your photo" note="A clear face helps the team put a name to a person.">
-          <div className="flex flex-wrap items-center gap-3">
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="text-[13px] text-soft"
-              disabled={busy}
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) void onPickPhoto(f);
-              }}
-            />
-            {profile.avatar_url ? (
-              <button
-                type="button"
-                className="btn3d btn3d-ghost"
-                disabled={busy}
-                onClick={() => void onRemovePhoto()}
-              >
-                Remove photo
-              </button>
-            ) : null}
-          </div>
-          <p className="mt-2 text-[13px] text-soft">
-            {busy ? "Working on it…" : "JPEG, PNG or WEBP. It is shrunk before upload."}
-          </p>
-        </Section>
 
         <Section title="About you">
           <div className="grid gap-4 sm:grid-cols-2">

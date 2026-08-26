@@ -13,6 +13,7 @@ import {
   useSaveHrPrivate,
   type PrivateRecord,
 } from "@/hooks/useHrRecord";
+import { FilePicker } from "@/components/FilePicker";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/lib/warriors";
 
@@ -318,12 +319,13 @@ export function HrRecord({ profile }: { profile: Profile }) {
               </div>
               <div>
                 <Label>PAN document</Label>
-                <input
-                  type="file"
+                <FilePicker
+                  label="Upload PAN card"
                   accept="image/*,application/pdf"
-                  className="text-[13px] text-soft"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
+                  maxBytes={10 * 1024 * 1024}
+                  uploading={busy}
+                  hint="An image or a PDF, up to 10MB."
+                  onSelect={(f) => {
                     if (f) void upload("pan", f);
                   }}
                 />
@@ -355,12 +357,13 @@ export function HrRecord({ profile }: { profile: Profile }) {
               </div>
               <div>
                 <Label>Aadhaar document</Label>
-                <input
-                  type="file"
+                <FilePicker
+                  label="Upload Aadhaar"
                   accept="image/*,application/pdf"
-                  className="text-[13px] text-soft"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
+                  maxBytes={10 * 1024 * 1024}
+                  uploading={busy}
+                  hint="An image or a PDF, up to 10MB."
+                  onSelect={(f) => {
                     if (f) void upload("aadhaar", f);
                   }}
                 />
