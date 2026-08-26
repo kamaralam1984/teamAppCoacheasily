@@ -15,11 +15,13 @@ export const getRouter = () => {
   const queryClient = new QueryClient({
     mutationCache: new MutationCache({
       onError: (error, _vars, _ctx, mutation) => {
-        // A mutation that handles its own errors stays in charge of the wording.
+        // A hook that words its own failure stays in charge of it.
         if (mutation.options.onError) return;
-        toast.error(humanMessage(error));
+        const msg = humanMessage(error);
+        toast.error(msg, { id: msg });
       },
     }),
+
     defaultOptions: {
       queries: {
         staleTime: 5 * 60_000,
