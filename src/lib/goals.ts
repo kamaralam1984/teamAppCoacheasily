@@ -10,6 +10,10 @@ export interface GoalProgress {
   kind: "number" | "funnel";
   current_value: number;
   pct: number;
+  /** how close to the line, counting where they already were */
+  of_target: number;
+  /** target equals baseline — there is no movement to measure */
+  hold_the_line: boolean;
   totals: number[];
   week_totals: number[];
   prev_week_totals: number[];
