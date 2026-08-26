@@ -8,11 +8,12 @@ export interface QuickAddProps {
   meId: string;
   line: Profile[];
   openTasks: Task[];
+  goals?: { id: string; name: string }[];
   pending?: boolean;
   onAdd: (input: TaskInput) => void;
 }
 
-export function QuickAdd({ meId, line, openTasks, pending, onAdd }: QuickAddProps) {
+export function QuickAdd({ meId, line, openTasks, goals = [], pending, onAdd }: QuickAddProps) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -21,6 +22,7 @@ export function QuickAdd({ meId, line, openTasks, pending, onAdd }: QuickAddProp
   const [priority, setPriority] = useState<Priority>("Normal");
   const [owner, setOwner] = useState(meId);
   const [blockedBy, setBlockedBy] = useState("");
+  const [goalId, setGoalId] = useState("");
 
   const submit = () => {
     if (!title.trim()) return;
@@ -32,6 +34,7 @@ export function QuickAdd({ meId, line, openTasks, pending, onAdd }: QuickAddProp
       priority,
       owner_id: owner || meId,
       blocked_by: blockedBy || null,
+      goal_id: goalId || null,
     });
     setTitle("");
     setDescription("");
@@ -39,6 +42,7 @@ export function QuickAdd({ meId, line, openTasks, pending, onAdd }: QuickAddProp
     setSlot("Anytime");
     setPriority("Normal");
     setBlockedBy("");
+    setGoalId("");
     setOwner(meId);
     setOpen(false);
   };
@@ -158,6 +162,27 @@ export function QuickAdd({ meId, line, openTasks, pending, onAdd }: QuickAddProp
                 ))}
               </select>
             </div>
+
+            {goals.length > 0 ? (
+              <div>
+                <label htmlFor="qa-goal" className="ce-label">
+                  Which goal does this move?
+                </label>
+                <select
+                  id="qa-goal"
+                  className="ce-input"
+                  value={goalId}
+                  onChange={(e) => setGoalId(e.target.value)}
+                >
+                  <option value="">Not linked to a goal</option>
+                  {goals.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
           </div>
 
           <button

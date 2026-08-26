@@ -7,9 +7,12 @@ import {
   shortDay,
   type Task,
 } from "@/lib/tasks";
+import { CARRY_COACHING, carriedLine } from "@/lib/day";
 
 export interface TaskRowProps {
   task: Task;
+  goalName?: string | null;
+  mine?: boolean;
   ownerName?: string | null;
   fromName?: string | null;
   blockerTitle?: string | null;
@@ -20,6 +23,8 @@ export interface TaskRowProps {
 
 export function TaskRow({
   task,
+  goalName,
+  mine,
   ownerName,
   fromName,
   blockerTitle,
@@ -79,6 +84,16 @@ export function TaskRow({
               {task.priority}
             </span>
           ) : null}
+          {goalName ? (
+            <span className="rounded-full bg-cream px-2 py-0.5 text-[11px] font-bold text-goldD">
+              {goalName}
+            </span>
+          ) : null}
+          {carriedLine(task.carried_count) ? (
+            <span className="text-[11px] font-semibold text-soft">
+              {carriedLine(task.carried_count)}
+            </span>
+          ) : null}
           {blockerTitle ? (
             <span
               className={
@@ -90,6 +105,10 @@ export function TaskRow({
             </span>
           ) : null}
         </div>
+
+        {mine && task.carried_count >= 3 && !task.done ? (
+          <p className="mt-1.5 text-[12px] leading-relaxed text-soft">{CARRY_COACHING}</p>
+        ) : null}
       </div>
 
       {onDelete ? (
