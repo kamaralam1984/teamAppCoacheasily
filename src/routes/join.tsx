@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 
 import { Mark } from "@/components/Mark";
+import { createJoinLogin } from "@/lib/join.functions";
 import { supabase } from "@/integrations/supabase/client";
 
 const DESCRIPTION =
@@ -31,6 +33,7 @@ function passwordProblem(pw: string): string | null {
 
 function JoinPage() {
   const navigate = useNavigate();
+  const createLoginFn = useServerFn(createJoinLogin);
   const [step, setStep] = useState<"email" | "password">("email");
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
