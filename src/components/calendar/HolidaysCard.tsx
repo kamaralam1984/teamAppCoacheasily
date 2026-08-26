@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { useState } from "react";
 
 import { ConfirmButton } from "@/components/ConfirmButton";
@@ -86,7 +87,15 @@ export function HolidaysCard({
             className="btn3d-ghost btn3d"
             disabled={!name.trim() || add.isPending}
             onClick={() =>
-              add.mutate({ date, name: name.trim() }, { onSuccess: () => setName("") })
+              add.mutate(
+                { date, name: name.trim() },
+                {
+                  onSuccess: () => {
+                    setName("");
+                    toast.success("Holiday added.");
+                  },
+                },
+              )
             }
           >
             Add holiday
