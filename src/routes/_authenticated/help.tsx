@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createFileRoute, Link, useRouterState } from "@tanstack/react-router";
 import { ChevronDown, Search } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
 import { HELP_GROUPS, searchHelp, type HelpGroup, type HelpTopic } from "@/lib/help";
+
 
 export const Route = createFileRoute("/_authenticated/help")({
   head: () => ({
@@ -27,11 +28,34 @@ export const Route = createFileRoute("/_authenticated/help")({
   component: HelpPage,
 });
 
-function Topic({ topic, open }: { topic: HelpTopic; open: boolean }) {
+function Topic({
+  topic,
+  open,
+  highlight,
+}: {
+  topic: HelpTopic;
+  open: boolean;
+  highlight?: boolean;
+}) {
   const [expanded, setExpanded] = useState(open);
-  const isOpen = open || expanded;
+  const ref = useRef<HTMLDivElement>(null);
+  const isOpen = open || expanded || Boolean(highlight);
+
+  useEffect(() => {
+    if (!highlight) return;
+    setExpanded(true);
+    ref.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [highlight]);
+
   return (
-    <div className="border-b border-line last:border-0">
+    <div
+      ref={ref}
+      className={
+        highlight
+          ? "rounded-2xl bg-gold/15 px-3 ring-2 ring-goldL transition-colors"
+          : "border-b border-line transition-colors last:border-0"
+      }
+    >
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
@@ -56,10 +80,30 @@ function Topic({ topic, open }: { topic: HelpTopic; open: boolean }) {
   );
 }
 
+
 function HelpPage() {
   const [q, setQ] = useState("");
   const found = useMemo(() => searchHelp(q), [q]);
   const searching = q.trim().length > 0;
+
+  /** Arriving from a screen's "How do I use this?" — open that topic and land on it. */
+  const searchStr = useRouterState({ select: (s) => s.location.searchStr });
+  const wanted = useMemo(() => {
+    const key = new URLSearchParams(searchStr.replace(/^\?/, "")).get("topic");
+    return key && key.trim() ? key : null;
+  }, [searchStr]);
+  const [glow, setGlow] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") window.scrollTo({ top: 0 });
+  }, []);
+
+  useEffect(() => {
+    if (!wanted) return;
+    setGlow(wanted);
+    const t = window.setTimeout(() => setGlow(null), 2600);
+    return () => window.clearTimeout(t);
+  }, [wanted]);
 
   const byGroup = useMemo(() => {
     const map = new Map<HelpGroup, HelpTopic[]>();
@@ -70,6 +114,7 @@ function HelpPage() {
     }
     return map;
   }, [found]);
+
 
   return (
     <AppShell>
@@ -112,7 +157,7 @@ function HelpPage() {
             <h2 className="ce-label">{group}</h2>
             <div className="mt-2">
               {(byGroup.get(group) ?? []).map((t) => (
-                <Topic key={t.key} topic={t} open={searching} />
+                <Topic key={t.key} topic={t} open={searching} highlight={glow === t.key} />
               ))}
             </div>
           </section>

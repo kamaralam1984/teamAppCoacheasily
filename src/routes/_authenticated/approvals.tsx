@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
@@ -187,7 +188,10 @@ function RequestCard({
             type="button"
             className="btn3d w-full sm:w-auto"
             disabled={decide.isPending}
-            onClick={() => decide.mutate({ id: request.id, status: "approved" })}
+            onClick={() => decide.mutate(
+                { id: request.id, status: "approved" },
+                { onSuccess: () => toast.success("Approved. They have been told.") },
+              )}
           >
             Approve
           </button>
@@ -195,7 +199,10 @@ function RequestCard({
             type="button"
             className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-line bg-white px-5 text-[15px] font-bold text-ink sm:w-auto"
             disabled={decide.isPending}
-            onClick={() => decide.mutate({ id: request.id, status: "rejected" })}
+            onClick={() => decide.mutate(
+                { id: request.id, status: "rejected" },
+                { onSuccess: () => toast.success("Declined. They have been told.") },
+              )}
           >
             Reject
           </button>

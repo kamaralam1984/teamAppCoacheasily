@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { useState } from "react";
 import { ConfirmButton } from "@/components/ConfirmButton";
 
@@ -95,7 +96,10 @@ export function Rituals({
           className="mt-3 flex flex-col gap-2 sm:flex-row"
           onSubmit={(e) => {
             e.preventDefault();
-            if (!text.trim()) return;
+            if (!text.trim()) {
+              toast.error("Write the ritual first.");
+              return;
+            }
             add.mutate(
               { text, sortOrder: rituals.length + 1 },
               { onSuccess: () => setText("") },

@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { useState } from "react";
 
 import { PRIORITIES, SLOTS, type Priority, type Slot, type Task } from "@/lib/tasks";
@@ -25,7 +26,10 @@ export function QuickAdd({ meId, line, openTasks, goals = [], pending, onAdd }: 
   const [goalId, setGoalId] = useState("");
 
   const submit = () => {
-    if (!title.trim()) return;
+    if (!title.trim()) {
+      toast.error("Type what the task is first.");
+      return;
+    }
     onAdd({
       title,
       description,

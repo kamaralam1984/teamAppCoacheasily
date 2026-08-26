@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { useState } from "react";
 
 import { ConfirmButton } from "@/components/ConfirmButton";
@@ -97,7 +98,10 @@ export function Playbook({
           className="mt-3 flex flex-col gap-2 sm:flex-row"
           onSubmit={(e) => {
             e.preventDefault();
-            if (!text.trim()) return;
+            if (!text.trim()) {
+              toast.error("Write the step first.");
+              return;
+            }
             add.mutate(
               { department, text, sortOrder: items.length + 1 },
               { onSuccess: () => setText("") },

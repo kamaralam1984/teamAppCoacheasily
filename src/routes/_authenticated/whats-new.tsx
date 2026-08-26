@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -330,24 +331,7 @@ function Composer() {
           type="button"
           className="btn3d btn3d-ghost w-full sm:w-auto"
           disabled={!canSave || save.isPending}
-          onClick={() =>
-            save.mutate(
-              {
-                id: editingId,
-                title: title.trim(),
-                summary: summary.trim(),
-                items: items.filter((i) => i.title.trim().length > 0),
-              },
-              { onSuccess: (id) => setEditingId(id) },
-            )
-          }
-        >
-          {save.isPending ? "Saving…" : "Save draft"}
-        </button>
-        <button
-          type="button"
-          className="btn3d w-full sm:w-auto"
-          disabled={!canSave || save.isPending || publish.isPending}
+          title={canSave ? undefined : "Give it a title and a summary first"}
           onClick={() =>
             save.mutate(
               {
@@ -358,7 +342,36 @@ function Composer() {
               },
               {
                 onSuccess: (id) => {
-                  publish.mutate(id, { onSuccess: () => reset() });
+                  setEditingId(id);
+                  toast.success("Draft saved.");
+                },
+              },
+            )
+          }
+        >
+          {save.isPending ? "Saving…" : "Save draft"}
+        </button>
+        <button
+          type="button"
+          className="btn3d w-full sm:w-auto"
+          disabled={!canSave || save.isPending || publish.isPending}
+          title={canSave ? undefined : "Give it a title and a summary first"}
+          onClick={() =>
+            save.mutate(
+              {
+                id: editingId,
+                title: title.trim(),
+                summary: summary.trim(),
+                items: items.filter((i) => i.title.trim().length > 0),
+              },
+              {
+                onSuccess: (id) => {
+                  publish.mutate(id, {
+                    onSuccess: () => {
+                      toast.success("Published. Everybody will see it.");
+                      reset();
+                    },
+                  });
                 },
               },
             )
