@@ -28,11 +28,34 @@ export const Route = createFileRoute("/_authenticated/help")({
   component: HelpPage,
 });
 
-function Topic({ topic, open }: { topic: HelpTopic; open: boolean }) {
+function Topic({
+  topic,
+  open,
+  highlight,
+}: {
+  topic: HelpTopic;
+  open: boolean;
+  highlight?: boolean;
+}) {
   const [expanded, setExpanded] = useState(open);
-  const isOpen = open || expanded;
+  const ref = useRef<HTMLDivElement>(null);
+  const isOpen = open || expanded || Boolean(highlight);
+
+  useEffect(() => {
+    if (!highlight) return;
+    setExpanded(true);
+    ref.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [highlight]);
+
   return (
-    <div className="border-b border-line last:border-0">
+    <div
+      ref={ref}
+      className={
+        highlight
+          ? "rounded-2xl bg-gold/15 px-3 ring-2 ring-goldL transition-colors"
+          : "border-b border-line transition-colors last:border-0"
+      }
+    >
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
@@ -56,6 +79,7 @@ function Topic({ topic, open }: { topic: HelpTopic; open: boolean }) {
     </div>
   );
 }
+
 
 function HelpPage() {
   const [q, setQ] = useState("");
