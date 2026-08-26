@@ -346,6 +346,14 @@ export function GoalForm({
                 placeholder="0"
               />
             </label>
+            {d.target.trim() !== "" &&
+            d.baseline.trim() !== "" &&
+            Number(d.target) === Number(d.baseline) ? (
+              <p className="text-[13px] leading-relaxed text-soft">
+                Same number — this is a hold-the-line goal. You'll score on keeping it there.
+              </p>
+            ) : null}
+
             <label className="flex items-start gap-3 rounded-[14px] border border-line bg-cream/50 p-3">
               <input
                 type="checkbox"
