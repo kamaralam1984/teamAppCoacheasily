@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { HelpCircle } from "lucide-react";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -8,8 +8,10 @@ import { helpForScreen, type HelpScreen } from "@/lib/help";
 /** A quiet "How do I use this?" beside a screen heading. */
 export function HelpLink({ screen, tone = "ink" }: { screen: HelpScreen; tone?: "ink" | "light" }) {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
   const topic = helpForScreen(screen);
   if (!topic) return null;
+
 
   return (
     <>
