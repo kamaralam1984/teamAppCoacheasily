@@ -149,10 +149,13 @@ function Page() {
           <PreviousCycleCard
             cycle={previous}
             profileId={profile.id}
+            orgId={profile.org_id}
+            department={profile.department}
             onCarryForward={(d) => setDraft(d)}
             style={{ animationDelay: "100ms" }}
           />
         ) : null}
+
 
         {active && profile ? (
           draft ? (
