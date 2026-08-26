@@ -55,12 +55,17 @@ function WarriorsPage() {
   const [exiting, setExiting] = useState<Profile | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteOnly, setInviteOnly] = useState<Profile | null>(null);
+  const [showPast, setShowPast] = useState(false);
 
   const viewer = mine?.profile ?? null;
   const canManage = isPrivileged(viewer?.role);
   const all = useMemo(() => warriors ?? [], [warriors]);
   const active = useMemo(() => all.filter((p) => p.status === "active"), [all]);
-  const tree = useMemo(() => buildTree(all), [all]);
+  const visible = useMemo(
+    () => (canManage && showPast ? all : active),
+    [all, active, canManage, showPast],
+  );
+  const tree = useMemo(() => buildTree(visible), [visible]);
   const { data: logins } = useLoginStatus(canManage);
   const withoutLogin = useMemo(
     () => (logins ? active.filter((p) => !logins.get(p.id)?.has_login).length : 0),
