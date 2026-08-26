@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
+import { HelpLink } from "@/components/help/HelpLink";
 import { TeamPanel } from "@/components/goals/TeamPanel";
 import { useMyProfile } from "@/hooks/useMyProfile";
 
@@ -36,6 +37,7 @@ function Page() {
       <div className="mx-auto max-w-3xl space-y-6 py-2">
         <header className="ce-rise">
           <h1 className="font-display text-4xl text-ink">Team</h1>
+          <HelpLink screen="team" />
           <p className="mt-1 text-sm text-soft">
             {role === "hr" || role === "admin"
               ? "Every warrior's goals for the active cycle."

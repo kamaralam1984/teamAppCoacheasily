@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.release_announce() FROM PUBLIC, anon, authenticated;

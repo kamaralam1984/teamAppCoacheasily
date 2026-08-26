@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, KeyRound, LogOut, Sparkles, UserRound } from "lucide-react";
+import { ChevronDown, KeyRound, LifeBuoy, LogOut, Sparkles, UserRound } from "lucide-react";
 
 import { Mark } from "@/components/Mark";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useOrgSettings } from "@/hooks/useOrg";
+import { useLatestUnseenRelease } from "@/hooks/useReleases";
+
 import { supabase } from "@/integrations/supabase/client";
 import { isTestingActive, prettyTestingDate } from "@/lib/testing";
 import { roleLabel } from "@/lib/warriors";
@@ -50,6 +52,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navRef = useRef<HTMLDivElement | null>(null);
   const { data: orgSettings } = useOrgSettings(Boolean(data?.profile));
+  const { data: unseenRelease } = useLatestUnseenRelease(Boolean(data?.profile));
+
 
   const profile = data?.profile ?? null;
   const role = profile?.role ?? "member";
@@ -97,7 +101,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="ml-auto flex items-center gap-2">
             {role === "hr" || role === "admin" ? <ThemePicker canSetDefault /> : null}
 
-            <SubmitIdea enabled={Boolean(profile)} />
+            <span data-tour="idea" className="inline-flex">
+              <SubmitIdea enabled={Boolean(profile)} />
+            </span>
 
             <NotificationBell enabled={Boolean(profile)} />
 
@@ -106,8 +112,16 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <button
                   type="button"
                   aria-label="Account menu"
-                  className="flex h-11 min-w-11 items-center gap-2 rounded-lg px-2 text-left transition-colors hover:bg-night2"
+                  data-tour="account"
+                  className="relative flex h-11 min-w-11 items-center gap-2 rounded-lg px-2 text-left transition-colors hover:bg-night2"
                 >
+                  {unseenRelease ? (
+                    <span
+                      aria-hidden
+                      className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-goldL"
+                    />
+                  ) : null}
+
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-night2 text-[11px] font-bold tracking-wide text-goldL sm:hidden">
                     {(profile?.full_name ?? data?.user?.email ?? "?")
                       .split(" ")
@@ -138,6 +152,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuItem asChild>
                   <Link to="/whats-new" className="flex items-center gap-2">
                     <Sparkles size={16} /> What's new
+                    {unseenRelease ? (
+                      <span aria-hidden className="ml-auto h-2 w-2 rounded-full bg-goldD" />
+                    ) : null}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/help" className="flex items-center gap-2">
+                    <LifeBuoy size={16} /> Help
                   </Link>
                 </DropdownMenuItem>
 
@@ -146,6 +168,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     <KeyRound size={16} /> Change password
                   </Link>
                 </DropdownMenuItem>
+
                 <DropdownMenuItem
                   onSelect={() => {
                     void handleSignOut();
@@ -169,6 +192,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                   key={tab.label}
                   to={tab.to}
                   data-active={active}
+                  data-tour={tab.to === "/leave" ? "tab-leave" : undefined}
+
                   className={
                     active
                       ? "flex min-h-11 shrink-0 items-center rounded-full bg-night px-4 text-sm font-bold whitespace-nowrap text-goldL"

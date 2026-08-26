@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouterState } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
 import { Celebrate } from "@/components/Celebrate";
@@ -48,6 +48,10 @@ import {
 import { shortDate } from "@/lib/warriors";
 import { birthdaysOn, firstName, isBirthdayToday, istToday } from "@/lib/birthdays";
 import { useTheme } from "@/hooks/useTheme";
+import { HelpLink } from "@/components/help/HelpLink";
+import { Tour } from "@/components/help/Tour";
+import { useMarkTourSeen, useTourSeen } from "@/hooks/useTour";
+
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -92,6 +96,16 @@ function Dashboard() {
   const { theme } = useTheme();
   const { data } = useMyProfile();
   const profile = data?.profile ?? null;
+
+  /* ── The first-run walkthrough ───────────────────────────── */
+  const searchStr = useRouterState({ select: (s) => s.location.searchStr });
+  const { data: tourSeen } = useTourSeen(profile?.id ?? null);
+  const markTour = useMarkTourSeen(profile?.id ?? null, profile?.org_id ?? null);
+  const [tourDismissed, setTourDismissed] = useState(false);
+  const askedForTour = searchStr.includes("tour=1");
+  const showTour =
+    Boolean(profile) && !tourDismissed && (askedForTour || tourSeen === false);
+
 
   const { data: summary } = useAttendanceSummary(profile ? undefined : null);
   const { data: history } = useAttendanceHistory(profile?.id ?? null, 7);
@@ -196,7 +210,16 @@ function Dashboard() {
 
   return (
     <AppShell>
+      {showTour ? (
+        <Tour
+          onDone={() => {
+            setTourDismissed(true);
+            markTour.mutate();
+          }}
+        />
+      ) : null}
       <div className="mx-auto max-w-3xl space-y-6 py-2">
+
         {/* ── Hero ───────────────────────────────────────────── */}
         <section
           className="ce-rise relative overflow-hidden rounded-[14px] bg-night p-6 text-white shadow-[0_10px_30px_rgba(23,17,38,0.18)] sm:p-8"
@@ -244,8 +267,16 @@ function Dashboard() {
             {profile?.title ? `${profile.title} · ` : ""}
             {profile?.department ?? "CoachEasily"}
           </p>
+          <div className="mt-1">
+            <HelpLink screen="dashboard" tone="light" />
+          </div>
 
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+
+          <div
+            data-tour="attendance"
+            className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center"
+          >
+
             {marked ? (
               <div className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-emer px-5 text-[15px] font-bold text-white sm:w-auto">
                 <span aria-hidden>✓</span> Present today ·{" "}
@@ -324,7 +355,7 @@ function Dashboard() {
 
         {/* ── The code, readable all day ─────────────────────── */}
         {todayCode ? (
-          <section className="ce-rise ce-card p-5" style={{ animationDelay: "40ms" }}>
+          <section data-tour="code" className="ce-rise ce-card p-5" style={{ animationDelay: "40ms" }}>
             <p className="ce-label">Today&rsquo;s code · {todayCode.value}</p>
             <h2 className="mt-1 font-display text-xl leading-snug text-ink">{todayCode.title}</h2>
             <p className="mt-2 text-[13px] leading-[1.75] text-soft">{todayCode.body}</p>
@@ -354,17 +385,20 @@ function Dashboard() {
         ) : null}
 
         <div className="grid gap-6 md:grid-cols-2">
-          <WinTheDay
-            tasks={tasks}
-            meId={profile?.id ?? null}
-            onToggle={(t) =>
-              updateTask.mutate({
-                id: t.id,
-                patch: { done: !t.done, done_at: t.done ? null : new Date().toISOString() },
-              })
-            }
-            style={{ animationDelay: "60ms" }}
-          />
+          <div data-tour="priorities">
+            <WinTheDay
+              tasks={tasks}
+              meId={profile?.id ?? null}
+              onToggle={(t) =>
+                updateTask.mutate({
+                  id: t.id,
+                  patch: { done: !t.done, done_at: t.done ? null : new Date().toISOString() },
+                })
+              }
+              style={{ animationDelay: "60ms" }}
+            />
+          </div>
+
           {profile ? (
             <Rituals
               me={profile}
@@ -400,11 +434,14 @@ function Dashboard() {
 
         <MyTasksCard tasks={tasks} meId={profile?.id ?? null} style={{ animationDelay: "120ms" }} />
 
-        <MyGoalsCard
-          goals={myGoals ?? []}
-          cycle={activeCycle}
-          style={{ animationDelay: "130ms" }}
-        />
+        <div data-tour="goals">
+          <MyGoalsCard
+            goals={myGoals ?? []}
+            cycle={activeCycle}
+            style={{ animationDelay: "130ms" }}
+          />
+        </div>
+
 
 
         <ComingUp

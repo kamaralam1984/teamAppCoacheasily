@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
+import { HelpLink } from "@/components/help/HelpLink";
 import { CyclePanel } from "@/components/goals/CyclePanel";
 import { GoalCard } from "@/components/goals/GoalCard";
 import {
@@ -114,6 +115,7 @@ function Page() {
       <div className="mx-auto max-w-3xl space-y-6 py-2">
         <header className="ce-rise">
           <h1 className="font-display text-4xl text-ink">Your goals</h1>
+          <HelpLink screen="goals" />
           <p className="mt-1 text-sm text-soft">
             Measured from where you started — never from zero.
           </p>

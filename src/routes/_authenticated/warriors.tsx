@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
+import { HelpLink } from "@/components/help/HelpLink";
 import { PresenceBoard } from "@/components/PresenceBoard";
 import { ExitDialog } from "@/components/warriors/ExitDialog";
 import { InvitePanel, useLoginStatus } from "@/components/warriors/InvitePanel";
@@ -116,6 +117,7 @@ function WarriorsPage() {
         <header className="ce-rise flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="font-display text-4xl leading-tight text-ink">Warriors</h1>
+          <HelpLink screen="warriors" />
             <p className="mt-1.5 text-sm text-soft">
               {active.length} active {active.length === 1 ? "warrior" : "warriors"} at CoachEasily.
             </p>

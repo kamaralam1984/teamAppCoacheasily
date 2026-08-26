@@ -1700,6 +1700,29 @@ export type Database = {
           },
         ]
       }
+      release_announced: {
+        Row: {
+          announced_at: string
+          release_id: string
+        }
+        Insert: {
+          announced_at?: string
+          release_id: string
+        }
+        Update: {
+          announced_at?: string
+          release_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_announced_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: true
+            referencedRelation: "releases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       release_items: {
         Row: {
           created_at: string
@@ -2212,6 +2235,42 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tour_seen: {
+        Row: {
+          created_at: string
+          org_id: string
+          profile_id: string
+          seen_at: string
+        }
+        Insert: {
+          created_at?: string
+          org_id: string
+          profile_id: string
+          seen_at?: string
+        }
+        Update: {
+          created_at?: string
+          org_id?: string
+          profile_id?: string
+          seen_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tour_seen_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tour_seen_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

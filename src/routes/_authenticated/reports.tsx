@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { postAnnouncement, sendTestEmail } from "@/lib/email.functions";
 
 import { AppShell } from "@/components/AppShell";
+import { HelpLink } from "@/components/help/HelpLink";
 import { AppraisalTable } from "@/components/reports/AppraisalTable";
 import { RevenueCard } from "@/components/reports/RevenueCard";
 import { LeaveLedgerTable } from "@/components/reports/LeaveLedgerTable";
@@ -116,6 +117,7 @@ function Page() {
       <div className="mx-auto max-w-5xl space-y-6 py-2">
         <header className="ce-rise">
           <h1 className="font-display text-4xl text-ink">Reports</h1>
+          <HelpLink screen="reports" />
           <p className="mt-1 text-sm text-soft">
             HR only. Everything below is in Mumbai time.
           </p>

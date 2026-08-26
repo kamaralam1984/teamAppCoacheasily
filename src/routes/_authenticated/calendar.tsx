@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
+import { HelpLink } from "@/components/help/HelpLink";
 import { AgendaView } from "@/components/calendar/AgendaView";
 import { DayDetail } from "@/components/calendar/DayDetail";
 import { EventEditor, type EditTarget } from "@/components/calendar/EventEditor";
@@ -275,6 +276,7 @@ function CalendarPage() {
       <div className="mx-auto max-w-4xl space-y-5 py-2">
         <div className="ce-rise">
           <h1 className="font-display text-3xl text-ink">Company calendar</h1>
+          <HelpLink screen="calendar" />
           <p className="mt-1 text-sm text-soft">
             Everything CoachEasily is running, and who is away while it runs.
           </p>

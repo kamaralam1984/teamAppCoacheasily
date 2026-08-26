@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
+import { HelpLink } from "@/components/help/HelpLink";
 import { Celebrate } from "@/components/Celebrate";
 import { WorkMeter } from "@/components/WorkMeter";
 import { useAttendanceSummary } from "@/hooks/useAttendance";
@@ -159,6 +160,11 @@ function LeavePage() {
   return (
     <AppShell>
       <div className="mx-auto max-w-3xl space-y-6 py-2">
+        <header>
+          <h1 className="font-display text-3xl text-ink">Leave</h1>
+          <HelpLink screen="leave" />
+        </header>
+
         {/* a) the work meter comes first — leave is earned by showing up */}
         <WorkMeter summary={summary} />
 

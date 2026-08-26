@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
+import { HelpLink } from "@/components/help/HelpLink";
 import { PulseResultsPanel } from "@/components/ideas/PulseResults";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import {
@@ -127,6 +128,7 @@ function Page() {
       <div className="mx-auto max-w-3xl space-y-6 py-2">
         <section className="ce-rise ce-card p-8">
           <h1 className="font-display text-3xl text-ink">Ideas &amp; improvements</h1>
+          <HelpLink screen="ideas" />
           <p className="mt-3 max-w-lg text-sm text-soft">
             Tell us what is broken, what is slow, what would help — and what we should protect.
             Everything here gets a status, and every status change is public.

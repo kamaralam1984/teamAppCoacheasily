@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
+import { HelpLink } from "@/components/help/HelpLink";
 import {
   TYPE_LABEL,
   useDecideLeave,
@@ -225,6 +226,7 @@ function Approvals() {
       <div className="mx-auto max-w-3xl space-y-5 py-2">
         <div className="ce-rise">
           <h1 className="font-display text-3xl text-ink">Approvals</h1>
+          <HelpLink screen="approvals" />
           <p className="mt-2 text-sm text-soft">
             Longest waiting at the top. Every decision reaches the applicant straight away.
           </p>
