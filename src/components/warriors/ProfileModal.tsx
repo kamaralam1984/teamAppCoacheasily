@@ -65,7 +65,13 @@ export function ProfileModal({
         </DialogHeader>
 
         <div className="flex items-center gap-4">
-          <WarriorAvatar name={profile.full_name} size={62} birthday={profile.birthday} />
+          <WarriorAvatar
+            name={profile.full_name}
+            size={62}
+            birthday={profile.birthday}
+            path={profile.avatar_url}
+          />
+
           <div className="min-w-0">
             <h2 className="font-display text-2xl leading-tight text-ink">{profile.full_name}</h2>
             <p className="mt-0.5 text-sm text-soft">{profile.title ?? "—"}</p>

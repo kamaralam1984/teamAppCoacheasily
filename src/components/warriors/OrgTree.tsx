@@ -25,6 +25,7 @@ function Row({
   index,
   logins,
   onInvite,
+  gaps,
 }: {
   node: TreeNode;
   depth: number;
@@ -35,11 +36,15 @@ function Row({
   canManage: boolean;
   logins?: Map<string, LoginBadge> | undefined;
   onInvite?: ((p: Profile) => void) | undefined;
+  /** HR/Admin only: the basics still to be filled in, per profile. */
+  gaps?: Map<string, string[]> | undefined;
 }) {
   const p = node.profile;
   const label = roleLabel(p.role);
   const login = logins?.get(p.id);
   const needsLogin = Boolean(canManage && logins && p.status === "active" && !login?.has_login);
+  const missing = gaps?.get(p.id);
+
 
   return (
     <div className={depth > 0 ? "border-l border-line pl-3 sm:pl-5" : ""}>
@@ -52,7 +57,7 @@ function Row({
           onClick={() => onOpen(p)}
           className="flex min-w-0 flex-1 items-center gap-3 rounded-lg text-left focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
         >
-          <WarriorAvatar name={p.full_name} birthday={p.birthday} />
+          <WarriorAvatar name={p.full_name} birthday={p.birthday} path={p.avatar_url} />
           <span className="min-w-0 flex-1">
             <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="truncate text-[15px] font-bold text-ink">{p.full_name}</span>
@@ -82,6 +87,12 @@ function Row({
               ) : null}
             </span>
             <span className="mt-1 block truncate text-[13px] text-soft">{subtitle(p)}</span>
+            {missing && missing.length > 0 ? (
+              <span className="mt-1 block text-[12px] text-soft italic">
+                Still to fill in: {missing.join(", ")}
+              </span>
+            ) : null}
+
           </span>
         </button>
 
@@ -133,6 +144,7 @@ function Row({
               canManage={canManage}
               logins={logins}
               onInvite={onInvite}
+              gaps={gaps}
             />
           ))}
         </div>
@@ -149,6 +161,7 @@ export function OrgTree({
   canManage,
   logins,
   onInvite,
+  gaps,
 }: {
   tree: TreeNode[];
   onOpen: (p: Profile) => void;
@@ -157,6 +170,7 @@ export function OrgTree({
   canManage: boolean;
   logins?: Map<string, LoginBadge> | undefined;
   onInvite?: ((p: Profile) => void) | undefined;
+  gaps?: Map<string, string[]> | undefined;
 }) {
   if (tree.length === 0) {
     return <p className="text-sm text-soft">No warriors yet.</p>;
@@ -175,8 +189,10 @@ export function OrgTree({
           canManage={canManage}
           logins={logins}
           onInvite={onInvite}
+          gaps={gaps}
         />
       ))}
+
     </div>
   );
 }
