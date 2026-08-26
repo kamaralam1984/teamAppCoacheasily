@@ -31,6 +31,7 @@ export interface TaskInput {
   priority: Priority;
   owner_id: string;
   blocked_by?: string | null;
+  goal_id?: string | null;
 }
 
 export function useCreateTasks(orgId?: string | null, createdBy?: string | null) {
@@ -49,9 +50,11 @@ export function useCreateTasks(orgId?: string | null, createdBy?: string | null)
           slot: t.slot,
           priority: t.priority,
           blocked_by: t.blocked_by || null,
+          goal_id: t.goal_id || null,
         })),
       );
       if (error) throw error;
+
 
       const assigned = inputs.filter((t) => t.owner_id !== createdBy);
       for (const task of assigned) {
@@ -65,7 +68,11 @@ export function useCreateTasks(orgId?: string | null, createdBy?: string | null)
       }
       return inputs.length;
     },
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ["tasks"] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["tasks"] });
+      void qc.invalidateQueries({ queryKey: ["my-day"] });
+    },
+
   });
 }
 
