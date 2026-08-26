@@ -2,7 +2,9 @@ import { useMemo, useState } from "react";
 import { Lightbulb, X } from "lucide-react";
 import { useRouterState } from "@tanstack/react-router";
 
+import { FilePicker } from "@/components/FilePicker";
 import {
+  SCREENSHOT_MAX_BYTES,
   SCREENSHOT_TYPES,
   similarIdeas,
   uploadIdeaScreenshot,
