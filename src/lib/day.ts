@@ -70,3 +70,22 @@ export function carriedLine(count: number): string | null {
 
 export const CARRY_COACHING =
   "This has moved three times. Is it too big to finish in a day, or is it not really a priority?";
+
+const NUMBER_WORDS = [
+  "zero",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+];
+
+/** "five" for 5, and the digits beyond ten — so the heading reads at any cap. */
+export function countWord(n: number): string {
+  return NUMBER_WORDS[n] ?? String(n);
+}

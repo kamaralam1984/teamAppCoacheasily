@@ -5,7 +5,7 @@ import { toPng } from "html-to-image";
 import { Mark } from "@/components/Mark";
 import { useCloseDay, useCommitDay, useMyDay } from "@/hooks/useDay";
 import { useUpdateTask } from "@/hooks/useTasks";
-import { CARRY_COACHING, carriedLine, prettyLongDate, type DayTask, type MyDay } from "@/lib/day";
+import { CARRY_COACHING, carriedLine, countWord, prettyLongDate, type DayTask, type MyDay } from "@/lib/day";
 import type { Profile } from "@/hooks/useMyProfile";
 
 const ROLE_LABEL: Record<string, string> = {
