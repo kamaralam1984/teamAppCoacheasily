@@ -1,0 +1,81 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { supabase } from "@/integrations/supabase/client";
+import type { CloseResult, DayReportRow, MyDay } from "@/lib/day";
+
+/** Today's plan, straight from my_day(). */
+export function useMyDay(enabled: boolean) {
+  return useQuery({
+    queryKey: ["my-day"],
+    enabled,
+    queryFn: async (): Promise<MyDay | null> => {
+      const { data, error } = await supabase.rpc("my_day", {});
+      if (error) throw error;
+      return (data as unknown as MyDay | null) ?? null;
+    },
+  });
+}
+
+export function useCommitDay() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (taskIds: string[]) => {
+      const { error } = await supabase.rpc("commit_day", { p_task_ids: taskIds });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["my-day"] });
+      void qc.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
+}
+
+export function useCloseDay() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (note: string): Promise<CloseResult> => {
+      const { data, error } = await supabase.rpc("close_day", { p_note: note });
+      if (error) throw error;
+      return data as unknown as CloseResult;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["my-day"] });
+      void qc.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
+}
+
+/** Kept promises for one person over a window — self, downline or HR. */
+export function useDayReport(profileId: string | null, from: string, to: string) {
+  return useQuery({
+    queryKey: ["day-report", profileId ?? "none", from, to],
+    enabled: Boolean(profileId),
+    queryFn: async (): Promise<DayReportRow[]> => {
+      const { data, error } = await supabase.rpc("day_report", {
+        p_profile_id: profileId!,
+        p_from: from,
+        p_to: to,
+      });
+      if (error) throw error;
+      return (data as unknown as DayReportRow[] | null) ?? [];
+    },
+  });
+}
+
+/** How many of a person's open tasks are currently carrying forward. */
+export function useCarryingCount(profileId: string | null) {
+  return useQuery({
+    queryKey: ["carrying", profileId ?? "none"],
+    enabled: Boolean(profileId),
+    queryFn: async (): Promise<number> => {
+      const { count, error } = await supabase
+        .from("tasks")
+        .select("id", { count: "exact", head: true })
+        .eq("owner_id", profileId!)
+        .eq("done", false)
+        .gte("carried_count", 1);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+}

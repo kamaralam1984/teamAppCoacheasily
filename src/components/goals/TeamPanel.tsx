@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 
 import { Ring } from "@/components/goals/Ring";
 import { useRemindAll, useTeamGoals } from "@/hooks/useGoals";
+import { KeptPromises } from "@/components/tasks/KeptPromises";
 import { fmt, type TeamGoalRow } from "@/lib/goals";
 import { initials, roleLabel, shortDate } from "@/lib/warriors";
 
@@ -146,6 +147,8 @@ export function TeamPanel({ canSeePast }: { canSeePast: boolean }) {
                 </span>
               ) : null}
             </div>
+
+            <KeptPromises profileId={row.profile.id} />
 
             {row.goals.length > 0 ? (
               <ul className="mt-4 space-y-3">
