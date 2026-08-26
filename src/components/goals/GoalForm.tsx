@@ -197,7 +197,7 @@ export function GoalForm({
 
         {step === 1 ? (
           <>
-            {hasHistory ? (
+            {hasHistory && d.kind === "funnel" ? (
               <div className="rounded-[14px] border border-gold/50 bg-gold/8 p-4">
                 <p className="text-[13px] leading-relaxed font-bold text-ink">
                   This goal already has {initial.entriesCount} day
@@ -229,6 +229,14 @@ export function GoalForm({
                 </button>
               </div>
             ) : null}
+
+            {hasHistory && d.kind !== "funnel" ? (
+              <p className="text-[13px] leading-relaxed text-soft">
+                Go ahead — the name, what you're counting, the unit, your starting number and your
+                target can all be changed. The days already logged stay exactly as they are.
+              </p>
+            ) : null}
+
 
             {forked ? (
               <p className="rounded-[14px] border border-emer/40 bg-emer/8 p-3 text-[13px] font-bold text-emer">
