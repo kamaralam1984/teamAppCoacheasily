@@ -103,8 +103,18 @@ function Dashboard() {
   const markTour = useMarkTourSeen(profile?.id ?? null, profile?.org_id ?? null);
   const [tourDismissed, setTourDismissed] = useState(false);
   const askedForTour = searchStr.includes("tour=1");
+  /** An explicit restart. Held in state and stripped from the URL, so a refresh does not loop it. */
+  const [forceTour, setForceTour] = useState(false);
+  useEffect(() => {
+    if (!askedForTour) return;
+    setForceTour(true);
+    if (typeof window !== "undefined") {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, [askedForTour]);
   const showTour =
-    Boolean(profile) && !tourDismissed && (askedForTour || tourSeen === false);
+    Boolean(profile) && !tourDismissed && (forceTour || tourSeen === false);
+
 
 
   const { data: summary } = useAttendanceSummary(profile ? undefined : null);
