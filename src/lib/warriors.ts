@@ -5,6 +5,7 @@ export type Profile = Tables<"profiles">;
 export const DEPARTMENTS = [
   "Leadership",
   "People & Culture",
+  "Private Coaching",
   "Operations",
   "Coaching",
   "Community",
@@ -187,14 +188,16 @@ function roleRank(role: string | null | undefined) {
 }
 
 /**
- * Sibling order at every level: role rank (People & Culture / Admin, then
- * Manager, then Warrior), then the hand-set display order, then name A→Z.
+ * Sibling order at every level: the hand-set display order comes first (it is
+ * the explicit instruction from a human), then role rank (People & Culture /
+ * Admin, then Manager, then Warrior) settles ties when two siblings share the
+ * same sort_order, then name A→Z as the final tie-break.
  */
 export function compareSiblings(a: Profile, b: Profile): number {
-  const byRole = roleRank(a.role) - roleRank(b.role);
-  if (byRole !== 0) return byRole;
   const byOrder = (a.sort_order ?? 100) - (b.sort_order ?? 100);
   if (byOrder !== 0) return byOrder;
+  const byRole = roleRank(a.role) - roleRank(b.role);
+  if (byRole !== 0) return byRole;
   return a.full_name.localeCompare(b.full_name);
 }
 
