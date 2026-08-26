@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import { Lightbulb, X } from "lucide-react";
 import { useRouterState } from "@tanstack/react-router";
@@ -79,7 +80,10 @@ function Sheet({ onClose }: { onClose: () => void }) {
   }
 
   async function send() {
-    if (!title.trim()) return;
+    if (!title.trim()) {
+      toast.error("Give it a short title first, so people know what this is about.");
+      return;
+    }
     let path: string | null = null;
     if (shot) {
       setUploading(true);

@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { useState } from "react";
 
 import { ProgressNumbers } from "@/components/goals/ProgressNumbers";
@@ -34,7 +35,10 @@ export function GoalCard({ item, editable, onEdit, canPurge = false, style }: Pr
   const saveLearnings = useSaveLearnings();
 
   const submitReview = () => {
-    if (!reviewValue.trim() && !reviewNote.trim()) return;
+    if (!reviewValue.trim() && !reviewNote.trim()) {
+      toast.error("Add a number or a note before saving.");
+      return;
+    }
     const stamp = new Date().toLocaleString("en-GB", {
       day: "numeric",
       month: "short",
