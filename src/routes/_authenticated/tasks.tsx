@@ -7,10 +7,12 @@ import { Playbook } from "@/components/culture/Playbook";
 import { BrainDump } from "@/components/tasks/BrainDump";
 
 import { QuickAdd } from "@/components/tasks/QuickAdd";
+import { TodayPanel } from "@/components/tasks/TodayPanel";
 import { TaskRow } from "@/components/tasks/TaskRow";
 import { WeekCard } from "@/components/tasks/WeekCard";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useWarriors } from "@/hooks/useWarriors";
+import { useGoalsFor } from "@/hooks/useGoals";
 import {
   myLine,
   useBlockedNudge,
@@ -75,6 +77,14 @@ function Page() {
   );
   const byId = useMemo(() => new Map((tasks ?? []).map((t) => [t.id, t])), [tasks]);
 
+  const { data: myGoals } = useGoalsFor(me?.id ?? null);
+  const goalOptions = useMemo(
+    () => (myGoals ?? []).map((g) => ({ id: g.goal.id, name: g.goal.name })),
+    [myGoals],
+  );
+  const goalNameOf = (id: string | null) =>
+    id ? (goalOptions.find((g) => g.id === id)?.name ?? null) : null;
+
   const overdue = groups.find((g) => g.key === "overdue")?.tasks.length ?? 0;
   const dueToday = groups.find((g) => g.key === "today")?.tasks.length ?? 0;
 
@@ -118,10 +128,23 @@ function Page() {
 
 
         {me ? (
+          <TodayPanel
+            profile={me}
+            adding={create.isPending}
+            onAddTask={(title) =>
+              create.mutate([
+                { title, slot: "Anytime", priority: "Normal", owner_id: me.id },
+              ])
+            }
+          />
+        ) : null}
+
+        {me ? (
           <QuickAdd
             meId={me.id}
             line={line}
             openTasks={mine.filter((t) => !t.done)}
+            goals={goalOptions}
             pending={create.isPending}
             onAdd={(input) =>
               create.mutate([input], {
@@ -152,6 +175,8 @@ function Page() {
                   <TaskRow
                     key={t.id}
                     task={t}
+                    mine
+                    goalName={goalNameOf(t.goal_id)}
                     fromName={t.created_by !== me?.id ? nameOf(t.created_by) : null}
                     blockerTitle={blocker && !blocker.done ? blocker.title : null}
                     blockerLate={Boolean(
