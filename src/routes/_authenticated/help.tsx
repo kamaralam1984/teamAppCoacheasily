@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createFileRoute, Link, useRouterState } from "@tanstack/react-router";
 import { ChevronDown, Search } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
 import { HELP_GROUPS, searchHelp, type HelpGroup, type HelpTopic } from "@/lib/help";
+
 
 export const Route = createFileRoute("/_authenticated/help")({
   head: () => ({
