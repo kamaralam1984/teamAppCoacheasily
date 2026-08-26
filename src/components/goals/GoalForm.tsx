@@ -111,14 +111,11 @@ export function GoalForm({
   const submit = () => {
     const baseline = Number(d.baseline);
     const target = Number(d.target);
-    if (baseline === target) {
-      setError("Where you are and where you're going cannot be the same number.");
-      return;
-    }
     if (d.kind === "funnel" && (stages.length < 2 || stages.length > 5)) {
       setError("A funnel needs between two and five steps.");
       return;
     }
+
 
     /* A fork never rewrites history — the old goal stays exactly as it is. */
     const input: SaveGoalInput = {
@@ -168,7 +165,9 @@ export function GoalForm({
             <label className="block">
               <span className="ce-label">Name your goal</span>
               <input
+                autoFocus
                 className="ce-input mt-1 h-12 w-full"
+
                 value={d.name}
                 onChange={(e) => set({ name: e.target.value })}
                 placeholder="e.g. Turn more calls into closures"
@@ -200,7 +199,7 @@ export function GoalForm({
 
         {step === 1 ? (
           <>
-            {hasHistory ? (
+            {hasHistory && d.kind === "funnel" ? (
               <div className="rounded-[14px] border border-gold/50 bg-gold/8 p-4">
                 <p className="text-[13px] leading-relaxed font-bold text-ink">
                   This goal already has {initial.entriesCount} day
@@ -232,6 +231,14 @@ export function GoalForm({
                 </button>
               </div>
             ) : null}
+
+            {hasHistory && d.kind !== "funnel" ? (
+              <p className="text-[13px] leading-relaxed text-soft">
+                Go ahead — the name, what you're counting, the unit, your starting number and your
+                target can all be changed. The days already logged stay exactly as they are.
+              </p>
+            ) : null}
+
 
             {forked ? (
               <p className="rounded-[14px] border border-emer/40 bg-emer/8 p-3 text-[13px] font-bold text-emer">
@@ -341,6 +348,14 @@ export function GoalForm({
                 placeholder="0"
               />
             </label>
+            {d.target.trim() !== "" &&
+            d.baseline.trim() !== "" &&
+            Number(d.target) === Number(d.baseline) ? (
+              <p className="text-[13px] leading-relaxed text-soft">
+                Same number — this is a hold-the-line goal. You'll score on keeping it there.
+              </p>
+            ) : null}
+
             <label className="flex items-start gap-3 rounded-[14px] border border-line bg-cream/50 p-3">
               <input
                 type="checkbox"

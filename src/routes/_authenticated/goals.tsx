@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
@@ -60,6 +60,12 @@ function Page() {
 
   const { data: goals } = useGoalsFor(profile ? undefined : null, active?.id ?? null);
   const [draft, setDraft] = useState<GoalDraft | null>(null);
+  const draftRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!draft) return;
+    draftRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [draft]);
+
 
   const role = profile?.role ?? "member";
   const canOpenCycle = role === "hr" || role === "admin";
@@ -159,6 +165,7 @@ function Page() {
 
         {active && profile ? (
           draft ? (
+            <div ref={draftRef}>
             <GoalForm
               cycle={active}
               profileId={profile.id}
@@ -168,6 +175,7 @@ function Page() {
               onDone={() => setDraft(null)}
               onCancel={() => setDraft(null)}
             />
+            </div>
           ) : (
             <button type="button" className="btn3d w-full sm:w-auto" onClick={() => setDraft(emptyDraft())}>
               + Write a goal
