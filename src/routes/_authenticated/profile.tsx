@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
+import { FilePicker } from "@/components/FilePicker";
 import { WarriorAvatar } from "@/components/warriors/Avatar";
 import { useAttendanceSummary } from "@/hooks/useAttendance";
 import {
