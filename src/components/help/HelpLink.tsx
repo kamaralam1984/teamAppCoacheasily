@@ -39,13 +39,17 @@ export function HelpLink({ screen, tone = "ink" }: { screen: HelpScreen; tone?: 
               </p>
             ))}
           </div>
-          <Link
-            to="/help"
-            onClick={() => setOpen(false)}
-            className="mt-4 inline-block text-sm font-semibold text-goldD underline underline-offset-4"
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              void navigate({ to: "/help", search: { topic: topic.key } as never });
+            }}
+            className="mt-4 inline-block min-h-11 text-left text-sm font-semibold text-goldD underline underline-offset-4"
           >
             See help for everything →
-          </Link>
+          </button>
+
         </DialogContent>
       </Dialog>
     </>
