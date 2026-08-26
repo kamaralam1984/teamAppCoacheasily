@@ -130,7 +130,7 @@ export async function uploadHrDocument(
   const path = `${profileId}/${kind}-${Date.now()}.${ext}`;
   const { error } = await supabase.storage.from("hr-documents").upload(path, file, {
     upsert: false,
-    contentType: file.type || undefined,
+    ...(file.type ? { contentType: file.type } : {}),
   });
   if (error) throw error;
   return path;
