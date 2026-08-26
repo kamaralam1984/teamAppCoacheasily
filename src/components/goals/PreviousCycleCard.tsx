@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useGoalsFor, useLogEntry } from "@/hooks/useGoals";
 import { fmt, type Cycle, type GoalWithProgress } from "@/lib/goals";
@@ -22,7 +22,7 @@ export function PreviousCycleCard({
   style?: React.CSSProperties;
 }) {
   const { data } = useGoalsFor(profileId, cycle.id);
-  const [editing, setEditing] = useState<GoalDraft | null>(null);
+  const [editing, setEditing] = useState<{ goalId: string; draft: GoalDraft } | null>(null);
   const goals: GoalWithProgress[] = data ?? [];
   if (goals.length === 0) return null;
 
@@ -57,7 +57,14 @@ export function PreviousCycleCard({
 
       <ul className="mt-4 space-y-3">
         {goals.map(({ goal, progress }) => (
-          <li key={goal.id} className="rounded-[12px] border border-line bg-cream/50 p-3">
+          <li
+            key={goal.id}
+            className={`rounded-[12px] border p-3 ${
+              editing?.goalId === goal.id
+                ? "border-gold bg-gold/8 ring-2 ring-gold/40"
+                : "border-line bg-cream/50"
+            }`}
+          >
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <p className="text-[14px] font-bold text-ink">{goal.name}</p>
               <span className="text-[12px] font-bold text-goldD">
@@ -85,7 +92,7 @@ export function PreviousCycleCard({
                     metric: goal.metric ?? "",
                     unit: goal.unit ?? "",
                     baseline: String(progress?.current_value ?? goal.baseline),
-                    target: "",
+                    target: String(goal.target),
                     stages: goal.stages?.length ? goal.stages : ["", "", ""],
                     plan: "",
                     tracksRevenue: Boolean(goal.tracks_revenue),
@@ -99,35 +106,62 @@ export function PreviousCycleCard({
                 className="text-[12px] font-bold text-soft underline"
                 onClick={() =>
                   setEditing(
-                    draftFromGoal(
-                      goal,
-                      progress?.entries_count ?? 0,
-                      progress?.current_value ?? undefined,
-                    ),
+                    editing?.goalId === goal.id
+                      ? null
+                      : {
+                          goalId: goal.id,
+                          draft: draftFromGoal(
+                            goal,
+                            progress?.entries_count ?? 0,
+                            progress?.current_value ?? undefined,
+                          ),
+                        },
                   )
                 }
               >
-                Fix this goal
+                {editing?.goalId === goal.id ? "Close" : "Fix this goal"}
               </button>
             </div>
+
+            {editing?.goalId === goal.id ? (
+              <ScrollTo className="mt-4">
+                <GoalForm
+                  cycle={cycle}
+                  profileId={profileId}
+                  orgId={orgId}
+                  department={department}
+                  initial={editing.draft}
+                  onDone={() => setEditing(null)}
+                  onCancel={() => setEditing(null)}
+                />
+              </ScrollTo>
+            ) : null}
           </li>
         ))}
       </ul>
 
-      {editing ? (
-        <div className="mt-4">
-          <GoalForm
-            cycle={cycle}
-            profileId={profileId}
-            orgId={orgId}
-            department={department}
-            initial={editing}
-            onDone={() => setEditing(null)}
-            onCancel={() => setEditing(null)}
-          />
-        </div>
-      ) : null}
     </section>
+  );
+}
+
+/** Brings freshly-opened panels into view so the click never feels dead. */
+function ScrollTo({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, []);
+  return (
+    <div ref={ref} className={className}>
+      {children}
+    </div>
   );
 }
 
