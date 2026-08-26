@@ -165,7 +165,9 @@ export function GoalForm({
             <label className="block">
               <span className="ce-label">Name your goal</span>
               <input
+                autoFocus
                 className="ce-input mt-1 h-12 w-full"
+
                 value={d.name}
                 onChange={(e) => set({ name: e.target.value })}
                 placeholder="e.g. Turn more calls into closures"
