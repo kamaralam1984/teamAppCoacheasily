@@ -210,7 +210,9 @@ export function TodayPanel({
       ) : (
         <div className="mt-2">
           <h2 className="font-display text-2xl leading-tight text-ink">
-            What are the {cap === 3 ? "three" : cap} things that matter today?
+            {cap === 1
+              ? "What is the one thing that matters today?"
+              : `What are the ${countWord(cap)} things that matter today?`}
           </h2>
           <p className="mt-1 text-[13px] text-soft">
             {selection.length} of {cap} chosen · {prettyLongDate(day.day)}

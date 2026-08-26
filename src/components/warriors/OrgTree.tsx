@@ -77,7 +77,7 @@ function Row({
               ) : null}
               {p.status === "exited" ? (
                 <span className="rounded-full bg-line px-2 py-0.5 text-[10px] font-bold tracking-wider text-soft uppercase">
-                  Exited
+                  Past{p.exited_on ? ` · left ${p.exited_on}` : ""}
                 </span>
               ) : null}
             </span>
