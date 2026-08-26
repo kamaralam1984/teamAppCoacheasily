@@ -15,6 +15,7 @@ export interface IdeaRow {
   screen: string | null;
   device: string | null;
   source: string;
+  screenshot_path: string | null;
   created_at: string;
   decided_at: string | null;
   is_anonymous: boolean;
@@ -61,6 +62,7 @@ export function useSubmitIdea() {
       anonymous: boolean;
       screen?: string;
       device?: string;
+      screenshotPath?: string | null;
     }) => {
       const { data, error } = await supabase.rpc("submit_idea", {
         p_kind: input.kind,
@@ -69,6 +71,7 @@ export function useSubmitIdea() {
         p_anonymous: input.anonymous,
         p_screen: input.screen ?? "",
         p_device: input.device ?? "",
+        p_screenshot_path: input.screenshotPath ?? "",
       });
       if (error) throw error;
       return data as string;
@@ -127,4 +130,45 @@ export function similarIdeas(rows: IdeaRow[], title: string, limit = 3): IdeaRow
     .sort((a, b) => b.score - a.score || b.r.votes - a.r.votes)
     .slice(0, limit)
     .map((x) => x.r);
+}
+
+/** Screenshots live in a private bucket — never a public URL. */
+export function useIdeaScreenshot(path: string | null | undefined) {
+  return useQuery({
+    queryKey: ["idea-screenshot", path],
+    enabled: Boolean(path),
+    staleTime: 4 * 60_000,
+    gcTime: 5 * 60_000,
+    queryFn: async (): Promise<string | null> => {
+      if (!path) return null;
+      const { data, error } = await supabase.storage
+        .from("idea-screenshots")
+        .createSignedUrl(path, 300);
+      if (error) throw error;
+      return data?.signedUrl ?? null;
+    },
+  });
+}
+
+const EXT: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+};
+
+export const SCREENSHOT_TYPES = Object.keys(EXT);
+export const SCREENSHOT_MAX_BYTES = 5 * 1024 * 1024;
+
+/** Anonymous or not, the folder is a fresh uuid — the path says nothing about who sent it. */
+export async function uploadIdeaScreenshot(file: File): Promise<string | null> {
+  const ext = EXT[file.type];
+  if (!ext) return null;
+  if (file.size > SCREENSHOT_MAX_BYTES) return null;
+  const folder = crypto.randomUUID();
+  const path = `${folder}/${Date.now()}.${ext}`;
+  const { error } = await supabase.storage
+    .from("idea-screenshots")
+    .upload(path, file, { contentType: file.type, upsert: false });
+  if (error) return null;
+  return path;
 }
