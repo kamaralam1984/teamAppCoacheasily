@@ -541,6 +541,7 @@ function ProfilePage() {
                   type="button"
                   className="btn3d"
                   disabled={!edu.institution.trim()}
+                  title={edu.institution.trim() ? undefined : "Type the institution first"}
                   onClick={() =>
                     addEdu.mutate(
                       {
@@ -641,6 +642,7 @@ function ProfilePage() {
                   type="button"
                   className="btn3d"
                   disabled={!emp.employer.trim()}
+                  title={emp.employer.trim() ? undefined : "Type the employer first"}
                   onClick={() =>
                     addEmp.mutate(
                       {

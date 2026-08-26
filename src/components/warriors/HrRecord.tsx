@@ -478,6 +478,7 @@ export function HrRecord({ profile }: { profile: Profile }) {
                   type="button"
                   className="btn3d"
                   disabled={!edu.institution.trim()}
+                  title={edu.institution.trim() ? undefined : "Type the institution first"}
                   onClick={() =>
                     addEdu.mutate(
                       {
@@ -568,6 +569,7 @@ export function HrRecord({ profile }: { profile: Profile }) {
                   type="button"
                   className="btn3d"
                   disabled={!emp.employer.trim()}
+                  title={emp.employer.trim() ? undefined : "Type the employer first"}
                   onClick={() =>
                     addEmp.mutate(
                       {
@@ -659,6 +661,7 @@ export function HrRecord({ profile }: { profile: Profile }) {
                   type="button"
                   className="btn3d"
                   disabled={!mile.effective_on}
+                  title={mile.effective_on ? undefined : "Pick the date it took effect first"}
                   onClick={() =>
                     addMile.mutate(
                       {
