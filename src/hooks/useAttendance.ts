@@ -19,6 +19,8 @@ export function useAttendanceSummary(profileId?: string | null) {
   return useQuery({
     queryKey: ["attendance-summary", profileId ?? "me"],
     enabled: profileId !== null,
+    staleTime: 15 * 60_000,
+    gcTime: 15 * 60_000,
     queryFn: async (): Promise<AttendanceSummary | null> => {
       const { data, error } = await supabase.rpc(
         "attendance_summary",

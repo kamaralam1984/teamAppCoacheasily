@@ -6,6 +6,8 @@ import type { Profile } from "@/lib/warriors";
 export function useWarriors() {
   return useQuery({
     queryKey: ["warriors"],
+    staleTime: 15 * 60_000,
+    gcTime: 15 * 60_000,
     queryFn: async (): Promise<Profile[]> => {
       const { data, error } = await supabase
         .from("profiles")
