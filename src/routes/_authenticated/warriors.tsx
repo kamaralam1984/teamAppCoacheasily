@@ -175,7 +175,20 @@ function WarriorsPage() {
         ) : null}
 
         <section className="ce-rise">
-          <SectionHeading>Org chart</SectionHeading>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <SectionHeading>Org chart</SectionHeading>
+            {canManage ? (
+              <label className="flex items-center gap-2 text-[13px] text-soft">
+                <input
+                  type="checkbox"
+                  className="h-5 w-5"
+                  checked={showPast}
+                  onChange={(e) => setShowPast(e.target.checked)}
+                />
+                Show past warriors
+              </label>
+            ) : null}
+          </div>
           <div className="mt-4">
             {isLoading ? (
               <p className="text-sm text-soft">Loading the team…</p>
