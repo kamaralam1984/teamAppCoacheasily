@@ -94,10 +94,10 @@ export function useTeamDayReport(from: string, to: string, enabled = true) {
     enabled,
     staleTime: 5 * 60_000,
     queryFn: async (): Promise<Record<string, TeamPromise>> => {
-      const { data, error } = await supabase.rpc("day_report_team", {
-        p_from: from,
-        p_to: to,
-      });
+      const { data, error } = await supabase.rpc(
+        "day_report_team" as never,
+        { p_from: from, p_to: to } as never,
+      );
       if (error) throw error;
       return (data as unknown as Record<string, TeamPromise> | null) ?? {};
     },
