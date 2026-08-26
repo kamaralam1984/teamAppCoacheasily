@@ -86,6 +86,25 @@ function HelpPage() {
   const found = useMemo(() => searchHelp(q), [q]);
   const searching = q.trim().length > 0;
 
+  /** Arriving from a screen's "How do I use this?" — open that topic and land on it. */
+  const searchStr = useRouterState({ select: (s) => s.location.searchStr });
+  const wanted = useMemo(() => {
+    const key = new URLSearchParams(searchStr.replace(/^\?/, "")).get("topic");
+    return key && key.trim() ? key : null;
+  }, [searchStr]);
+  const [glow, setGlow] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") window.scrollTo({ top: 0 });
+  }, []);
+
+  useEffect(() => {
+    if (!wanted) return;
+    setGlow(wanted);
+    const t = window.setTimeout(() => setGlow(null), 2600);
+    return () => window.clearTimeout(t);
+  }, [wanted]);
+
   const byGroup = useMemo(() => {
     const map = new Map<HelpGroup, HelpTopic[]>();
     for (const t of found) {
@@ -95,6 +114,7 @@ function HelpPage() {
     }
     return map;
   }, [found]);
+
 
   return (
     <AppShell>
