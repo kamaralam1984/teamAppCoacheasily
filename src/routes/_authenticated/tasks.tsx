@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
+import { HelpLink } from "@/components/help/HelpLink";
 import { Celebrate } from "@/components/Celebrate";
 import { Playbook } from "@/components/culture/Playbook";
 import { BrainDump } from "@/components/tasks/BrainDump";
@@ -115,6 +116,7 @@ function Page() {
         ) : (
           <section className="ce-rise ce-card p-6">
             <h1 className="font-display text-3xl text-ink">Your tasks</h1>
+          <HelpLink screen="tasks" />
             <p className="mt-1.5 text-sm text-soft">
               Nothing overdue and nothing due today. Good place to be.
             </p>

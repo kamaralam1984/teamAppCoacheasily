@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
+import { HelpLink } from "@/components/help/HelpLink";
 import { HolidaysCard } from "@/components/calendar/HolidaysCard";
 import { CyclesCard } from "@/components/settings/CyclesCard";
 import { DepartmentsCard } from "@/components/settings/DepartmentsCard";
@@ -55,6 +56,7 @@ function SettingsPage() {
       <div className="mx-auto max-w-3xl space-y-5 py-2">
         <div className="ce-rise">
           <h1 className="font-display text-3xl text-ink">Admin settings</h1>
+          <HelpLink screen="settings" />
           <p className="mt-2 text-sm text-soft">
             Everything a human should own lives here. A change flows straight through the org
             chart, approvals, calendar, goals and reports.

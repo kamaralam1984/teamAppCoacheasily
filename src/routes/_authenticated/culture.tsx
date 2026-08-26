@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
+import { HelpLink } from "@/components/help/HelpLink";
 import { CheckInRequest } from "@/components/culture/CheckInRequest";
 import {
   GiveRecognition,
@@ -54,6 +55,7 @@ function Page() {
       <div className="mx-auto max-w-3xl space-y-6 py-2">
         <section className="ce-rise ce-card p-8">
           <h1 className="font-display text-3xl text-ink">Culture</h1>
+          <HelpLink screen="culture" />
           <p className="mt-3 max-w-lg text-sm text-soft">
             Honesty · Dedication · Genuine Care. We are spread across a city and a country — so we
             say the good things out loud, and we keep the hard things private.
