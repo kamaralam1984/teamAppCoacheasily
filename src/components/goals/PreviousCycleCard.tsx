@@ -85,7 +85,8 @@ export function PreviousCycleCard({
               <button
                 type="button"
                 className="min-h-11 rounded-full border border-line bg-ivory px-3 text-[12px] font-bold text-goldD"
-                onClick={() =>
+                onClick={() => {
+                  setEditing(null);
                   onCarryForward({
                     kind: goal.kind as "number" | "funnel",
                     name: goal.name,
@@ -96,8 +97,8 @@ export function PreviousCycleCard({
                     stages: goal.stages?.length ? goal.stages : ["", "", ""],
                     plan: "",
                     tracksRevenue: Boolean(goal.tracks_revenue),
-                  })
-                }
+                  });
+                }}
               >
                 Use this again next cycle →
               </button>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
@@ -159,6 +159,7 @@ function Page() {
 
         {active && profile ? (
           draft ? (
+            <div ref={draftRef}>
             <GoalForm
               cycle={active}
               profileId={profile.id}
@@ -168,6 +169,7 @@ function Page() {
               onDone={() => setDraft(null)}
               onCancel={() => setDraft(null)}
             />
+            </div>
           ) : (
             <button type="button" className="btn3d w-full sm:w-auto" onClick={() => setDraft(emptyDraft())}>
               + Write a goal
