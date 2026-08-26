@@ -157,7 +157,7 @@ function HelpPage() {
             <h2 className="ce-label">{group}</h2>
             <div className="mt-2">
               {(byGroup.get(group) ?? []).map((t) => (
-                <Topic key={t.key} topic={t} open={searching} />
+                <Topic key={t.key} topic={t} open={searching} highlight={glow === t.key} />
               ))}
             </div>
           </section>
