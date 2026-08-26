@@ -79,3 +79,27 @@ export function useCarryingCount(profileId: string | null) {
     },
   });
 }
+
+export interface TeamPromise {
+  days_committed: number;
+  avg_pct: number;
+  carrying: number;
+  last_note: string | null;
+}
+
+/** Kept promises for the whole downline in one call. */
+export function useTeamDayReport(from: string, to: string, enabled = true) {
+  return useQuery({
+    queryKey: ["day-report-team", from, to],
+    enabled,
+    staleTime: 5 * 60_000,
+    queryFn: async (): Promise<Record<string, TeamPromise>> => {
+      const { data, error } = await supabase.rpc(
+        "day_report_team" as never,
+        { p_from: from, p_to: to } as never,
+      );
+      if (error) throw error;
+      return (data as unknown as Record<string, TeamPromise> | null) ?? {};
+    },
+  });
+}

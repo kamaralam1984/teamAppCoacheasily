@@ -3,6 +3,8 @@ import { useMemo, useState } from "react";
 import { Ring } from "@/components/goals/Ring";
 import { useRemindAll, useTeamGoals } from "@/hooks/useGoals";
 import { KeptPromises } from "@/components/tasks/KeptPromises";
+import { useTeamDayReport } from "@/hooks/useDay";
+import { addDays, istToday } from "@/lib/tasks";
 import { fmt, type TeamGoalRow } from "@/lib/goals";
 import { initials, roleLabel, shortDate } from "@/lib/warriors";
 
@@ -50,6 +52,9 @@ export function TeamPanel({ canSeePast }: { canSeePast: boolean }) {
   const { data, isLoading } = useTeamGoals(true);
   const remind = useRemindAll();
   const [reminded, setReminded] = useState<number | null>(null);
+  const to = istToday();
+  const from = useMemo(() => addDays(to, -13), [to]);
+  const { data: promises } = useTeamDayReport(from, to);
   const rows = data ?? [];
   const combined = useMemo(() => rollUps(rows), [rows]);
 
@@ -148,7 +153,7 @@ export function TeamPanel({ canSeePast }: { canSeePast: boolean }) {
               ) : null}
             </div>
 
-            <KeptPromises profileId={row.profile.id} />
+            <KeptPromises stats={promises?.[row.profile.id]} />
 
             {row.goals.length > 0 ? (
               <ul className="mt-4 space-y-3">

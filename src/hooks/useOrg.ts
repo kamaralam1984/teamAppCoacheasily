@@ -12,6 +12,8 @@ export function useOrgSettings(enabled = true) {
   return useQuery({
     queryKey: ["org-settings"],
     enabled,
+    staleTime: 30 * 60_000,
+    gcTime: 30 * 60_000,
     queryFn: async (): Promise<OrgSettings> => {
       const { data, error } = await supabase.rpc("org_settings");
       if (error) throw error;
@@ -39,6 +41,8 @@ export function usePunctualityMe(enabled = true) {
   return useQuery({
     queryKey: ["punctuality-me"],
     enabled,
+    staleTime: 15 * 60_000,
+    gcTime: 15 * 60_000,
     queryFn: async (): Promise<PunctualityMe | null> => {
       const { data, error } = await supabase.rpc("punctuality_me");
       if (error) throw error;

@@ -24,7 +24,8 @@ import {
 function useThemeRows() {
   return useQuery({
     queryKey: ["themes"],
-    staleTime: 5 * 60_000,
+    staleTime: 30 * 60_000,
+    gcTime: 30 * 60_000,
     queryFn: async (): Promise<Theme[]> => {
       const { data, error } = await supabase
         .from("themes")

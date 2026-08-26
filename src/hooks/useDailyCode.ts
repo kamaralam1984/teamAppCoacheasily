@@ -13,6 +13,8 @@ export function useTodayCode(enabled = true) {
   return useQuery({
     queryKey: ["daily-code-today"],
     enabled,
+    staleTime: 30 * 60_000,
+    gcTime: 30 * 60_000,
     queryFn: async (): Promise<DailyCode | null> => {
       const { data, error } = await supabase.rpc("daily_code_today");
       if (error) throw error;
@@ -35,6 +37,8 @@ export function usePresenceToday(enabled = true) {
   return useQuery({
     queryKey: ["presence-today"],
     enabled,
+    staleTime: 5 * 60_000,
+    gcTime: 5 * 60_000,
     queryFn: async (): Promise<PresenceRow[]> => {
       const { data, error } = await supabase.rpc("presence_today");
       if (error) throw error;
