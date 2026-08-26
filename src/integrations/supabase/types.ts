@@ -399,6 +399,57 @@ export type Database = {
           },
         ]
       }
+      day_plans: {
+        Row: {
+          closed_at: string | null
+          committed_at: string | null
+          created_at: string
+          day: string
+          id: string
+          note: string | null
+          org_id: string
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          committed_at?: string | null
+          created_at?: string
+          day: string
+          id?: string
+          note?: string | null
+          org_id: string
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          committed_at?: string | null
+          created_at?: string
+          day?: string
+          id?: string
+          note?: string | null
+          org_id?: string
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "day_plans_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "day_plans_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departments: {
         Row: {
           created_at: string
@@ -1698,20 +1749,76 @@ export type Database = {
           },
         ]
       }
+      task_days: {
+        Row: {
+          day: string
+          done: boolean
+          done_at: string | null
+          id: string
+          org_id: string
+          profile_id: string
+          task_id: string
+        }
+        Insert: {
+          day: string
+          done?: boolean
+          done_at?: string | null
+          id?: string
+          org_id: string
+          profile_id: string
+          task_id: string
+        }
+        Update: {
+          day?: string
+          done?: boolean
+          done_at?: string | null
+          id?: string
+          org_id?: string
+          profile_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_days_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_days_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_days_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           blocked_by: string | null
           blocked_notified_on: string | null
+          carried_count: number
+          committed_on: string | null
           created_at: string
           created_by: string | null
           description: string | null
           done: boolean
           done_at: string | null
           due_date: string | null
+          goal_id: string | null
           id: string
           org_id: string
           owner_id: string
           priority: string
+          repeats: string
           slot: string
           title: string
           updated_at: string
@@ -1719,16 +1826,20 @@ export type Database = {
         Insert: {
           blocked_by?: string | null
           blocked_notified_on?: string | null
+          carried_count?: number
+          committed_on?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
           done?: boolean
           done_at?: string | null
           due_date?: string | null
+          goal_id?: string | null
           id?: string
           org_id: string
           owner_id: string
           priority?: string
+          repeats?: string
           slot?: string
           title: string
           updated_at?: string
@@ -1736,16 +1847,20 @@ export type Database = {
         Update: {
           blocked_by?: string | null
           blocked_notified_on?: string | null
+          carried_count?: number
+          committed_on?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
           done?: boolean
           done_at?: string | null
           due_date?: string | null
+          goal_id?: string | null
           id?: string
           org_id?: string
           owner_id?: string
           priority?: string
+          repeats?: string
           slot?: string
           title?: string
           updated_at?: string
@@ -1763,6 +1878,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
             referencedColumns: ["id"]
           },
           {
@@ -1904,7 +2026,13 @@ export type Database = {
       can_read_goal: { Args: { p_goal_id: string }; Returns: boolean }
       checkin_talked: { Args: { p_id: string }; Returns: undefined }
       claim_invite: { Args: { p_email: string }; Returns: Json }
+      close_day: { Args: { p_note?: string }; Returns: Json }
+      commit_day: { Args: { p_task_ids: string[] }; Returns: Json }
       daily_code_today: { Args: never; Returns: Json }
+      day_report: {
+        Args: { p_from: string; p_profile_id: string; p_to: string }
+        Returns: Json
+      }
       digest_daily: {
         Args: never
         Returns: {
@@ -2002,6 +2130,7 @@ export type Database = {
       }
       manages: { Args: { target_id: string }; Returns: boolean }
       mark_release_seen: { Args: { p_release_id: string }; Returns: undefined }
+      my_day: { Args: { p_day?: string }; Returns: Json }
       my_org: { Args: never; Returns: string }
       my_profile_id: { Args: never; Returns: string }
       my_pulse: { Args: never; Returns: Json }
