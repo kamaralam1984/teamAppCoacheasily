@@ -842,6 +842,7 @@ export type Database = {
           org_id: string
           profile_id: string | null
           screen: string | null
+          screenshot_path: string | null
           source: string
           status: string
           status_note: string | null
@@ -860,6 +861,7 @@ export type Database = {
           org_id: string
           profile_id?: string | null
           screen?: string | null
+          screenshot_path?: string | null
           source?: string
           status?: string
           status_note?: string | null
@@ -878,6 +880,7 @@ export type Database = {
           org_id?: string
           profile_id?: string | null
           screen?: string | null
+          screenshot_path?: string | null
           source?: string
           status?: string
           status_note?: string | null
@@ -2425,6 +2428,7 @@ export type Database = {
           p_device?: string
           p_kind: string
           p_screen?: string
+          p_screenshot_path?: string
           p_title: string
         }
         Returns: string

@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { ProgressNumbers } from "@/components/goals/ProgressNumbers";
 import { Ring } from "@/components/goals/Ring";
 import { StepAdvice } from "@/components/goals/StepAdvice";
 import {
@@ -161,6 +162,8 @@ export function GoalCard({ item, editable, onEdit, canPurge = false, style }: Pr
         <span className="text-goldD">{fmt(goal.target)}</span>
         {goal.unit ? <span className="text-soft">{goal.unit}</span> : null}
       </div>
+
+      <ProgressNumbers progress={p} className="mt-3" />
 
       <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-cream">
         <div

@@ -3,7 +3,9 @@ import { Lightbulb, X } from "lucide-react";
 import { useRouterState } from "@tanstack/react-router";
 
 import {
+  SCREENSHOT_TYPES,
   similarIdeas,
+  uploadIdeaScreenshot,
   useIdeas,
   useSubmitIdea,
   useVoteIdea,
@@ -53,6 +55,10 @@ function Sheet({ onClose }: { onClose: () => void }) {
   const [detail, setDetail] = useState("");
   const [anonymous, setAnonymous] = useState(false);
   const [done, setDone] = useState(false);
+  const [shot, setShot] = useState<File | null>(null);
+  const [shotUrl, setShotUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [shotFailed, setShotFailed] = useState(false);
 
   const device =
     typeof window !== "undefined" && window.innerWidth < 640 ? "Phone" : "Computer";
@@ -63,10 +69,33 @@ function Sheet({ onClose }: { onClose: () => void }) {
     [board, title],
   );
 
-  function send() {
+  function pick(file: File | null) {
+    setShotFailed(false);
+    if (shotUrl) URL.revokeObjectURL(shotUrl);
+    setShot(file);
+    setShotUrl(file ? URL.createObjectURL(file) : null);
+  }
+
+  async function send() {
     if (!title.trim()) return;
+    let path: string | null = null;
+    if (shot) {
+      setUploading(true);
+      path = await uploadIdeaScreenshot(shot);
+      setUploading(false);
+      // an upload that fails must never cost somebody what they typed
+      if (!path) setShotFailed(true);
+    }
     submit.mutate(
-      { kind, title: title.trim(), detail: detail.trim(), anonymous, screen, device },
+      {
+        kind,
+        title: title.trim(),
+        detail: detail.trim(),
+        anonymous,
+        screen,
+        device,
+        screenshotPath: path,
+      },
       { onSuccess: () => setDone(true) },
     );
   }
@@ -156,6 +185,40 @@ function Sheet({ onClose }: { onClose: () => void }) {
               className="w-full rounded-lg border border-line bg-ivory p-3 text-[15px] text-ink"
             />
 
+            <div className="rounded-lg border border-line bg-ivory p-3">
+              <p className="text-[13px] font-bold text-ink">Add a screenshot (optional)</p>
+              <p className="mt-0.5 text-[12px] text-soft">
+                PNG, JPG or WEBP, up to 5MB. It helps us see exactly what you are seeing.
+              </p>
+              <input
+                type="file"
+                accept={SCREENSHOT_TYPES.join(",")}
+                onChange={(e) => pick(e.target.files?.[0] ?? null)}
+                className="mt-2 block w-full text-[12px] text-soft"
+              />
+              {shotUrl ? (
+                <div className="mt-3 flex items-center gap-3">
+                  <img
+                    src={shotUrl}
+                    alt="Your screenshot"
+                    className="h-20 w-auto rounded-lg border border-line"
+                  />
+                  <button
+                    type="button"
+                    className="min-h-9 rounded-full border border-line px-3 text-[12px] font-bold text-soft"
+                    onClick={() => pick(null)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : null}
+              {shotFailed ? (
+                <p className="mt-2 text-[12px] font-semibold text-goldD">
+                  The picture would not upload — we sent your words through anyway.
+                </p>
+              ) : null}
+            </div>
+
             <label className="flex items-start gap-3 text-[13px] text-ink">
               <input
                 type="checkbox"
@@ -187,10 +250,10 @@ function Sheet({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               className="btn3d w-full"
-              onClick={send}
-              disabled={submit.isPending || !title.trim()}
+              onClick={() => void send()}
+              disabled={submit.isPending || uploading || !title.trim()}
             >
-              {submit.isPending ? "Sending…" : "Send it"}
+              {uploading ? "Uploading…" : submit.isPending ? "Sending…" : "Send it"}
             </button>
           </div>
         )}

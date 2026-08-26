@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { ProgressNumbers } from "@/components/goals/ProgressNumbers";
 import { Ring } from "@/components/goals/Ring";
 import { ReviewSummary } from "@/components/goals/ReviewSummary";
 import { StepAdvice } from "@/components/goals/StepAdvice";
@@ -182,6 +183,8 @@ function Slide({ cycle, slide }: { cycle: Cycle; slide: ReviewSlide }) {
           <Stat label="Target" value={fmt(goal.target)} gold />
         </div>
       </div>
+
+      <ProgressNumbers progress={p} big className="mt-5" />
 
       <div className="mt-7 grid gap-4 sm:grid-cols-2">
         <div className="ce-card p-5">

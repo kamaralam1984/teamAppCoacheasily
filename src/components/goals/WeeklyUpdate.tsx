@@ -3,9 +3,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toPng } from "html-to-image";
 
 import { Mark } from "@/components/Mark";
+import { ProgressNumbers } from "@/components/goals/ProgressNumbers";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/hooks/useMyProfile";
-import { addDays, fmt, type Cycle, type GoalWithProgress } from "@/lib/goals";
+import { addDays, fmt, progressWords, type Cycle, type GoalWithProgress } from "@/lib/goals";
 
 /* ── week, always Mumbai time ──────────────────────────────── */
 
@@ -177,12 +178,8 @@ export function WeeklyUpdate({
         <ul className="mt-4 space-y-3">
           {goals.map((item) => (
             <li key={item.goal.id} className="rounded-[12px] border border-line bg-cream/50 p-3">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <p className="text-sm font-bold text-ink">{item.goal.name}</p>
-                <p className="text-sm font-bold" style={{ color: "var(--ce-goldD)" }}>
-                  {Math.round(pctOf(item))}%
-                </p>
-              </div>
+              <p className="text-sm font-bold text-ink">{item.goal.name}</p>
+              <ProgressNumbers progress={item.progress} className="mt-1" />
               {item.goal.metric ? (
                 <p className="text-[12px] text-soft">{item.goal.metric}</p>
               ) : null}
@@ -295,8 +292,8 @@ export function WeeklyUpdate({
               >
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                   <p style={{ fontSize: 19, fontWeight: 800 }}>{item.goal.name}</p>
-                  <p style={{ fontSize: 19, fontWeight: 800, color: "var(--ce-goldL)" }}>
-                    {Math.round(pctOf(item))}%
+                  <p style={{ fontSize: 15, fontWeight: 800, color: "var(--ce-goldL)" }}>
+                    {progressWords(item.progress).lead}
                   </p>
                 </div>
                 {item.goal.metric ? (

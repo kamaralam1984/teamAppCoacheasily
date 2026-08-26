@@ -8,6 +8,7 @@ import {
   KIND_LABEL,
   STATUS_LABEL,
   useIdeas,
+  useIdeaScreenshot,
   useSetIdeaStatus,
   useVoteIdea,
   type IdeaKind,
@@ -67,6 +68,7 @@ function downloadCsv(rows: IdeaRow[]) {
     "screen",
     "device",
     "source",
+    "screenshot_path",
     "created_at",
     "decided_at",
   ];
@@ -84,6 +86,7 @@ function downloadCsv(rows: IdeaRow[]) {
       r.screen,
       r.device,
       r.source,
+      r.screenshot_path,
       new Date(r.created_at).toISOString(),
       r.decided_at ? new Date(r.decided_at).toISOString() : "",
     ]
@@ -237,6 +240,7 @@ function IdeaCard({
             {row.screen ? ` · from ${row.screen}` : ""}
             {row.device ? ` · ${row.device}` : ""}
           </p>
+          {row.screenshot_path ? <Shot path={row.screenshot_path} /> : null}
           {row.status_note ? (
             <p className="mt-3 rounded-lg border border-line bg-ivory p-3 text-[13px] text-ink">
               {row.status_note}
@@ -333,5 +337,36 @@ function IdeaCard({
         </div>
       ) : null}
     </section>
+  );
+}
+
+/** Thumbnail on the board, opening larger on click. Signed URL, short-lived. */
+function Shot({ path }: { path: string }) {
+  const { data: url } = useIdeaScreenshot(path);
+  const [open, setOpen] = useState(false);
+  if (!url) return null;
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-3 block overflow-hidden rounded-lg border border-line"
+      >
+        <img src={url} alt="Screenshot sent with this report" className="h-24 w-auto object-cover" />
+      </button>
+      {open ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-night/70 p-4"
+          role="presentation"
+          onClick={() => setOpen(false)}
+        >
+          <img
+            src={url}
+            alt="Screenshot sent with this report"
+            className="max-h-[90vh] max-w-full rounded-lg"
+          />
+        </div>
+      ) : null}
+    </>
   );
 }
