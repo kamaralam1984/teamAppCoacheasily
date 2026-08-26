@@ -127,7 +127,6 @@ function ProfilePage() {
   const [savingPersonal, setSavingPersonal] = useState(false);
   const [edu, setEdu] = useState({ institution: "", qualification: "", field: "", start_year: "", end_year: "" });
   const [emp, setEmp] = useState({ employer: "", designation: "", from_date: "", to_date: "", notes: "" });
-  const fileRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!profile) return;
@@ -167,7 +166,6 @@ function ProfilePage() {
       toast.error(message(e));
     } finally {
       setBusy(false);
-      if (fileRef.current) fileRef.current.value = "";
     }
   }
 
