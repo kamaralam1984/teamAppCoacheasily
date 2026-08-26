@@ -91,6 +91,37 @@ function SettingsPage() {
         </section>
 
         <section className="ce-card p-5">
+          <h2 className="font-display text-2xl text-ink">Daily priority cap</h2>
+          <input
+            type="number"
+            min={1}
+            max={10}
+            className="mt-3 min-h-11 w-28 rounded-[12px] border border-line bg-pearl px-3 text-sm text-ink"
+            defaultValue={settings?.daily_priority_cap ?? 5}
+            key={settings?.daily_priority_cap ?? 5}
+            onBlur={(e) => {
+              const n = Number(e.target.value);
+              if (!Number.isFinite(n) || n < 1 || n > 10) {
+                toast.error("Pick a number between 1 and 10.");
+                return;
+              }
+              if (n === (settings?.daily_priority_cap ?? 5)) return;
+              save.mutate(
+                { daily_priority_cap: n },
+                {
+                  onSuccess: () => toast.success("Saved."),
+                  onError: () => toast.error("That didn't save. Please try again."),
+                },
+              );
+            }}
+          />
+          <p className="mt-2 text-[13px] text-soft">
+            How many things a warrior may commit to each morning. The Today panel follows this
+            number on its own.
+          </p>
+        </section>
+
+        <section className="ce-card p-5">
           <h2 className="font-display text-2xl text-ink">Testing period ends</h2>
           <input
             type="date"

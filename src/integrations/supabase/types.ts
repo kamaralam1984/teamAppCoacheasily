@@ -1079,6 +1079,260 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_education: {
+        Row: {
+          created_at: string
+          end_year: number | null
+          field: string | null
+          id: string
+          institution: string
+          org_id: string
+          profile_id: string
+          qualification: string | null
+          sort_order: number
+          start_year: number | null
+        }
+        Insert: {
+          created_at?: string
+          end_year?: number | null
+          field?: string | null
+          id?: string
+          institution: string
+          org_id: string
+          profile_id: string
+          qualification?: string | null
+          sort_order?: number
+          start_year?: number | null
+        }
+        Update: {
+          created_at?: string
+          end_year?: number | null
+          field?: string | null
+          id?: string
+          institution?: string
+          org_id?: string
+          profile_id?: string
+          qualification?: string | null
+          sort_order?: number
+          start_year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_education_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_education_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_employment: {
+        Row: {
+          created_at: string
+          designation: string | null
+          employer: string
+          from_date: string | null
+          id: string
+          notes: string | null
+          org_id: string
+          profile_id: string
+          sort_order: number
+          to_date: string | null
+        }
+        Insert: {
+          created_at?: string
+          designation?: string | null
+          employer: string
+          from_date?: string | null
+          id?: string
+          notes?: string | null
+          org_id: string
+          profile_id: string
+          sort_order?: number
+          to_date?: string | null
+        }
+        Update: {
+          created_at?: string
+          designation?: string | null
+          employer?: string
+          from_date?: string | null
+          id?: string
+          notes?: string | null
+          org_id?: string
+          profile_id?: string
+          sort_order?: number
+          to_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_employment_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_employment_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_milestones: {
+        Row: {
+          created_at: string
+          designation: string | null
+          effective_on: string
+          id: string
+          kind: string
+          note: string | null
+          org_id: string
+          profile_id: string
+          recorded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          designation?: string | null
+          effective_on: string
+          id?: string
+          kind: string
+          note?: string | null
+          org_id: string
+          profile_id: string
+          recorded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          designation?: string | null
+          effective_on?: string
+          id?: string
+          kind?: string
+          note?: string | null
+          org_id?: string
+          profile_id?: string
+          recorded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_milestones_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_milestones_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_milestones_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_private: {
+        Row: {
+          aadhaar_doc_path: string | null
+          aadhaar_last4: string | null
+          address_correspondence: string | null
+          address_permanent: string | null
+          blood_group: string | null
+          created_at: string
+          emergency_name: string | null
+          emergency_phone: string | null
+          emergency_relationship: string | null
+          gender: string | null
+          marital_status: string | null
+          notes: string | null
+          org_id: string
+          pan_doc_path: string | null
+          pan_number: string | null
+          profile_id: string
+          same_address: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          aadhaar_doc_path?: string | null
+          aadhaar_last4?: string | null
+          address_correspondence?: string | null
+          address_permanent?: string | null
+          blood_group?: string | null
+          created_at?: string
+          emergency_name?: string | null
+          emergency_phone?: string | null
+          emergency_relationship?: string | null
+          gender?: string | null
+          marital_status?: string | null
+          notes?: string | null
+          org_id: string
+          pan_doc_path?: string | null
+          pan_number?: string | null
+          profile_id: string
+          same_address?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          aadhaar_doc_path?: string | null
+          aadhaar_last4?: string | null
+          address_correspondence?: string | null
+          address_permanent?: string | null
+          blood_group?: string | null
+          created_at?: string
+          emergency_name?: string | null
+          emergency_phone?: string | null
+          emergency_relationship?: string | null
+          gender?: string | null
+          marital_status?: string | null
+          notes?: string | null
+          org_id?: string
+          pan_doc_path?: string | null
+          pan_number?: string | null
+          profile_id?: string
+          same_address?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_private_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_private_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_private_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           auth_user_id: string | null

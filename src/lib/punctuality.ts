@@ -44,6 +44,8 @@ export interface OrgSettings {
   testing_until?: string | null;
   /** Compensatory off. Absent or false means the whole feature stays hidden. */
   comp_off_enabled?: boolean;
+  /** How many things one person may commit to in a day. */
+  daily_priority_cap?: number;
 }
 
 export const DEFAULT_MEETING_TIME = "11:00";

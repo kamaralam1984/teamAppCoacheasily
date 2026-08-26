@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WarriorAvatar } from "@/components/warriors/Avatar";
+import { HrRecord } from "@/components/warriors/HrRecord";
 import { supabase } from "@/integrations/supabase/client";
 import {
   daysSince,
@@ -121,6 +122,8 @@ export function ProfileModal({
             </p>
           )}
         </div>
+
+        {canManage ? <HrRecord profile={profile} /> : null}
 
         {canManage ? (
           <div className="mt-6 flex flex-wrap gap-3">
