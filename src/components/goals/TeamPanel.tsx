@@ -6,7 +6,10 @@ import { KeptPromises } from "@/components/tasks/KeptPromises";
 import { useTeamDayReport } from "@/hooks/useDay";
 import { addDays, istToday } from "@/lib/tasks";
 import { fmt, type TeamGoalRow } from "@/lib/goals";
-import { initials, roleLabel, shortDate } from "@/lib/warriors";
+import { roleLabel, shortDate } from "@/lib/warriors";
+import { WarriorAvatar } from "@/components/warriors/Avatar";
+import { useWarriors } from "@/hooks/useWarriors";
+
 
 /** A combined funnel for reports who share the same stages — where revenue leaks shows up. */
 function rollUps(rows: TeamGoalRow[]) {
@@ -55,8 +58,15 @@ export function TeamPanel({ canSeePast }: { canSeePast: boolean }) {
   const to = istToday();
   const from = useMemo(() => addDays(to, -13), [to]);
   const { data: promises } = useTeamDayReport(from, to);
+  const { data: everyone } = useWarriors();
+  const photos = useMemo(() => {
+    const map = new Map<string, string | null>();
+    for (const p of everyone ?? []) map.set(p.id, p.avatar_url);
+    return map;
+  }, [everyone]);
   const rows = data ?? [];
   const combined = useMemo(() => rollUps(rows), [rows]);
+
 
   if (isLoading) {
     return <p className="text-sm text-soft">Loading your line…</p>;
@@ -116,9 +126,12 @@ export function TeamPanel({ canSeePast }: { canSeePast: boolean }) {
             style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
           >
             <div className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cream text-[13px] font-bold text-goldD">
-                {initials(row.profile.full_name)}
-              </span>
+              <WarriorAvatar
+                name={row.profile.full_name}
+                size={44}
+                path={photos.get(row.profile.id) ?? null}
+              />
+
               <div className="min-w-0 flex-1">
                 <p className="text-[15px] font-bold text-ink">{row.profile.full_name}</p>
                 <p className="text-[13px] text-soft">

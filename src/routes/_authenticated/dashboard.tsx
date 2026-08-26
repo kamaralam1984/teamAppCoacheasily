@@ -18,6 +18,8 @@ import { WhatsNewDialog } from "@/components/releases/WhatsNewDialog";
 import { PunctualityCard } from "@/components/Punctuality";
 import { DailyNumbers } from "@/components/goals/DailyNumbers";
 import { Mark } from "@/components/Mark";
+import { WarriorAvatar } from "@/components/warriors/Avatar";
+
 import { ThemeIcon } from "@/components/ThemeIcon";
 import { WorkMeter } from "@/components/WorkMeter";
 import { Rituals } from "@/components/culture/Rituals";
@@ -217,11 +219,22 @@ function Dashboard() {
             <Mark size={34} color="var(--ce-goldL)" />
           </div>
 
-          <h1 className="mt-5 font-display text-4xl leading-tight text-white sm:text-5xl">
-            {myBirthday ? "Happy birthday, " : "Namaste, "}
-            {profile?.full_name?.split(" ")[0] ?? "warrior"}
-            {myBirthday ? " 🎂" : ""}
+          <h1 className="mt-5 flex flex-wrap items-center gap-3 font-display text-4xl leading-tight text-white sm:text-5xl">
+            {profile ? (
+              <WarriorAvatar
+                name={profile.full_name}
+                size={52}
+                birthday={profile.birthday}
+                path={profile.avatar_url}
+              />
+            ) : null}
+            <span>
+              {myBirthday ? "Happy birthday, " : "Namaste, "}
+              {profile?.full_name?.split(" ")[0] ?? "warrior"}
+              {myBirthday ? " 🎂" : ""}
+            </span>
           </h1>
+
           {myBirthday ? (
             <p className="mt-2 text-sm font-bold text-goldL">
               The whole team is glad you're here. Have a wonderful day.

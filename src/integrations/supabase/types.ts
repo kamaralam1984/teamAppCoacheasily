@@ -1340,6 +1340,7 @@ export type Database = {
         Row: {
           auth_user_id: string | null
           avatar_url: string | null
+          bio: string | null
           birthday: string | null
           can_manage_calendar: boolean
           created_at: string
@@ -1368,6 +1369,7 @@ export type Database = {
         Insert: {
           auth_user_id?: string | null
           avatar_url?: string | null
+          bio?: string | null
           birthday?: string | null
           can_manage_calendar?: boolean
           created_at?: string
@@ -1396,6 +1398,7 @@ export type Database = {
         Update: {
           auth_user_id?: string | null
           avatar_url?: string | null
+          bio?: string | null
           birthday?: string | null
           can_manage_calendar?: boolean
           created_at?: string

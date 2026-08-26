@@ -10,6 +10,8 @@ import { ProfileModal } from "@/components/warriors/ProfileModal";
 import { WarriorForm } from "@/components/warriors/WarriorForm";
 import { usePresenceToday } from "@/hooks/useDailyCode";
 import { useMyProfile } from "@/hooks/useMyProfile";
+import { useMissingDetails } from "@/hooks/useMyDetails";
+
 import { useWarriors } from "@/hooks/useWarriors";
 import {
   buildTree,
@@ -67,10 +69,28 @@ function WarriorsPage() {
   );
   const tree = useMemo(() => buildTree(visible), [visible]);
   const { data: logins } = useLoginStatus(canManage);
+  const { data: privateLite } = useMissingDetails(canManage);
   const withoutLogin = useMemo(
     () => (logins ? active.filter((p) => !logins.get(p.id)?.has_login).length : 0),
     [active, logins],
   );
+
+  /** HR/Admin only — a quiet nudge list, never shown to anybody else. */
+  const gaps = useMemo(() => {
+    if (!canManage) return undefined;
+    const map = new Map<string, string[]>();
+    for (const p of active) {
+      const priv = privateLite?.get(p.id);
+      const missing: string[] = [];
+      if (!p.date_of_birth) missing.push("date of birth");
+      if (!p.phone?.trim()) missing.push("phone number");
+      if (!priv?.emergency_name?.trim() || !priv?.emergency_phone?.trim())
+        missing.push("emergency contact");
+      if (missing.length > 0) map.set(p.id, missing);
+    }
+    return map;
+  }, [active, canManage, privateLite]);
+
 
   const newJoiners = useMemo(
     () =>
@@ -209,7 +229,9 @@ function WarriorsPage() {
                   setInviteOnly(p);
                   setInviteOpen(true);
                 }}
+                gaps={gaps}
               />
+
 
             )}
           </div>

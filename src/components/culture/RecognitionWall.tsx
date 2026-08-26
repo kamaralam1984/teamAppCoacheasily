@@ -3,15 +3,8 @@ import { useMemo, useState } from "react";
 import { useGiveRecognition } from "@/hooks/useCulture";
 import { BADGES, shelfOrder, whenLabel, type Recognition } from "@/lib/culture";
 import type { Profile } from "@/lib/warriors";
+import { WarriorAvatar } from "@/components/warriors/Avatar";
 
-function initials(name: string) {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
-}
 
 export function GiveRecognition({
   me,
@@ -167,9 +160,12 @@ export function RecognitionCard({
   return (
     <article className="ce-rise ce-card p-5" style={style}>
       <div className="flex items-start gap-3">
-        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-night text-[13px] font-bold text-white">
-          {initials(to?.full_name ?? "?")}
-        </span>
+        <WarriorAvatar
+          name={to?.full_name ?? "?"}
+          size={40}
+          path={to?.avatar_url ?? null}
+        />
+
         <div className="min-w-0 flex-1">
           <p className="text-[15px] leading-tight font-bold text-ink">
             {to?.full_name ?? "A warrior"}
