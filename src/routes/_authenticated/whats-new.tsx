@@ -331,6 +331,7 @@ function Composer() {
           type="button"
           className="btn3d btn3d-ghost w-full sm:w-auto"
           disabled={!canSave || save.isPending}
+          title={canSave ? undefined : "Give it a title and a summary first"}
           onClick={() =>
             save.mutate(
               {
@@ -339,7 +340,12 @@ function Composer() {
                 summary: summary.trim(),
                 items: items.filter((i) => i.title.trim().length > 0),
               },
-              { onSuccess: (id) => setEditingId(id) },
+              {
+                onSuccess: (id) => {
+                  setEditingId(id);
+                  toast.success("Draft saved.");
+                },
+              },
             )
           }
         >
@@ -349,6 +355,7 @@ function Composer() {
           type="button"
           className="btn3d w-full sm:w-auto"
           disabled={!canSave || save.isPending || publish.isPending}
+          title={canSave ? undefined : "Give it a title and a summary first"}
           onClick={() =>
             save.mutate(
               {

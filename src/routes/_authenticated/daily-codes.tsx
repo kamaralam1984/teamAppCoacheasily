@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -189,6 +190,11 @@ function Page() {
                 type="button"
                 className="btn3d w-full sm:w-auto"
                 disabled={save.isPending || !form.title.trim() || !form.body.trim()}
+                title={
+                  form.title.trim() && form.body.trim()
+                    ? undefined
+                    : "A title and the thought are needed first"
+                }
                 onClick={() =>
                   save.mutate(
                     {
@@ -200,7 +206,12 @@ function Page() {
                       pledge: form.pledge,
                       department: form.department || null,
                     },
-                    { onSuccess: () => start(null) },
+                    {
+                      onSuccess: () => {
+                        toast.success(editing ? "Code updated." : "Code added.");
+                        start(null);
+                      },
+                    },
                   )
                 }
               >
