@@ -2448,6 +2448,7 @@ export type Database = {
         Returns: Json
       }
       manages: { Args: { target_id: string }; Returns: boolean }
+      mark_attendance: { Args: { p_focus?: string }; Returns: Json }
       mark_release_seen: { Args: { p_release_id: string }; Returns: undefined }
       my_day: { Args: { p_day?: string }; Returns: Json }
       my_org: { Args: never; Returns: string }
