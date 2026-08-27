@@ -63,39 +63,34 @@ export interface MarkResult {
 export function useMarkAttendance(profileId?: string | null, orgId?: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (focus?: string): Promise<MarkResult> => {
+    mutationFn: async (focus?: string): Promise<MarkResult & { summary: AttendanceSummary | null }> => {
       if (!profileId || !orgId) throw new Error("Your profile isn't set up yet.");
 
-      const { data: row, error } = await supabase
-        .from("attendance")
-        .insert({ profile_id: profileId, org_id: orgId, focus: focus?.trim() || null })
-        .select("date, marked_at, on_time")
-        .single();
+      // One trip: the insert, the comp-off look-up and the summary all happen in Postgres.
+      const { data, error } = await supabase.rpc(
+        "mark_attendance" as never,
+        { p_focus: focus?.trim() || null } as never,
+      );
       if (error) throw error;
 
-      // The comp-off, if any, was created by the database on the write itself.
-      const { data: credit } = await supabase
-        .from("comp_off_credits")
-        .select("reason")
-        .eq("profile_id", profileId)
-        .eq("earned_on", row.date)
-        .maybeSingle();
-
-      const { data: summary } = await supabase.rpc("attendance_summary", {});
-      const days = (summary as unknown as AttendanceSummary | null)?.days_marked ?? 0;
+      const res = data as unknown as {
+        date: string;
+        at: string;
+        onTime: boolean;
+        compOffReason: string | null;
+        daysMarked: number;
+        milestone: boolean;
+        summary: AttendanceSummary | null;
+      };
 
       return {
-        date: row.date,
-        at: new Date(row.marked_at).toLocaleTimeString("en-GB", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-          timeZone: "Asia/Kolkata",
-        }),
-        onTime: row.on_time ?? true,
-        compOffReason: credit?.reason ?? null,
-        milestone: days > 0 && days % 20 === 0,
-        daysMarked: days,
+        date: res.date,
+        at: res.at,
+        onTime: res.onTime ?? true,
+        compOffReason: res.compOffReason ?? null,
+        milestone: Boolean(res.milestone),
+        daysMarked: res.daysMarked ?? 0,
+        summary: res.summary ?? null,
       };
     },
     // The punch must feel instant — flip the summary now, roll back on failure.
@@ -113,8 +108,18 @@ export function useMarkAttendance(profileId?: string | null, orgId?: string | nu
     onError: (_error, _vars, context) => {
       for (const [key, value] of context?.snapshot ?? []) qc.setQueryData(key, value);
     },
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["attendance-summary"] });
+    onSuccess: (result) => {
+      // The truth came back with the write — write it straight in, no refetch.
+      if (result.summary) {
+        const keys = qc.getQueriesData<AttendanceSummary | null>({
+          queryKey: ["attendance-summary"],
+        });
+        for (const [key] of keys) qc.setQueryData(key, result.summary);
+        qc.setQueryData(["attendance-summary", "me"], result.summary);
+      } else {
+        void qc.invalidateQueries({ queryKey: ["attendance-summary"] });
+      }
+      // Background refreshes — nobody waits on these.
       void qc.invalidateQueries({ queryKey: ["attendance-history"] });
       void qc.invalidateQueries({ queryKey: ["presence-today"] });
       void qc.invalidateQueries({ queryKey: ["punctuality-me"] });
@@ -122,6 +127,7 @@ export function useMarkAttendance(profileId?: string | null, orgId?: string | nu
     },
   });
 }
+
 
 export function useHolidays() {
   return useQuery({
