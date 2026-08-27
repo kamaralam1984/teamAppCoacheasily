@@ -204,6 +204,22 @@ export function useDecideLeave(deciderId?: string | null) {
         });
       }
     },
+    // The decision is final the moment it is pressed — drop it off the list now.
+    onMutate: async (args) => {
+      await qc.cancelQueries({ queryKey: ["leave-pending"] });
+      const snapshot = qc.getQueriesData<PendingRequest[]>({ queryKey: ["leave-pending"] });
+      for (const [key, rows] of snapshot) {
+        if (!rows) continue;
+        qc.setQueryData<PendingRequest[]>(
+          key,
+          rows.filter((r) => r.id !== args.id),
+        );
+      }
+      return { snapshot };
+    },
+    onError: (_error, _vars, context) => {
+      for (const [key, rows] of context?.snapshot ?? []) qc.setQueryData(key, rows);
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["leave-pending"] });
       void qc.invalidateQueries({ queryKey: ["leave-balances"] });
