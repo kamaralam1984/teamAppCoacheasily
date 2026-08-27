@@ -492,7 +492,7 @@ function Dashboard() {
         ) : null}
       </div>
 
-      {unseenRelease && !releaseClosed && !codeOpen ? (
+      
       {unseenRelease && !releaseClosed && !codeOpen && !showTour ? (
         <WhatsNewDialog
           release={unseenRelease}
