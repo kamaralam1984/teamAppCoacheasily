@@ -166,9 +166,9 @@ export const HELP_TOPICS: HelpTopic[] = [
     title: "Comp-off",
     group: "Leave",
     body: [
-      "If you mark attendance on a holiday or on your weekly off, a comp-off credit is created for you automatically. You do not have to ask.",
-      "When you take one, the oldest credit is used first so nothing quietly expires.",
-      "If comp-off is switched off for the company, you will not see it in the leave types at all.",
+      "Comp-off has not been introduced yet. It is planned for next year.",
+      "Until then nothing is being accrued — marking attendance on a holiday or on your weekly off does not create a credit, and you will not see comp-off in the leave types.",
+      "When it does arrive, we will explain here exactly how it is earned and how it is taken.",
     ],
   },
   {
