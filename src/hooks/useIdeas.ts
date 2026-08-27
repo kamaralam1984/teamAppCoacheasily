@@ -90,6 +90,26 @@ export function useVoteIdea() {
       if (error) throw error;
       return data as number;
     },
+    // The count moves on the tap; it rolls back if the write fails.
+    onMutate: async (ideaId: string) => {
+      await qc.cancelQueries({ queryKey: ["ideas"] });
+      const snapshot = qc.getQueriesData<IdeaRow[]>({ queryKey: ["ideas"] });
+      for (const [key, rows] of snapshot) {
+        if (!rows) continue;
+        qc.setQueryData<IdeaRow[]>(
+          key,
+          rows.map((r) =>
+            r.id === ideaId
+              ? { ...r, voted: !r.voted, votes: Math.max(0, r.votes + (r.voted ? -1 : 1)) }
+              : r,
+          ),
+        );
+      }
+      return { snapshot };
+    },
+    onError: (_error, _vars, context) => {
+      for (const [key, rows] of context?.snapshot ?? []) qc.setQueryData(key, rows);
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["ideas"] });
     },
