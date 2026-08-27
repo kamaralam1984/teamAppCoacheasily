@@ -111,11 +111,8 @@ export function useMarkAttendance(profileId?: string | null, orgId?: string | nu
     onSuccess: (result) => {
       // The truth came back with the write — write it straight in, no refetch.
       if (result.summary) {
-        const keys = qc.getQueriesData<AttendanceSummary | null>({
-          queryKey: ["attendance-summary"],
-        });
-        for (const [key] of keys) qc.setQueryData(key, result.summary);
         qc.setQueryData(["attendance-summary", "me"], result.summary);
+        if (profileId) qc.setQueryData(["attendance-summary", profileId], result.summary);
       } else {
         void qc.invalidateQueries({ queryKey: ["attendance-summary"] });
       }
