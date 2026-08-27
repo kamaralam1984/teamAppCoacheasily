@@ -37,14 +37,20 @@ export function useOpenCycle() {
       if (error) throw error;
 
       const cycle = data as unknown as { id: string; name: string; closed: string | null };
-      const { data: people } = await supabase.from("profiles").select("id").eq("status", "active");
-      notifyByEmail({
-        kind: "cycle_opened",
-        profileIds: (people ?? []).map((p) => p.id),
-        title: `${cycle.name} is open`,
-        body: `Write your goals for this cycle. It runs to ${args.endDate}.`,
-        link: "/goals",
-      });
+      // Telling everybody is a courtesy — it must not hold the button.
+      void (async () => {
+        const { data: people } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("status", "active");
+        notifyByEmail({
+          kind: "cycle_opened",
+          profileIds: (people ?? []).map((p) => p.id),
+          title: `${cycle.name} is open`,
+          body: `Write your goals for this cycle. It runs to ${args.endDate}.`,
+          link: "/goals",
+        });
+      })();
       return cycle;
     },
     onSuccess: () => {

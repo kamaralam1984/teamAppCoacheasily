@@ -132,12 +132,14 @@ export function useApplyLeave(profileId?: string | null, orgId?: string | null) 
         .single();
       if (error) throw error;
 
-      const { data: me } = await supabase
-        .from("profiles")
-        .select("full_name, manager_id")
-        .eq("id", profileId)
-        .maybeSingle();
-      if (me?.manager_id) {
+      // Telling the approver is a courtesy — it must not hold the button.
+      void (async () => {
+        const { data: me } = await supabase
+          .from("profiles")
+          .select("full_name, manager_id")
+          .eq("id", profileId)
+          .maybeSingle();
+        if (!me?.manager_id) return;
         notifyByEmail({
           kind: "leave_raised",
           profileIds: [me.manager_id],
@@ -145,7 +147,7 @@ export function useApplyLeave(profileId?: string | null, orgId?: string | null) 
           body: `${input.type} leave from ${input.from_date} to ${input.to_date}. It's waiting for your decision.`,
           link: "/approvals",
         });
-      }
+      })();
       return data;
     },
     onSuccess: () => {
@@ -201,6 +203,22 @@ export function useDecideLeave(deciderId?: string | null) {
           link: "/leave",
         });
       }
+    },
+    // The decision is final the moment it is pressed — drop it off the list now.
+    onMutate: async (args) => {
+      await qc.cancelQueries({ queryKey: ["leave-pending"] });
+      const snapshot = qc.getQueriesData<PendingRequest[]>({ queryKey: ["leave-pending"] });
+      for (const [key, rows] of snapshot) {
+        if (!rows) continue;
+        qc.setQueryData<PendingRequest[]>(
+          key,
+          rows.filter((r) => r.id !== args.id),
+        );
+      }
+      return { snapshot };
+    },
+    onError: (_error, _vars, context) => {
+      for (const [key, rows] of context?.snapshot ?? []) qc.setQueryData(key, rows);
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["leave-pending"] });

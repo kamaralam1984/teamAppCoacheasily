@@ -81,6 +81,16 @@ function useSaveWeeklyNote(weekStart: string) {
       });
       if (error) throw error;
     },
+    // The note is on screen already — show it saved, roll back if it fails.
+    onMutate: async (note: string) => {
+      await qc.cancelQueries({ queryKey: ["weekly-review"] });
+      const snapshot = qc.getQueriesData<string>({ queryKey: ["weekly-review"] });
+      for (const [key] of snapshot) qc.setQueryData(key, note);
+      return { snapshot };
+    },
+    onError: (_error, _vars, context) => {
+      for (const [key, value] of context?.snapshot ?? []) qc.setQueryData(key, value);
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["weekly-review"] });
     },

@@ -23,6 +23,30 @@ export function useCommitDay() {
       const { error } = await supabase.rpc("commit_day", { p_task_ids: taskIds });
       if (error) throw error;
     },
+    // The day is committed on the click; the server catches up behind it.
+    onMutate: async (taskIds: string[]) => {
+      await qc.cancelQueries({ queryKey: ["my-day"] });
+      const previous = qc.getQueryData<MyDay | null>(["my-day"]);
+      if (previous) {
+        const chosen = [
+          ...previous.tasks.filter((t) => taskIds.includes(t.id)),
+          ...previous.available
+            .filter((a) => taskIds.includes(a.id) && !previous.tasks.some((t) => t.id === a.id))
+            .map((a) => ({ ...a, done: false, goal_name: a.goal_name })),
+        ];
+        qc.setQueryData<MyDay>(["my-day"], {
+          ...previous,
+          committed_at: previous.committed_at ?? new Date().toISOString(),
+          tasks: chosen,
+          total: chosen.length,
+          done: chosen.filter((t) => t.done).length,
+        });
+      }
+      return { previous };
+    },
+    onError: (_error, _vars, context) => {
+      if (context) qc.setQueryData(["my-day"], context.previous);
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["my-day"] });
       void qc.invalidateQueries({ queryKey: ["tasks"] });
@@ -37,6 +61,22 @@ export function useCloseDay() {
       const { data, error } = await supabase.rpc("close_day", { p_note: note });
       if (error) throw error;
       return data as unknown as CloseResult;
+    },
+    // The day reads as closed straight away.
+    onMutate: async (note: string) => {
+      await qc.cancelQueries({ queryKey: ["my-day"] });
+      const previous = qc.getQueryData<MyDay | null>(["my-day"]);
+      if (previous) {
+        qc.setQueryData<MyDay>(["my-day"], {
+          ...previous,
+          closed_at: new Date().toISOString(),
+          note: note || previous.note,
+        });
+      }
+      return { previous };
+    },
+    onError: (_error, _vars, context) => {
+      if (context) qc.setQueryData(["my-day"], context.previous);
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["my-day"] });
