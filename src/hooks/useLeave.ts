@@ -132,12 +132,14 @@ export function useApplyLeave(profileId?: string | null, orgId?: string | null) 
         .single();
       if (error) throw error;
 
-      const { data: me } = await supabase
-        .from("profiles")
-        .select("full_name, manager_id")
-        .eq("id", profileId)
-        .maybeSingle();
-      if (me?.manager_id) {
+      // Telling the approver is a courtesy — it must not hold the button.
+      void (async () => {
+        const { data: me } = await supabase
+          .from("profiles")
+          .select("full_name, manager_id")
+          .eq("id", profileId)
+          .maybeSingle();
+        if (!me?.manager_id) return;
         notifyByEmail({
           kind: "leave_raised",
           profileIds: [me.manager_id],
@@ -145,7 +147,7 @@ export function useApplyLeave(profileId?: string | null, orgId?: string | null) 
           body: `${input.type} leave from ${input.from_date} to ${input.to_date}. It's waiting for your decision.`,
           link: "/approvals",
         });
-      }
+      })();
       return data;
     },
     onSuccess: () => {
