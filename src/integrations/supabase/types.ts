@@ -791,69 +791,6 @@ export type Database = {
           },
         ]
       }
-      el_policy: {
-        Row: {
-          count_approved_leave: boolean
-          credit_amount: number
-          exclude_holidays: boolean
-          exclude_weekly_off: boolean
-          max_balance: number
-          org_id: string
-          required_days: number
-          updated_at: string
-          updated_by: string | null
-        }
-        Insert: {
-          count_approved_leave?: boolean
-          credit_amount?: number
-          exclude_holidays?: boolean
-          exclude_weekly_off?: boolean
-          max_balance?: number
-          org_id: string
-          required_days?: number
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Update: {
-          count_approved_leave?: boolean
-          credit_amount?: number
-          exclude_holidays?: boolean
-          exclude_weekly_off?: boolean
-          max_balance?: number
-          org_id?: string
-          required_days?: number
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Relationships: []
-      }
-      el_policy_log: {
-        Row: {
-          changed_at: string
-          changed_by: string | null
-          id: string
-          new_policy: Json
-          old_policy: Json
-          org_id: string
-        }
-        Insert: {
-          changed_at?: string
-          changed_by?: string | null
-          id?: string
-          new_policy: Json
-          old_policy: Json
-          org_id: string
-        }
-        Update: {
-          changed_at?: string
-          changed_by?: string | null
-          id?: string
-          new_policy?: Json
-          old_policy?: Json
-          org_id?: string
-        }
-        Relationships: []
-      }
       holidays: {
         Row: {
           created_at: string
@@ -2480,8 +2417,6 @@ export type Database = {
       goal_nudge_me: { Args: never; Returns: boolean }
       goal_owner: { Args: { p_goal_id: string }; Returns: string }
       goal_pct: { Args: { p_goal_id: string }; Returns: number }
-      el_ledger_for: { Args: { p_profile_id?: string }; Returns: Json }
-      el_recalculate: { Args: never; Returns: number }
       goal_progress: { Args: { p_goal_id: string }; Returns: Json }
       goals_for: {
         Args: { p_cycle_id?: string; p_profile_id?: string }
@@ -2494,17 +2429,6 @@ export type Database = {
       latest_unseen_release: { Args: never; Returns: Json }
       leave_approver_for: { Args: { p_profile_id: string }; Returns: string }
       leave_balances: { Args: { p_profile_id?: string }; Returns: Json }
-      probation_decide: {
-        Args: {
-          p_decision: string
-          p_months?: number
-          p_note?: string
-          p_profile_id: string
-        }
-        Returns: Json
-      }
-      probation_history: { Args: { p_profile_id: string }; Returns: Json }
-      probation_overview: { Args: never; Returns: Json }
       leave_check: {
         Args: {
           p_from: string
