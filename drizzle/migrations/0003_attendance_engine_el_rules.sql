@@ -457,7 +457,7 @@ RETURNS SETOF date LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
   )
   SELECT days.d
     FROM days, me
-    WHERE days.d > p_after
+   WHERE days.d > p_after
      AND days.d <= (now() AT TIME ZONE 'Asia/Kolkata')::date
      AND (me.joined_on IS NULL OR days.d >= me.joined_on)
      AND NOT (NOT me.cnt_prob AND me.pr_start IS NOT NULL
@@ -617,7 +617,7 @@ BEGIN
                'amount', z.amount, 'credited', -z.amount,
                'previous_balance', NULL, 'new_balance', NULL, 'carry_limit', z.carry_limit)
         FROM el_lapses z WHERE z.profile_id = v_target
-     ) x), '[]'::jsonb);
+    ) x), '[]'::jsonb);
 END $$;
 
 -- ───────── 8. SUMMARY: balance after lapses, plus today's check-out ─────────
@@ -647,7 +647,7 @@ BEGIN
   v_earned := v_earned - coalesce((SELECT sum(amount) FROM el_lapses WHERE profile_id = v_target), 0)::int;
 
   SELECT coalesce((SELECT required_days FROM el_policy pol JOIN profiles p ON p.org_id = pol.org_id
-                     WHERE p.id = v_target), 20) INTO v_req;
+                    WHERE p.id = v_target), 20) INTO v_req;
   SELECT count(*) INTO v_progress FROM public.el_eligible_days(v_target, v_after);
 
   SELECT * INTO v_today_row FROM attendance WHERE profile_id = v_target AND date = v_today;
@@ -727,7 +727,7 @@ BEGIN
                          WHERE profile_id = v_target AND type = r.t AND status = 'approved'
                            AND (r.t = 'earned' OR extract(year FROM from_date) = v_year)), 0),
       'pending', coalesce((SELECT sum(days) FROM leave_requests
-                             WHERE profile_id = v_target AND type = r.t AND status = 'pending'
+                            WHERE profile_id = v_target AND type = r.t AND status = 'pending'
                               AND (r.t = 'earned' OR extract(year FROM from_date) = v_year)), 0),
       'balance', 0
     );
