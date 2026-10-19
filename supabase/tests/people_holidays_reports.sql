@@ -89,7 +89,7 @@ BEGIN
     format('INSERT INTO profiles (org_id, full_name, role, employee_code) VALUES (%L, ''Bad'', ''member'', ''no spaces!'')', o), 'check constraint');
 
   PERFORM pg_temp.as_user(a);
-  PERFORM pg_temp.fails('id: a member cannot change their own', format('UPDATE profiles SET employee_code = ''Z-1'' WHERE id = %L', a), 'Only HR');
+  PERFORM pg_temp.fails('id: a member cannot change their own', format('UPDATE profiles SET employee_code = ''Z-1'' WHERE id = %L', a), 'Only HR|looked after by HR');
   PERFORM pg_temp.as_user(hr);
   UPDATE profiles SET employee_code = 'ASHA-1' WHERE id = a;
   PERFORM pg_temp.eq('id: HR can change it', (SELECT employee_code FROM profiles WHERE id = a), 'ASHA-1');
