@@ -136,7 +136,7 @@ export const devUpdateProfile = createServerFn({ method: "POST" })
     for (const [k, v] of Object.entries(patch)) {
       if (before[k] !== v) changes[k] = { before: (before[k] ?? null) as Json, after: v };
     }
-    const { error: upErr } = await db.from("profiles").update(patch).eq("id", data.id);
+    const { error: upErr } = await db.rpc("dev_update_profile", { p_id: data.id, p_patch: patch });
     if (upErr) throw new Error(upErr.message);
     await log(db, email, "profile.update", `profiles:${data.id}`, changes);
     return { ok: true };
@@ -234,6 +234,12 @@ export const devWriteRow = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const { db, email } = await gate(context.userId);
+    if (data.table === "profiles" && data.op === "update") {
+      const protectedFields = ["title", "department", "manager_id", "role", "opening_earned_leave"];
+      if (protectedFields.some((key) => Object.hasOwn(data.values, key))) {
+        throw new Error("Change title, department, reporting line and access level in the Users tab. Opening earned leave must be changed by a signed-in HR or Admin person.");
+      }
+    }
     if (data.op === "insert") {
       const { data: row, error } = await db.from(data.table).insert(data.values).select().maybeSingle();
       if (error) throw new Error(error.message);
