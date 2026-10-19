@@ -3,7 +3,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
-import { devListUsers, devUpdateProfile, devUserAction } from "@/lib/developer.functions";
+import { devImpersonateLink, devListUsers, devUpdateProfile, devUserAction } from "@/lib/developer.functions";
+import { impersonationBlockedReason } from "@/lib/developerImpersonation";
+import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { errMsg } from "@/hooks/useDeveloper";
 import { Card, Failed, Loading } from "./shared";
 
@@ -127,6 +130,61 @@ function UserEditor({ row, all }: { row: UserRow; all: UserRow[] }) {
         </div>
       ) : (
         <p className="text-soft">No login linked.</p>
+      )}
+      <ImpersonatePerson row={row} />
+    </div>
+  );
+}
+
+function ImpersonatePerson({ row }: { row: UserRow }) {
+  const generate = useServerFn(devImpersonateLink);
+  const qc = useQueryClient();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [link, setLink] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const reason = impersonationBlockedReason(row);
+  const request = useMutation({
+    mutationFn: () => generate({ data: { profileId: row.id, redirectTo: `${window.location.origin}/dashboard` } }),
+    retry: false,
+    onSuccess: (value) => { setLink(value); setCopied(false); void qc.invalidateQueries({ queryKey: ["dev-audit"] }); },
+    onError: (error) => toast.error(errMsg(error)),
+  });
+  async function copy() {
+    if (!link) return;
+    try { await navigator.clipboard.writeText(link); setCopied(true); }
+    catch { toast.error("Couldn't copy. Select the link and copy it manually."); }
+  }
+  return (
+    <div className="space-y-2 border-t border-border pt-3">
+      <Button variant="ghost" className="btn3d btn3d-ghost min-h-12 w-full sm:w-auto" disabled={Boolean(reason) || request.isPending} onClick={() => setConfirmOpen(true)}>
+        {request.isPending ? "Creating link…" : "Open as this person"}
+      </Button>
+      {reason && <p className="text-sm text-soft">{reason}</p>}
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-[24px] border-border bg-card sm:max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-ink">Open as this person?</AlertDialogTitle>
+            <AlertDialogDescription className="text-base text-soft">
+              You'll see the app exactly as {row.full_name} ({row.role}). Anything you do there is done as them. Open the link in a private/incognito window so your own session stays signed in.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="btn3d btn3d-ghost min-h-12">Cancel</AlertDialogCancel>
+            <AlertDialogAction className="btn3d min-h-12" onClick={() => { setLink(null); setCopied(false); request.mutate(); }}>Create sign-in link</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      {link && !reason && (
+        <div className="min-w-0 space-y-2">
+          <textarea aria-label={`Sign-in link for ${row.full_name}`} readOnly className="ce-input w-full min-w-0 text-base break-all" rows={3} value={link} onFocus={(e) => e.currentTarget.select()} />
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button variant="ghost" className="btn3d btn3d-ghost min-h-12 w-full sm:w-auto" onClick={() => void copy()}>{copied ? "Copied" : "Copy"}</Button>
+            <Button variant="ghost" className="btn3d btn3d-ghost min-h-12 w-full sm:w-auto" asChild>
+              <a href={link} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">Open in new tab</a>
+            </Button>
+          </div>
+          <p className="text-sm text-soft">Use a private/incognito window to keep your own session signed in.</p>
+        </div>
       )}
     </div>
   );
