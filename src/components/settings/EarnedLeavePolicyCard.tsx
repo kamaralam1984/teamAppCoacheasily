@@ -32,6 +32,36 @@ const TOGGLES: { key: keyof PolicyEdit; label: string; hint: string }[] = [
     label: "Count approved full-day leave",
     hint: "Approved paid leave days count as worked. Half-days and unpaid leave never do.",
   },
+  {
+    key: "count_wfh",
+    label: "Count work-from-home days",
+    hint: "A day marked as work from home counts as a working day.",
+  },
+  {
+    key: "count_half_day",
+    label: "Count half days as a full working day",
+    hint: "Off by default: a day marked as a half day does not count towards the target.",
+  },
+  {
+    key: "count_during_probation",
+    label: "Count days during probation",
+    hint: "Turn this off if earned leave should only start once probation is over. Days before someone's joining date never count.",
+  },
+];
+
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 const PLAIN: Record<string, string> = {
@@ -41,6 +71,11 @@ const PLAIN: Record<string, string> = {
   exclude_weekly_off: "skip weekly offs",
   exclude_holidays: "skip holidays",
   count_approved_leave: "count approved leave",
+  count_wfh: "count work from home",
+  count_half_day: "count half days",
+  count_during_probation: "count probation days",
+  carry_forward_limit: "carry-forward limit",
+  year_start_month: "leave year starts in month",
 };
 
 function describeChange(oldP: Record<string, unknown>, newP: Record<string, unknown>) {
@@ -67,13 +102,21 @@ export function EarnedLeavePolicyCard({ orgId }: { orgId: string | null }) {
       exclude_weekly_off: policy.exclude_weekly_off,
       exclude_holidays: policy.exclude_holidays,
       count_approved_leave: policy.count_approved_leave,
+      count_wfh: policy.count_wfh,
+      count_half_day: policy.count_half_day,
+      count_during_probation: policy.count_during_probation,
+      carry_forward_limit: policy.carry_forward_limit,
+      year_start_month: policy.year_start_month,
     });
   }, [policy]);
 
   if (!draft) return null;
 
   const nameOf = (id: string | null) => warriors?.find((w) => w.id === id)?.full_name ?? "Someone";
-  const valid = FIELDS.every(({ key }) => Number.isInteger(draft[key]) && Number(draft[key]) >= 1);
+  const valid =
+    FIELDS.every(({ key }) => Number.isInteger(draft[key]) && Number(draft[key]) >= 1) &&
+    (draft.carry_forward_limit === null ||
+      (Number.isInteger(draft.carry_forward_limit) && draft.carry_forward_limit >= 0));
 
   return (
     <section className="ce-card p-5">
@@ -115,6 +158,61 @@ export function EarnedLeavePolicyCard({ orgId }: { orgId: string | null }) {
             </span>
           </label>
         ))}
+      </div>
+
+      <div className="mt-5 border-t border-line pt-4">
+        <p className="ce-label">Leave year and carry-forward</p>
+        <p className="mt-1 text-[12px] leading-relaxed text-soft">
+          When a new leave year starts, earned leave above the limit lapses. People are told, and
+          the lapse is written to their ledger. A new limit only applies to leave years that start
+          after you save it, so turning it on today never wipes the current year.
+        </p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label>
+            <span className="ce-label">Leave year starts in</span>
+            <select
+              className="ce-input"
+              value={draft.year_start_month}
+              onChange={(e) => setDraft({ ...draft, year_start_month: Number(e.target.value) })}
+            >
+              {MONTHS.map((m, i) => (
+                <option key={m} value={i + 1}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div>
+            <label className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                className="h-5 w-5"
+                checked={draft.carry_forward_limit !== null}
+                onChange={(e) =>
+                  setDraft({ ...draft, carry_forward_limit: e.target.checked ? 10 : null })
+                }
+              />
+              <span className="text-sm font-semibold text-ink">Limit what carries forward</span>
+            </label>
+            {draft.carry_forward_limit !== null ? (
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                className="ce-input mt-2"
+                aria-label="Days that carry forward"
+                value={
+                  Number.isNaN(draft.carry_forward_limit) ? "" : String(draft.carry_forward_limit)
+                }
+                onChange={(e) =>
+                  setDraft({ ...draft, carry_forward_limit: e.target.valueAsNumber })
+                }
+              />
+            ) : (
+              <p className="mt-1 text-[12px] text-soft">No limit: the full balance carries on.</p>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">

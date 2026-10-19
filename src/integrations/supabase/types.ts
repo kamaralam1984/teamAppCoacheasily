@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       attendance: {
         Row: {
+          check_out_at: string | null
           created_at: string
           date: string
           focus: string | null
@@ -24,8 +25,10 @@ export type Database = {
           on_time: boolean | null
           org_id: string
           profile_id: string
+          status: string
         }
         Insert: {
+          check_out_at?: string | null
           created_at?: string
           date?: string
           focus?: string | null
@@ -34,8 +37,10 @@ export type Database = {
           on_time?: boolean | null
           org_id: string
           profile_id: string
+          status?: string
         }
         Update: {
+          check_out_at?: string | null
           created_at?: string
           date?: string
           focus?: string | null
@@ -44,6 +49,7 @@ export type Database = {
           on_time?: boolean | null
           org_id?: string
           profile_id?: string
+          status?: string
         }
         Relationships: [
           {
@@ -577,7 +583,12 @@ export type Database = {
       }
       el_policy: {
         Row: {
+          carry_forward_limit: number | null
+          carry_forward_since: string | null
           count_approved_leave: boolean
+          count_during_probation: boolean
+          count_half_day: boolean
+          count_wfh: boolean
           credit_amount: number
           exclude_holidays: boolean
           exclude_weekly_off: boolean
@@ -586,9 +597,15 @@ export type Database = {
           required_days: number
           updated_at: string
           updated_by: string | null
+          year_start_month: number
         }
         Insert: {
+          carry_forward_limit?: number | null
+          carry_forward_since?: string | null
           count_approved_leave?: boolean
+          count_during_probation?: boolean
+          count_half_day?: boolean
+          count_wfh?: boolean
           credit_amount?: number
           exclude_holidays?: boolean
           exclude_weekly_off?: boolean
@@ -597,9 +614,15 @@ export type Database = {
           required_days?: number
           updated_at?: string
           updated_by?: string | null
+          year_start_month?: number
         }
         Update: {
+          carry_forward_limit?: number | null
+          carry_forward_since?: string | null
           count_approved_leave?: boolean
+          count_during_probation?: boolean
+          count_half_day?: boolean
+          count_wfh?: boolean
           credit_amount?: number
           exclude_holidays?: boolean
           exclude_weekly_off?: boolean
@@ -608,6 +631,7 @@ export type Database = {
           required_days?: number
           updated_at?: string
           updated_by?: string | null
+          year_start_month?: number
         }
         Relationships: [
           {
@@ -2663,7 +2687,33 @@ export type Database = {
     }
     Functions: {
       appraisal_matrix: { Args: never; Returns: Json }
+      attendance_correct: {
+        Args: {
+          p_action: string
+          p_check_in?: string
+          p_check_out?: string
+          p_date: string
+          p_profile_id: string
+          p_reason?: string
+          p_status?: string
+        }
+        Returns: Json
+      }
+      attendance_corrections_for: {
+        Args: { p_profile_id?: string }
+        Returns: Json
+      }
+      attendance_month: {
+        Args: { p_month?: string; p_profile_id?: string }
+        Returns: Json
+      }
+      attendance_range_report: {
+        Args: { p_from: string; p_to: string }
+        Returns: Json
+      }
       attendance_summary: { Args: { p_profile_id?: string }; Returns: Json }
+      attendance_team_day: { Args: { p_date?: string }; Returns: Json }
+      check_out_attendance: { Args: never; Returns: Json }
       birthday_nudges: { Args: never; Returns: number }
       calendar_feed: { Args: { p_token: string }; Returns: Json }
       calendar_leave: { Args: { p_from: string; p_to: string }; Returns: Json }
@@ -2790,7 +2840,10 @@ export type Database = {
         Returns: Json
       }
       manages: { Args: { target_id: string }; Returns: boolean }
-      mark_attendance: { Args: { p_focus?: string }; Returns: Json }
+      mark_attendance: {
+        Args: { p_focus?: string; p_status?: string }
+        Returns: Json
+      }
       mark_release_seen: { Args: { p_release_id: string }; Returns: undefined }
       my_day: { Args: { p_day?: string }; Returns: Json }
       my_org: { Args: never; Returns: string }

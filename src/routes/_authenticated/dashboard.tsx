@@ -27,7 +27,10 @@ import { Rituals } from "@/components/culture/Rituals";
 import {
   useAttendanceHistory,
   useAttendanceSummary,
+  useCheckOut,
   useMarkAttendance,
+  WORK_MODE_LABEL,
+  type WorkMode,
 } from "@/hooks/useAttendance";
 import { usePresenceToday, useTodayCode } from "@/hooks/useDailyCode";
 import { useCycles, useEveningNudge, useGoalsFor } from "@/hooks/useGoals";
@@ -120,6 +123,7 @@ function Dashboard() {
   const { data: summary } = useAttendanceSummary(profile ? undefined : null);
   const { data: history } = useAttendanceHistory(profile?.id ?? null, 7);
   const mark = useMarkAttendance(profile?.id ?? null, profile?.org_id ?? null);
+  const checkOut = useCheckOut();
 
   interface Cheer {
     message: string;
@@ -195,8 +199,8 @@ function Dashboard() {
     });
   }, [profile, myBirthday, birthdayKey]);
 
-  const onMark = (focus: string) => {
-    mark.mutate(focus, {
+  const onMark = (focus: string, status: WorkMode) => {
+    mark.mutate({ focus, status }, {
       onError: () => undefined,
       onSuccess: (res) => {
         setCodeOpen(false);
@@ -289,8 +293,11 @@ function Dashboard() {
 
             {marked ? (
               <div className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-emer px-5 text-[15px] font-bold text-white sm:w-auto">
-                <span aria-hidden>✓</span> Present today ·{" "}
-                {summary ? shortDate(summary.today) : date}
+                <span aria-hidden>✓</span>{" "}
+                {summary?.today_status && summary.today_status !== "present"
+                  ? WORK_MODE_LABEL[summary.today_status]
+                  : "Present today"}{" "}
+                · {summary ? shortDate(summary.today) : date}
               </div>
             ) : (
               <button
@@ -302,6 +309,30 @@ function Dashboard() {
                 Mark attendance ({prettyTime(meetingTime)})
               </button>
             )}
+
+            {marked && summary ? (
+              summary.checked_out ? (
+                <span className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-goldL/40 px-4 text-[13px] font-bold text-goldL sm:w-auto">
+                  Checked out
+                  {summary.check_out_at
+                    ? ` · ${new Date(summary.check_out_at).toLocaleTimeString("en-IN", {
+                        timeZone: "Asia/Kolkata",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}`
+                    : ""}
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  className="btn3d btn3d-dark w-full sm:w-auto"
+                  disabled={checkOut.isPending}
+                  onClick={() => checkOut.mutate()}
+                >
+                  {checkOut.isPending ? "One moment…" : "Check out"}
+                </button>
+              )
+            ) : null}
 
             {marked && meetingUrl ? (
               <a
@@ -331,6 +362,12 @@ function Dashboard() {
           {!marked ? (
             <p className="mt-4 text-[13px] leading-relaxed text-mist">
               The standup room opens for you the moment you mark attendance.
+            </p>
+          ) : null}
+
+          {checkOut.isError ? (
+            <p className="mt-4 text-[13px] font-semibold text-goldL">
+              {(checkOut.error as Error)?.message ?? "Check-out didn't go through."}
             </p>
           ) : null}
 

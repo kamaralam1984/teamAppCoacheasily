@@ -16,7 +16,20 @@ export interface AttendanceSummary {
   el_progress: number;
   streak: number;
   comp_off_available: number;
+  /** how today was marked, and whether the person has checked out */
+  today_status?: WorkMode | null;
+  checked_out?: boolean;
+  check_out_at?: string | null;
 }
+
+/** How a day was worked. Late is worked out from the check-in time, not chosen. */
+export type WorkMode = "present" | "wfh" | "half_day";
+
+export const WORK_MODE_LABEL: Record<WorkMode, string> = {
+  present: "In the office",
+  wfh: "Work from home",
+  half_day: "Half day",
+};
 
 export function useAttendanceSummary(profileId?: string | null) {
   return useQuery({
@@ -58,6 +71,7 @@ export interface MarkResult {
   /** exactly when the punch landed, in Mumbai time (HH:MM) */
   at: string;
   onTime: boolean;
+  status: WorkMode;
   compOffReason: string | null;
   milestone: boolean;
   daysMarked: number;
@@ -66,13 +80,16 @@ export interface MarkResult {
 export function useMarkAttendance(profileId?: string | null, orgId?: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (focus?: string): Promise<MarkResult & { summary: AttendanceSummary | null }> => {
+    mutationFn: async (input: {
+      focus?: string;
+      status?: WorkMode;
+    }): Promise<MarkResult & { summary: AttendanceSummary | null }> => {
       if (!profileId || !orgId) throw new Error("Your profile isn't set up yet.");
 
       // One trip: the insert, the comp-off look-up and the summary all happen in Postgres.
       const { data, error } = await supabase.rpc(
         "mark_attendance" as never,
-        { p_focus: focus?.trim() || null } as never,
+        { p_focus: input.focus?.trim() || null, p_status: input.status ?? "present" } as never,
       );
       if (error) throw error;
 
@@ -80,6 +97,7 @@ export function useMarkAttendance(profileId?: string | null, orgId?: string | nu
         date: string;
         at: string;
         onTime: boolean;
+        status?: WorkMode;
         compOffReason: string | null;
         daysMarked: number;
         milestone: boolean;
@@ -90,6 +108,7 @@ export function useMarkAttendance(profileId?: string | null, orgId?: string | nu
         date: res.date,
         at: res.at,
         onTime: res.onTime ?? true,
+        status: res.status ?? "present",
         compOffReason: res.compOffReason ?? null,
         milestone: Boolean(res.milestone),
         daysMarked: res.daysMarked ?? 0,
@@ -124,10 +143,28 @@ export function useMarkAttendance(profileId?: string | null, orgId?: string | nu
       void qc.invalidateQueries({ queryKey: ["presence-today"] });
       void qc.invalidateQueries({ queryKey: ["punctuality-me"] });
       void qc.invalidateQueries({ queryKey: ["punctuality-rows"] });
+      void qc.invalidateQueries({ queryKey: ["attendance-month"] });
+      void qc.invalidateQueries({ queryKey: ["el-ledger"] });
     },
   });
 }
 
+/** End of day: records the check-out time. Allowed once, after marking in. */
+export function useCheckOut() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (): Promise<{ check_out: string; hours: number }> => {
+      const { data, error } = await supabase.rpc("check_out_attendance");
+      if (error) throw error;
+      return data as unknown as { check_out: string; hours: number };
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["attendance-summary"] });
+      void qc.invalidateQueries({ queryKey: ["attendance-month"] });
+      void qc.invalidateQueries({ queryKey: ["attendance-history"] });
+    },
+  });
+}
 
 export function useHolidays() {
   return useQuery({

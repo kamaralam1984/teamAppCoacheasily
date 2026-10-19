@@ -30,6 +30,7 @@ const BASE_TABS = [
   { label: "Goals", to: "/goals" },
   { label: "Culture", to: "/culture" },
   { label: "Leave", to: "/leave" },
+  { label: "Attendance", to: "/attendance" },
   { label: "Warriors", to: "/warriors" },
   { label: "Ideas", to: "/ideas" },
 ] as const;

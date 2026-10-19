@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { Mark } from "@/components/Mark";
+import { WORK_MODE_LABEL, type WorkMode } from "@/hooks/useAttendance";
 import type { DailyCode } from "@/hooks/useDailyCode";
 
 export interface DailyCodeModalProps {
@@ -9,7 +10,7 @@ export interface DailyCodeModalProps {
   pending?: boolean;
   error?: boolean;
   onClose: () => void;
-  onPledge: (focus: string) => void;
+  onPledge: (focus: string, status: WorkMode) => void;
 }
 
 const FALLBACK_PLEDGE = "I'm here, and I'll work honestly today";
@@ -27,6 +28,7 @@ export function DailyCodeModal({
   onPledge,
 }: DailyCodeModalProps) {
   const [focus, setFocus] = useState("");
+  const [mode, setMode] = useState<WorkMode>("present");
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -73,12 +75,37 @@ export function DailyCodeModal({
           </>
         )}
 
-        <div className="mt-8">
+        <fieldset className="mt-8">
+          <legend className="ce-label">How are you working today?</legend>
+          <div className="flex flex-wrap gap-2">
+            {(Object.keys(WORK_MODE_LABEL) as WorkMode[]).map((m) => (
+              <label
+                key={m}
+                className={`inline-flex min-h-11 cursor-pointer items-center rounded-full border px-4 text-[13px] font-bold ${
+                  mode === m
+                    ? "border-goldD bg-goldL/30 text-ink"
+                    : "border-line bg-white text-soft hover:border-gold"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="dc-mode"
+                  className="sr-only"
+                  checked={mode === m}
+                  onChange={() => setMode(m)}
+                />
+                {WORK_MODE_LABEL[m]}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <div className="mt-5">
           <button
             type="button"
             className="btn3d w-full"
             disabled={pending}
-            onClick={() => onPledge(focus.trim().slice(0, 120))}
+            onClick={() => onPledge(focus.trim().slice(0, 120), mode)}
           >
             {pending ? "One moment…" : (code?.pledge ?? FALLBACK_PLEDGE)}
           </button>

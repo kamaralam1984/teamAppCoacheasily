@@ -8,11 +8,16 @@ export type EarnedLeavePolicy = Tables<"el_policy">;
 /** One automatic credit. HR/Admin also receive the calculation behind it. */
 export interface LedgerEntry {
   id: string;
+  /** a credit, or the part of the balance that lapsed when a new leave year began */
+  kind: "credit" | "lapse";
   credited_on: string;
   amount: number;
+  /** negative for a lapse */
   credited: number;
-  previous_balance: number;
-  new_balance: number;
+  previous_balance: number | null;
+  new_balance: number | null;
+  /** lapses: the carry-forward limit that applied */
+  carry_limit?: number;
   period_start?: string;
   period_end?: string;
   eligible_days?: number;
@@ -38,6 +43,11 @@ export type PolicyEdit = Pick<
   | "exclude_weekly_off"
   | "exclude_holidays"
   | "count_approved_leave"
+  | "count_wfh"
+  | "count_half_day"
+  | "count_during_probation"
+  | "carry_forward_limit"
+  | "year_start_month"
   | "max_balance"
 >;
 

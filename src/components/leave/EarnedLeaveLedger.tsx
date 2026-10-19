@@ -28,33 +28,47 @@ export function EarnedLeaveLedger({
         </p>
       ) : (
         <ul className="mt-3 space-y-2">
-          {data.map((e) => (
-            <li
-              key={e.id}
-              className="rounded-lg border border-line bg-cream px-3 py-2 text-[13px] text-ink"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
+          {data.map((e) =>
+            e.kind === "lapse" ? (
+              <li
+                key={e.id}
+                className="rounded-lg border border-saff/30 bg-saff/10 px-3 py-2 text-[13px] text-ink"
+              >
                 <span className="font-bold">
-                  +{e.credited} earned leave · {niceDate(e.credited_on)}
+                  {e.credited} earned leave lapsed · {niceDate(e.credited_on)}
                 </span>
-                <span className="text-soft">
-                  {e.previous_balance} → {e.new_balance}
-                </span>
-              </div>
-              {e.credited < e.amount ? (
                 <p className="mt-1 text-soft">
-                  Capped at the maximum balance ({e.amount - e.credited} not credited).
+                  A new leave year began, and only {e.carry_limit} day(s) carry forward.
                 </p>
-              ) : null}
-              {e.period_start && e.period_end ? (
-                <p className="mt-1 text-soft">
-                  {e.eligible_days} eligible working days, {niceDate(e.period_start)} →{" "}
-                  {niceDate(e.period_end)}
-                  {e.source && e.source !== "system" ? ` · ${e.source}` : ""}
-                </p>
-              ) : null}
-            </li>
-          ))}
+              </li>
+            ) : (
+              <li
+                key={e.id}
+                className="rounded-lg border border-line bg-cream px-3 py-2 text-[13px] text-ink"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-bold">
+                    +{e.credited} earned leave · {niceDate(e.credited_on)}
+                  </span>
+                  <span className="text-soft">
+                    {e.previous_balance} → {e.new_balance}
+                  </span>
+                </div>
+                {e.credited < e.amount ? (
+                  <p className="mt-1 text-soft">
+                    Capped at the maximum balance ({e.amount - e.credited} not credited).
+                  </p>
+                ) : null}
+                {e.period_start && e.period_end ? (
+                  <p className="mt-1 text-soft">
+                    {e.eligible_days} eligible working days, {niceDate(e.period_start)} →{" "}
+                    {niceDate(e.period_end)}
+                    {e.source && e.source !== "system" ? ` · ${e.source}` : ""}
+                  </p>
+                ) : null}
+              </li>
+            ),
+          )}
         </ul>
       )}
     </section>
