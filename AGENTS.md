@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Developer panel access is an auth-email allowlist (src/lib/developer.server.ts + optional DEVELOPER_EMAILS secret), never profiles.role; every dev server fn re-checks it server-side and audits writes to dev_audit_log (service-role only, no RLS policies). Why: one technical maintainer needs cross-table access without granting an app role.
