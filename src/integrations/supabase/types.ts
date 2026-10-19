@@ -3440,6 +3440,43 @@ export type Database = {
       }
       reconcile_roster: { Args: never; Returns: Json }
       release_history: { Args: never; Returns: Json }
+      report_person_metrics: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          absent: number
+          attendance_pct: number
+          department: string
+          full_name: string
+          goal_entries: number
+          goals_at_risk: number
+          goals_completed: number
+          goals_on_track: number
+          goals_overdue: number
+          goals_total: number
+          half_day: number
+          late: number
+          leave_days: number
+          manager_id: string
+          manager_name: string
+          present: number
+          profile_id: string
+          task_comments: number
+          tasks_assigned: number
+          tasks_completed: number
+          tasks_completion_pct: number
+          tasks_on_time: number
+          tasks_overdue: number
+          tasks_pending: number
+          tasks_review: number
+          weekly_reviews: number
+          wfh: number
+          working_days: number
+        }[]
+      }
+      report_run: {
+        Args: { p_from?: string; p_report: string; p_to?: string }
+        Returns: Json
+      }
       request_checkin: { Args: { p_note?: string }; Returns: string }
       retire_departed_warriors: { Args: never; Returns: number }
       revenue_summary: { Args: never; Returns: Json }

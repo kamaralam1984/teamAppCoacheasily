@@ -71,6 +71,13 @@
       "when": 1792428955660,
       "tag": "0009_holidays_birthdays",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792429030667,
+      "tag": "0010_reports",
+      "breakpoints": true
     }
   ]
 }
