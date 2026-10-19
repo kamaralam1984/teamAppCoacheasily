@@ -512,6 +512,162 @@ export type Database = {
         }
         Relationships: []
       }
+      el_ledger: {
+        Row: {
+          amount: number
+          created_at: string
+          credited: number
+          eligible_days: number
+          id: string
+          new_balance: number
+          org_id: string
+          period_end: string
+          period_start: string
+          policy: Json
+          previous_balance: number
+          profile_id: string
+          source: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          credited: number
+          eligible_days: number
+          id?: string
+          new_balance: number
+          org_id: string
+          period_end: string
+          period_start: string
+          policy: Json
+          previous_balance: number
+          profile_id: string
+          source?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          credited?: number
+          eligible_days?: number
+          id?: string
+          new_balance?: number
+          org_id?: string
+          period_end?: string
+          period_start?: string
+          policy?: Json
+          previous_balance?: number
+          profile_id?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "el_ledger_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "el_ledger_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      el_policy: {
+        Row: {
+          count_approved_leave: boolean
+          credit_amount: number
+          exclude_holidays: boolean
+          exclude_weekly_off: boolean
+          max_balance: number
+          org_id: string
+          required_days: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          count_approved_leave?: boolean
+          credit_amount?: number
+          exclude_holidays?: boolean
+          exclude_weekly_off?: boolean
+          max_balance?: number
+          org_id: string
+          required_days?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          count_approved_leave?: boolean
+          credit_amount?: number
+          exclude_holidays?: boolean
+          exclude_weekly_off?: boolean
+          max_balance?: number
+          org_id?: string
+          required_days?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "el_policy_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "el_policy_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      el_policy_log: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_policy: Json
+          old_policy: Json
+          org_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_policy: Json
+          old_policy: Json
+          org_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_policy?: Json
+          old_policy?: Json
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "el_policy_log_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "el_policy_log_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           all_day: boolean
@@ -1108,6 +1264,147 @@ export type Database = {
           settings?: Json
         }
         Relationships: []
+      }
+      probation_decisions: {
+        Row: {
+          created_at: string
+          decided_by: string | null
+          decision: string
+          extension_months: number | null
+          id: string
+          new_end: string | null
+          note: string | null
+          org_id: string
+          previous_end: string | null
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          decided_by?: string | null
+          decision: string
+          extension_months?: number | null
+          id?: string
+          new_end?: string | null
+          note?: string | null
+          org_id: string
+          previous_end?: string | null
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          decided_by?: string | null
+          decision?: string
+          extension_months?: number | null
+          id?: string
+          new_end?: string | null
+          note?: string | null
+          org_id?: string
+          previous_end?: string | null
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "probation_decisions_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "probation_decisions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "probation_decisions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      probation_reminders: {
+        Row: {
+          end_date: string
+          kind: string
+          probation_id: string
+          sent_at: string
+        }
+        Insert: {
+          end_date: string
+          kind: string
+          probation_id: string
+          sent_at?: string
+        }
+        Update: {
+          end_date?: string
+          kind?: string
+          probation_id?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "probation_reminders_probation_id_fkey"
+            columns: ["probation_id"]
+            isOneToOne: false
+            referencedRelation: "probations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      probations: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          duration_months: number
+          end_date: string
+          id: string
+          org_id: string
+          profile_id: string
+          start_date: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          duration_months?: number
+          end_date: string
+          id?: string
+          org_id: string
+          profile_id: string
+          start_date: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          duration_months?: number
+          end_date?: string
+          id?: string
+          org_id?: string
+          profile_id?: string
+          start_date?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "probations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "probations_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profile_education: {
         Row: {
@@ -2414,6 +2711,17 @@ export type Database = {
         }[]
       }
       digests_enabled: { Args: never; Returns: boolean }
+      el_eligible_days: {
+        Args: { p_after: string; p_profile_id: string }
+        Returns: string[]
+      }
+      el_ledger_for: { Args: { p_profile_id?: string }; Returns: Json }
+      el_recalculate: { Args: never; Returns: number }
+      el_run_all: { Args: never; Returns: number }
+      el_run_credits: {
+        Args: { p_notify?: boolean; p_profile_id: string; p_source?: string }
+        Returns: number
+      }
       goal_nudge_me: { Args: never; Returns: boolean }
       goal_owner: { Args: { p_goal_id: string }; Returns: string }
       goal_pct: { Args: { p_goal_id: string }; Returns: number }
@@ -2495,6 +2803,18 @@ export type Database = {
       }
       org_settings: { Args: never; Returns: Json }
       presence_today: { Args: never; Returns: Json }
+      probation_decide: {
+        Args: {
+          p_decision: string
+          p_months?: number
+          p_note?: string
+          p_profile_id: string
+        }
+        Returns: Json
+      }
+      probation_history: { Args: { p_profile_id: string }; Returns: Json }
+      probation_overview: { Args: never; Returns: Json }
+      probation_tick: { Args: never; Returns: number }
       pulse_results: { Args: { p_round_id: string }; Returns: Json }
       punctuality_me: { Args: never; Returns: Json }
       punctuality_rows: { Args: { p_month?: string }; Returns: Json }
