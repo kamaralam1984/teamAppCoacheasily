@@ -485,6 +485,33 @@ export type Database = {
           },
         ]
       }
+      dev_audit_log: {
+        Row: {
+          action: string
+          actor_email: string
+          created_at: string
+          detail: Json
+          id: string
+          target: string | null
+        }
+        Insert: {
+          action: string
+          actor_email: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          target?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          target?: string | null
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           all_day: boolean
