@@ -68,6 +68,64 @@ export type Database = {
           },
         ]
       }
+      attendance_corrections: {
+        Row: {
+          corrected_by: string | null
+          created_at: string
+          date: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          org_id: string
+          profile_id: string
+          reason: string
+        }
+        Insert: {
+          corrected_by?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          org_id: string
+          profile_id: string
+          reason: string
+        }
+        Update: {
+          corrected_by?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          org_id?: string
+          profile_id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_corrections_corrected_by_fkey"
+            columns: ["corrected_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_corrections_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_corrections_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_attendees: {
         Row: {
           created_at: string
@@ -517,6 +575,57 @@ export type Database = {
           target?: string | null
         }
         Relationships: []
+      }
+      el_lapses: {
+        Row: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          carry_limit: number
+          created_at: string
+          id: string
+          lapse_on: string
+          org_id: string
+          profile_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          carry_limit: number
+          created_at?: string
+          id?: string
+          lapse_on: string
+          org_id: string
+          profile_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          balance_before?: number
+          carry_limit?: number
+          created_at?: string
+          id?: string
+          lapse_on?: string
+          org_id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "el_lapses_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "el_lapses_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       el_ledger: {
         Row: {
@@ -2703,6 +2812,10 @@ export type Database = {
         Args: { p_profile_id?: string }
         Returns: Json
       }
+      attendance_day_info: {
+        Args: { p_date: string; p_profile_id: string }
+        Returns: Json
+      }
       attendance_month: {
         Args: { p_month?: string; p_profile_id?: string }
         Returns: Json
@@ -2713,13 +2826,13 @@ export type Database = {
       }
       attendance_summary: { Args: { p_profile_id?: string }; Returns: Json }
       attendance_team_day: { Args: { p_date?: string }; Returns: Json }
-      check_out_attendance: { Args: never; Returns: Json }
       birthday_nudges: { Args: never; Returns: number }
       calendar_feed: { Args: { p_token: string }; Returns: Json }
       calendar_leave: { Args: { p_from: string; p_to: string }; Returns: Json }
       calendar_prep_nudges: { Args: never; Returns: number }
       can_keep_calendar: { Args: never; Returns: boolean }
       can_read_goal: { Args: { p_goal_id: string }; Returns: boolean }
+      check_out_attendance: { Args: never; Returns: Json }
       checkin_talked: { Args: { p_id: string }; Returns: undefined }
       claim_invite: { Args: { p_email: string }; Returns: Json }
       close_day: { Args: { p_note?: string }; Returns: Json }
@@ -2772,6 +2885,7 @@ export type Database = {
         Args: { p_notify?: boolean; p_profile_id: string; p_source?: string }
         Returns: number
       }
+      el_run_lapses: { Args: { p_profile_id: string }; Returns: number }
       goal_nudge_me: { Args: never; Returns: boolean }
       goal_owner: { Args: { p_goal_id: string }; Returns: string }
       goal_pct: { Args: { p_goal_id: string }; Returns: number }
