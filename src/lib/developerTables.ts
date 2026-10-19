@@ -11,6 +11,13 @@ export const DEV_TABLES = [
 
 export type DevTable = (typeof DEV_TABLES)[number];
 
+export function assertDevDataProfileUpdate(values: Record<string, unknown>): void {
+  const protectedFields = ["title", "department", "manager_id", "role", "opening_earned_leave"];
+  if (protectedFields.some((key) => Object.hasOwn(values, key))) {
+    throw new Error("Change title, department, reporting line and access level in the Users tab. Opening earned leave must be changed by a signed-in HR or Admin person.");
+  }
+}
+
 const KEYS: Partial<Record<DevTable, string[]>> = {
   calendar_tokens: ["profile_id"],
   idea_votes: ["idea_id", "profile_id"],

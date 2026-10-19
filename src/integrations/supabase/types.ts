@@ -2382,6 +2382,10 @@ export type Database = {
         Args: { p_from: string; p_profile_id: string; p_to: string }
         Returns: Json
       }
+      dev_update_profile: {
+        Args: { p_id: string; p_patch: Json }
+        Returns: undefined
+      }
       digest_daily: {
         Args: never
         Returns: {
