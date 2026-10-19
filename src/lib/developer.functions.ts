@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Json } from "@/integrations/supabase/types";
+import { impersonationBlockedReason, validateImpersonationInput } from "@/lib/developerImpersonation";
 import { assertDevDataProfileUpdate, assertDevTable, DEV_TABLES, istToday, keyColumns } from "@/lib/developerTables";
 
 type Row = { [k: string]: Json };
@@ -83,6 +84,8 @@ export const devListUsers = createServerFn({ method: "GET" })
       if (data.users.length < 200) break;
     }
     const byId = new Map(users.map((u) => [u.id, u]));
+    const { developerEmails } = await import("@/lib/developer.server");
+    const developers = developerEmails();
     type P = {
       id: string; org_id: string; full_name: string; title: string | null; department: string | null;
       role: string; status: string; manager_id: string | null; invited_at: string | null;
@@ -96,6 +99,7 @@ export const devListUsers = createServerFn({ method: "GET" })
         email_confirmed: u?.confirmed ?? false,
         last_sign_in_at: u?.last ?? null,
         disabled: u?.disabled ?? false,
+        isDeveloper: Boolean(u?.email && developers.includes(u.email.toLowerCase())),
       };
     });
     const linked = new Set(rows.map((r) => r.auth_user_id).filter(Boolean));
@@ -149,6 +153,37 @@ interface UserActionInput {
   password?: string;
   origin?: string;
 }
+
+export const devImpersonateLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(validateImpersonationInput)
+  .handler(async ({ data, context }): Promise<string> => {
+    const { db, email: actor } = await gate(context.userId);
+    const { data: profile, error: profileError } = await db.from("profiles")
+      .select("id, full_name, role, status, auth_user_id").eq("id", data.profileId).maybeSingle();
+    if (profileError) throw new Error("Couldn't look up this person. Please try again.");
+    if (!profile) throw new Error("This person was not found.");
+    if (!profile.auth_user_id) throw new Error("This person has no login.");
+    const { data: auth, error: authError } = await db.auth.admin.getUserById(profile.auth_user_id);
+    if (authError || !auth.user) throw new Error("Couldn't find this person's login.");
+    const { developerEmails } = await import("@/lib/developer.server");
+    const email = auth.user.email;
+    const bannedUntil = (auth.user as { banned_until?: string | null }).banned_until;
+    const reason = impersonationBlockedReason({
+      auth_user_id: profile.auth_user_id,
+      status: profile.status,
+      disabled: Boolean(bannedUntil && new Date(bannedUntil).getTime() > Date.now()),
+      isDeveloper: auth.user.id === context.userId || Boolean(email && developerEmails().includes(email.toLowerCase())),
+    });
+    if (reason) throw new Error(reason);
+    if (!email) throw new Error("This person's login has no email address.");
+    const { data: generated, error } = await db.auth.admin.generateLink({
+      type: "magiclink", email, options: { redirectTo: data.redirectTo },
+    });
+    if (error || !generated.properties?.action_link) throw new Error("Couldn't create the sign-in link. Please try again.");
+    await log(db, actor, "user.impersonate", `${profile.full_name} (${profile.id})`, { role: profile.role });
+    return generated.properties.action_link;
+  });
 
 export const devUserAction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
