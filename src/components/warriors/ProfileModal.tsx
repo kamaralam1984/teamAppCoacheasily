@@ -1,16 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { EarnedLeaveLedger } from "@/components/leave/EarnedLeaveLedger";
+import { ProbationSection } from "@/components/probation/ProbationSection";
 import { WarriorAvatar } from "@/components/warriors/Avatar";
 import { HrRecord } from "@/components/warriors/HrRecord";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  daysSince,
-  isNewWarrior,
-  isPrivileged,
-  roleLabel,
-  type Profile,
-} from "@/lib/warriors";
+import { daysSince, isNewWarrior, isPrivileged, roleLabel, type Profile } from "@/lib/warriors";
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
@@ -51,8 +47,7 @@ export function ProfileModal({
 
   const manager = profiles.find((p) => p.id === profile.manager_id) ?? null;
   const canSeePrivate =
-    !!viewer &&
-    (viewer.id === profile.id || isPrivileged(viewer.role) || managesTarget === true);
+    !!viewer && (viewer.id === profile.id || isPrivileged(viewer.role) || managesTarget === true);
   const canManage = isPrivileged(viewer?.role);
   const days = daysSince(profile.joined_on);
   const label = roleLabel(profile.role);
@@ -112,7 +107,9 @@ export function ProfileModal({
           {canSeePrivate ? (
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-xl bg-cream p-3 text-center">
-                <p className="font-display text-2xl text-ink">{days !== null && days >= 0 ? days : "—"}</p>
+                <p className="font-display text-2xl text-ink">
+                  {days !== null && days >= 0 ? days : "—"}
+                </p>
                 <p className="text-[11px] font-semibold text-soft">Days worked</p>
               </div>
               <div className="rounded-xl bg-cream p-3 text-center">
@@ -123,11 +120,20 @@ export function ProfileModal({
             </div>
           ) : (
             <p className="rounded-xl bg-cream p-4 text-[13px] leading-relaxed text-soft">
-              Goals, attendance and leave are private — visible to the person, their manager,
-              HR and Admin.
+              Goals, attendance and leave are private — visible to the person, their manager, HR and
+              Admin.
             </p>
           )}
         </div>
+
+        {canSeePrivate ? <EarnedLeaveLedger profileId={profile.id} className="mt-6" /> : null}
+
+        {canSeePrivate ? (
+          <ProbationSection
+            profileId={profile.id}
+            canDecide={viewer?.id !== profile.id && (canManage || managesTarget === true)}
+          />
+        ) : null}
 
         {canManage ? <HrRecord profile={profile} /> : null}
 

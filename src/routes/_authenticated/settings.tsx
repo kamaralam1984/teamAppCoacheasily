@@ -6,6 +6,7 @@ import { HelpLink } from "@/components/help/HelpLink";
 import { HolidaysCard } from "@/components/calendar/HolidaysCard";
 import { CyclesCard } from "@/components/settings/CyclesCard";
 import { DepartmentsCard } from "@/components/settings/DepartmentsCard";
+import { EarnedLeavePolicyCard } from "@/components/settings/EarnedLeavePolicyCard";
 import { LeaveQuotasCard } from "@/components/settings/LeaveQuotasCard";
 import { PlaybookEditor } from "@/components/settings/PlaybookEditor";
 import { useMyProfile } from "@/hooks/useMyProfile";
@@ -65,6 +66,7 @@ function SettingsPage() {
 
         <DepartmentsCard orgId={profile?.org_id ?? null} />
         <LeaveQuotasCard />
+        <EarnedLeavePolicyCard orgId={profile?.org_id ?? null} />
         <HolidaysCard orgId={profile?.org_id ?? null} canManage />
         <CyclesCard />
         <PlaybookEditor orgId={profile?.org_id ?? null} />

@@ -11,6 +11,9 @@ export interface AttendanceSummary {
   opening_earned_leave: number;
   earned_available: number;
   to_next_leave: number;
+  /** the policy's working days per credit, and how many of them are done */
+  el_required_days: number;
+  el_progress: number;
   streak: number;
   comp_off_available: number;
 }

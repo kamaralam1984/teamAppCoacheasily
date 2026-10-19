@@ -585,3 +585,71 @@
     }
   }
 }
+
+@layer components {
+  /* Org chart: a top-down tree, connectors drawn with borders so it needs no SVG. */
+  .org-chart ul {
+    display: flex;
+    justify-content: center;
+    padding-top: 20px;
+    position: relative;
+  }
+  .org-chart > ul {
+    padding-top: 0;
+  }
+  .org-chart li {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 8px 0;
+  }
+  .org-chart > ul > li {
+    padding-top: 0;
+  }
+  .org-chart li::before,
+  .org-chart li::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 50%;
+    width: 50%;
+    height: 20px;
+    border-top: 1px solid var(--ce-mist);
+  }
+  .org-chart li::after {
+    right: auto;
+    left: 50%;
+    border-left: 1px solid var(--ce-mist);
+  }
+  .org-chart > ul > li::before,
+  .org-chart > ul > li::after {
+    display: none;
+  }
+  .org-chart li:only-child::before,
+  .org-chart li:only-child::after {
+    display: none;
+  }
+  .org-chart li:only-child {
+    padding-top: 20px;
+  }
+  .org-chart li:first-child::before,
+  .org-chart li:last-child::after {
+    border-top: 0;
+  }
+  .org-chart li:last-child::before {
+    border-right: 1px solid var(--ce-mist);
+    border-radius: 0 6px 0 0;
+  }
+  .org-chart li:first-child::after {
+    border-radius: 6px 0 0 0;
+  }
+  .org-chart ul ul::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    height: 20px;
+    border-left: 1px solid var(--ce-mist);
+  }
+}

@@ -6,6 +6,8 @@ import { HelpLink } from "@/components/help/HelpLink";
 import { PresenceBoard } from "@/components/PresenceBoard";
 import { ExitDialog } from "@/components/warriors/ExitDialog";
 import { InvitePanel, useLoginStatus } from "@/components/warriors/InvitePanel";
+import { ProbationPanel } from "@/components/probation/ProbationPanel";
+import { OrgChart } from "@/components/warriors/OrgChart";
 import { OrgTree } from "@/components/warriors/OrgTree";
 import { ProfileModal } from "@/components/warriors/ProfileModal";
 import { WarriorForm } from "@/components/warriors/WarriorForm";
@@ -59,6 +61,7 @@ function WarriorsPage() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteOnly, setInviteOnly] = useState<Profile | null>(null);
   const [showPast, setShowPast] = useState(false);
+  const [layout, setLayout] = useState<"chart" | "list">("chart");
 
   const viewer = mine?.profile ?? null;
   const canManage = isPrivileged(viewer?.role);
@@ -92,12 +95,13 @@ function WarriorsPage() {
     return map;
   }, [active, canManage, privateLite]);
 
-
   const newJoiners = useMemo(
     () =>
       active
         .map((p) => ({ p, days: daysSince(p.joined_on) }))
-        .filter((x): x is { p: Profile; days: number } => x.days !== null && x.days >= 0 && x.days < 90)
+        .filter(
+          (x): x is { p: Profile; days: number } => x.days !== null && x.days >= 0 && x.days < 90,
+        )
         .sort((a, b) => a.days - b.days),
     [active],
   );
@@ -117,38 +121,48 @@ function WarriorsPage() {
         <header className="ce-rise flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="font-display text-4xl leading-tight text-ink">Warriors</h1>
-          <HelpLink screen="warriors" />
+            <HelpLink screen="warriors" />
             <p className="mt-1.5 text-sm text-soft">
               {active.length} active {active.length === 1 ? "warrior" : "warriors"} at CoachEasily.
             </p>
           </div>
           {canManage ? (
             <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="min-h-12 rounded-full border border-line px-5 text-[13px] font-bold text-ink hover:bg-cream"
-              onClick={() => {
-                setInviteOnly(null);
-                setInviteOpen(true);
-              }}
-            >
-              Logins &amp; invites{withoutLogin ? ` · ${withoutLogin} pending` : ""}
-            </button>
-            <button
-              className="btn3d"
-              onClick={() => {
-                setEditing(null);
-                setFormOpen(true);
-              }}
-            >
-              Add warrior
-            </button>
+              <button
+                type="button"
+                className="min-h-12 rounded-full border border-line px-5 text-[13px] font-bold text-ink hover:bg-cream"
+                onClick={() => {
+                  setInviteOnly(null);
+                  setInviteOpen(true);
+                }}
+              >
+                Logins &amp; invites{withoutLogin ? ` · ${withoutLogin} pending` : ""}
+              </button>
+              <button
+                className="btn3d"
+                onClick={() => {
+                  setEditing(null);
+                  setFormOpen(true);
+                }}
+              >
+                Add warrior
+              </button>
             </div>
           ) : null}
         </header>
 
         <PresenceBoard rows={presence ?? []} />
 
+        {canManage ? (
+          <section className="ce-rise">
+            <ProbationPanel
+              onOpen={(id) => {
+                const p = all.find((w) => w.id === id);
+                if (p) setSelected(p);
+              }}
+            />
+          </section>
+        ) : null}
 
         {canManage ? (
           <section className="ce-rise grid gap-5 md:grid-cols-2">
@@ -199,23 +213,46 @@ function WarriorsPage() {
         <section className="ce-rise">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <SectionHeading>Org chart</SectionHeading>
-            {canManage ? (
-              <label className="flex items-center gap-2 text-[13px] text-soft">
-                <input
-                  type="checkbox"
-                  className="h-5 w-5"
-                  checked={showPast}
-                  onChange={(e) => setShowPast(e.target.checked)}
-                />
-                Show past warriors
-              </label>
-            ) : null}
+            <div className="flex flex-wrap items-center gap-3">
+              <div
+                role="group"
+                aria-label="Layout"
+                className="flex gap-1 rounded-full border border-line p-1"
+              >
+                {(["chart", "list"] as const).map((l) => (
+                  <button
+                    key={l}
+                    type="button"
+                    aria-pressed={layout === l}
+                    onClick={() => setLayout(l)}
+                    className={`min-h-9 rounded-full px-4 text-[13px] font-bold capitalize ${
+                      layout === l ? "bg-cream text-goldD" : "text-soft hover:text-ink"
+                    }`}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
+              {canManage ? (
+                <label className="flex items-center gap-2 text-[13px] text-soft">
+                  <input
+                    type="checkbox"
+                    className="h-5 w-5"
+                    checked={showPast}
+                    onChange={(e) => setShowPast(e.target.checked)}
+                  />
+                  Show past warriors
+                </label>
+              ) : null}
+            </div>
           </div>
           <div className="mt-4">
             {isLoading ? (
               <p className="text-sm text-soft">Loading the team…</p>
             ) : error ? (
               <p className="text-sm text-red">The team couldn't be loaded. Please refresh.</p>
+            ) : layout === "chart" ? (
+              <OrgChart profiles={visible} viewerId={viewer?.id ?? null} onOpen={setSelected} />
             ) : (
               <OrgTree
                 tree={tree}
@@ -233,8 +270,6 @@ function WarriorsPage() {
                 }}
                 gaps={gaps}
               />
-
-
             )}
           </div>
         </section>

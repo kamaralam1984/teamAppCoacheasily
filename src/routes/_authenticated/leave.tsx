@@ -17,6 +17,7 @@ import {
 } from "@/hooks/useLeave";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useWarriors } from "@/hooks/useWarriors";
+import { EarnedLeaveLedger } from "@/components/leave/EarnedLeaveLedger";
 import { useOrgSettings } from "@/hooks/useOrg";
 import { useTasksInWindow } from "@/hooks/useTasks";
 import { isTestingActive } from "@/lib/testing";
@@ -130,7 +131,6 @@ function LeavePage() {
     return Math.round((b - a) / 86400000) + 1;
   }, [from, effectiveTo, halfDay]);
 
-
   const onSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (blocked) return;
@@ -167,18 +167,17 @@ function LeavePage() {
 
         {/* a) the work meter comes first — leave is earned by showing up */}
         <WorkMeter summary={summary} />
+        <EarnedLeaveLedger />
 
         {testingActive ? (
           <section className="ce-rise rounded-[14px] border border-gold/50 bg-cream p-4">
             <p className="text-sm leading-relaxed text-ink">
-              Your balances were brought across from HR's leave tracker this week. Please
-              check them against your own record — the entitlement, what you have used and
-              what is left. If anything is different, tell HR before you rely on it.
+              Your balances were brought across from HR's leave tracker this week. Please check them
+              against your own record — the entitlement, what you have used and what is left. If
+              anything is different, tell HR before you rely on it.
             </p>
           </section>
         ) : null}
-
-
 
         {/* b) what you have this year */}
         <section className="ce-rise ce-card p-6" style={{ animationDelay: "80ms" }}>
@@ -305,9 +304,7 @@ function LeavePage() {
                             checked={handoverTasks.includes(t.id)}
                             onChange={(e) =>
                               setHandoverTasks((ids) =>
-                                e.target.checked
-                                  ? [...ids, t.id]
-                                  : ids.filter((id) => id !== t.id),
+                                e.target.checked ? [...ids, t.id] : ids.filter((id) => id !== t.id),
                               )
                             }
                           />
@@ -363,12 +360,11 @@ function LeavePage() {
               {calendarDays > 0 && days > 0 && days < calendarDays ? (
                 <p className="mt-1 text-[12px] leading-relaxed text-soft">
                   {calendarDays} days selected · {days} leave day{days === 1 ? "" : "s"} — your
-                  weekly off and any public holiday inside this period are not working days, so
-                  they are not counted.
+                  weekly off and any public holiday inside this period are not working days, so they
+                  are not counted.
                 </p>
               ) : null}
             </div>
-
 
             {errors.map((message) => (
               <p
@@ -438,9 +434,7 @@ function LeavePage() {
         </section>
       </div>
 
-      {celebration ? (
-        <Celebrate message={celebration} onDone={() => setCelebration(null)} />
-      ) : null}
+      {celebration ? <Celebrate message={celebration} onDone={() => setCelebration(null)} /> : null}
     </AppShell>
   );
 }

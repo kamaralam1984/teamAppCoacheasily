@@ -11,9 +11,11 @@ export interface WorkMeterProps {
 /** The earned-leave work meter. One component, so Dashboard and Leave never disagree. */
 export function WorkMeter({ summary, showStreak = true, className, style }: WorkMeterProps) {
   const days = summary?.days_marked ?? 0;
-  const toNext = summary?.to_next_leave ?? 20;
+  const required = summary?.el_required_days ?? 20;
+  const done = summary?.el_progress ?? 0;
+  const toNext = summary?.to_next_leave ?? required;
   const streak = summary?.streak ?? 0;
-  const progress = ((days % 20) / 20) * 100;
+  const progress = (done / required) * 100;
 
   return (
     <section className={`ce-rise ce-card p-6 ${className ?? ""}`} style={style}>
@@ -30,8 +32,8 @@ export function WorkMeter({ summary, showStreak = true, className, style }: Work
         className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-cream"
         role="progressbar"
         aria-valuemin={0}
-        aria-valuemax={20}
-        aria-valuenow={days % 20}
+        aria-valuemax={required}
+        aria-valuenow={done}
         aria-label="Progress to your next earned leave"
       >
         <div
@@ -41,7 +43,8 @@ export function WorkMeter({ summary, showStreak = true, className, style }: Work
       </div>
 
       <p className="mt-3 text-[13px] leading-relaxed text-soft">
-        Starts the day you first mark attendance here. 1 paid leave for every 20 days.
+        Starts the day you first mark attendance here. 1 paid leave for every {required} working
+        days, counted by the company's leave policy.
       </p>
 
       {showStreak && streak >= 2 ? (
