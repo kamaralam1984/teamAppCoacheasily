@@ -57,6 +57,13 @@
       "when": 1792428845392,
       "tag": "0007_lock_down_log_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792428893112,
+      "tag": "0008_people_search_360",
+      "breakpoints": true
     }
   ]
 }

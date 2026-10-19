@@ -1997,6 +1997,7 @@ export type Database = {
           date_of_birth: string | null
           department: string | null
           email: string | null
+          employee_code: string | null
           exited_on: string | null
           full_name: string
           fun_fact: string | null
@@ -2027,6 +2028,7 @@ export type Database = {
           date_of_birth?: string | null
           department?: string | null
           email?: string | null
+          employee_code?: string | null
           exited_on?: string | null
           full_name: string
           fun_fact?: string | null
@@ -2057,6 +2059,7 @@ export type Database = {
           date_of_birth?: string | null
           department?: string | null
           email?: string | null
+          employee_code?: string | null
           exited_on?: string | null
           full_name?: string
           fun_fact?: string | null
@@ -3316,6 +3319,7 @@ export type Database = {
       probation_history: { Args: { p_profile_id: string }; Returns: Json }
       probation_overview: { Args: never; Returns: Json }
       probation_tick: { Args: never; Returns: number }
+      profile_360: { Args: { p_profile_id: string }; Returns: Json }
       pulse_results: { Args: { p_round_id: string }; Returns: Json }
       punctuality_me: { Args: never; Returns: Json }
       punctuality_rows: { Args: { p_month?: string }; Returns: Json }
