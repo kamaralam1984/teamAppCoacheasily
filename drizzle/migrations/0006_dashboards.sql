@@ -87,7 +87,7 @@ BEGIN
 
   SELECT coalesce(jsonb_agg(jsonb_build_object('profile_id', id, 'full_name', full_name) ORDER BY full_name), '[]'::jsonb)
     INTO v_absent FROM profiles p
-    WHERE p.org_id = v_org AND p.status = 'active'
+   WHERE p.org_id = v_org AND p.status = 'active'
      AND attendance_day_info(p.id, v_last)->>'kind' = 'absent';
   SELECT coalesce(jsonb_agg(jsonb_build_object('profile_id', id, 'full_name', full_name,
                                                'check_in', attendance_day_info(p.id, v_last)->>'check_in')
@@ -117,7 +117,7 @@ BEGIN
       'pending_count', (SELECT count(*) FROM leave_requests WHERE org_id = v_org AND status = 'pending'),
       'pending', (SELECT coalesce(jsonb_agg(x ORDER BY x.from_date), '[]'::jsonb) FROM (
          SELECT l.id, l.profile_id, p.full_name, l.type, l.from_date, l.to_date, l.days
-            FROM leave_requests l JOIN profiles p ON p.id = l.profile_id
+           FROM leave_requests l JOIN profiles p ON p.id = l.profile_id
           WHERE l.org_id = v_org AND l.status = 'pending'
           ORDER BY l.from_date LIMIT 8) x)),
     'attendance', jsonb_build_object(
@@ -127,7 +127,7 @@ BEGIN
       'lapses_30d', (SELECT count(*) FROM el_lapses WHERE org_id = v_org AND created_at >= now() - interval '30 days'),
       'exceptions', (SELECT coalesce(jsonb_agg(x ORDER BY x.created_at DESC), '[]'::jsonb) FROM (
          SELECT l.profile_id, p.full_name, 'capped' AS kind, l.amount - l.credited AS days, l.created_at
-            FROM el_ledger l JOIN profiles p ON p.id = l.profile_id
+           FROM el_ledger l JOIN profiles p ON p.id = l.profile_id
           WHERE l.org_id = v_org AND l.credited < l.amount AND l.created_at >= now() - interval '60 days'
          UNION ALL
          SELECT z.profile_id, p.full_name, 'lapsed', z.amount, z.created_at
