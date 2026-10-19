@@ -356,4 +356,120 @@ BEGIN
   PERFORM pg_temp.eq('balances: earned balance = entitled - used', (r->>'balance')::numeric, 0::numeric);
 END $$;
 
+-- ───────── the 20-day rule, the way HR describes it ─────────
+-- 1 earned leave after 20 working days, 1 more after 40 (so 2 in all), none at 19 or 39.
+DO $$
+DECLARE
+  o uuid := (SELECT v FROM ids WHERE k='org'); hr uuid := (SELECT v FROM ids WHERE k='hr');
+  today date := (now() AT TIME ZONE 'Asia/Kolkata')::date;
+  u uuid := gen_random_uuid(); p uuid; start_day date := today - 300; i int;
+  r record;
+BEGIN
+  INSERT INTO auth.users (id, email) VALUES (u, 'rule@t.test');
+  INSERT INTO profiles (org_id, full_name, role, auth_user_id, joined_on, weekly_off, opening_earned_leave)
+  VALUES (o, 'Rule Rani', 'member', u, start_day - 5, NULL, 0) RETURNING id INTO p;
+  INSERT INTO el_policy (org_id) VALUES (o) ON CONFLICT DO NOTHING;
+  -- plain policy: the carry-forward test above left a limit on, which would (rightly) lapse a day
+  UPDATE el_policy SET required_days = 20, credit_amount = 1, max_balance = 30,
+         exclude_weekly_off = true, exclude_holidays = true, carry_forward_limit = NULL,
+         year_start_month = 1, count_wfh = true, count_half_day = false, count_during_probation = true
+   WHERE org_id = o;
+
+  -- 19 days: nothing yet
+  FOR i IN 0..18 LOOP
+    INSERT INTO attendance (org_id, profile_id, date, marked_at)
+    VALUES (o, p, start_day + i, ((start_day + i)::text || ' 09:30')::timestamp AT TIME ZONE 'Asia/Kolkata');
+  END LOOP;
+  PERFORM pg_temp.eq('20-day rule: 19 days gives no leave', el_run_credits(p), 0);
+  PERFORM pg_temp.eq('20-day rule: balance stays 0 at 19 days', (attendance_summary(p)->>'earned_available')::int, 0);
+  PERFORM pg_temp.eq('20-day rule: 1 day to go', (attendance_summary(p)->>'to_next_leave')::int, 1);
+
+  -- the 20th day
+  INSERT INTO attendance (org_id, profile_id, date, marked_at)
+  VALUES (o, p, start_day + 19, ((start_day + 19)::text || ' 09:30')::timestamp AT TIME ZONE 'Asia/Kolkata');
+  PERFORM pg_temp.eq('20-day rule: the 20th day gives 1 leave', el_run_credits(p), 1);
+  PERFORM pg_temp.eq('20-day rule: balance is 1', (attendance_summary(p)->>'earned_available')::int, 1);
+  SELECT * INTO r FROM el_ledger WHERE profile_id = p ORDER BY period_end LIMIT 1;
+  PERFORM pg_temp.eq('20-day rule: the credit was for 20 days', r.eligible_days, 20);
+  PERFORM pg_temp.eq('20-day rule: the credit was 1 day', r.credited, 1);
+  PERFORM pg_temp.eq('20-day rule: balance went 0 to 1', r.previous_balance || '>' || r.new_balance, '0>1');
+  PERFORM pg_temp.eq('20-day rule: the period is exactly those 20 days', r.period_end - r.period_start, 19);
+  PERFORM pg_temp.eq('20-day rule: running it again gives nothing more', el_run_credits(p), 0);
+  PERFORM pg_temp.eq('20-day rule: counting restarts, 20 to go', (attendance_summary(p)->>'to_next_leave')::int, 20);
+
+  -- days 21 to 39: still 1
+  FOR i IN 20..38 LOOP
+    INSERT INTO attendance (org_id, profile_id, date, marked_at)
+    VALUES (o, p, start_day + i, ((start_day + i)::text || ' 09:30')::timestamp AT TIME ZONE 'Asia/Kolkata');
+  END LOOP;
+  PERFORM pg_temp.eq('20-day rule: 39 days gives no second leave', el_run_credits(p), 0);
+  PERFORM pg_temp.eq('20-day rule: balance still 1 at 39 days', (attendance_summary(p)->>'earned_available')::int, 1);
+
+  -- the 40th day: 1 + 1
+  INSERT INTO attendance (org_id, profile_id, date, marked_at)
+  VALUES (o, p, start_day + 39, ((start_day + 39)::text || ' 09:30')::timestamp AT TIME ZONE 'Asia/Kolkata');
+  PERFORM pg_temp.eq('20-day rule: the 40th day gives the second leave', el_run_credits(p), 1);
+  PERFORM pg_temp.eq('20-day rule: balance is 2 (1 + 1)', (attendance_summary(p)->>'earned_available')::int, 2);
+  PERFORM pg_temp.eq('20-day rule: two credits, one per 20 days',
+    (SELECT count(*) FROM el_ledger WHERE profile_id = p)::int, 2);
+  SELECT * INTO r FROM el_ledger WHERE profile_id = p ORDER BY period_end DESC LIMIT 1;
+  PERFORM pg_temp.eq('20-day rule: the second credit went 1 to 2', r.previous_balance || '>' || r.new_balance, '1>2');
+  PERFORM pg_temp.eq('20-day rule: and the two periods do not overlap',
+    (SELECT bool_and(a.period_end < b.period_start) FROM el_ledger a JOIN el_ledger b
+       ON a.profile_id = b.profile_id AND a.period_end < b.period_end WHERE a.profile_id = p), true);
+  PERFORM pg_temp.as_user(p);
+  PERFORM pg_temp.eq('20-day rule: the Leave screen shows 2 earned leave to take',
+    (SELECT (e->>'balance')::int FROM jsonb_array_elements(leave_balances(p)) e WHERE e->>'type' = 'earned'), 2);
+
+  -- day 41: still 2, and 19 to go
+  PERFORM pg_temp.as_user(hr);
+  INSERT INTO attendance (org_id, profile_id, date, marked_at)
+  VALUES (o, p, start_day + 40, ((start_day + 40)::text || ' 09:30')::timestamp AT TIME ZONE 'Asia/Kolkata');
+  PERFORM pg_temp.eq('20-day rule: day 41 adds nothing', el_run_credits(p), 0);
+  PERFORM pg_temp.eq('20-day rule: balance still 2 at day 41', (attendance_summary(p)->>'earned_available')::int, 2);
+  PERFORM pg_temp.eq('20-day rule: 19 to go for the third', (attendance_summary(p)->>'to_next_leave')::int, 19);
+END $$;
+
+-- 40 days all at once (an old backlog, or the nightly job after a quiet spell): two credits, in order
+DO $$
+DECLARE
+  o uuid := (SELECT v FROM ids WHERE k='org');
+  today date := (now() AT TIME ZONE 'Asia/Kolkata')::date;
+  u uuid := gen_random_uuid(); p uuid; start_day date := today - 200; i int;
+BEGIN
+  INSERT INTO auth.users (id, email) VALUES (u, 'backlog@t.test');
+  INSERT INTO profiles (org_id, full_name, role, auth_user_id, joined_on, weekly_off, opening_earned_leave)
+  VALUES (o, 'Backlog Bina', 'member', u, start_day - 5, NULL, 3) RETURNING id INTO p;
+  FOR i IN 0..39 LOOP
+    INSERT INTO attendance (org_id, profile_id, date, marked_at)
+    VALUES (o, p, start_day + i, ((start_day + i)::text || ' 09:30')::timestamp AT TIME ZONE 'Asia/Kolkata');
+  END LOOP;
+  PERFORM pg_temp.eq('backlog: 40 days in one run gives two credits', el_run_credits(p), 2);
+  PERFORM pg_temp.eq('backlog: opening 3 + 2 = 5', (attendance_summary(p)->>'earned_available')::int, 5);
+  PERFORM pg_temp.eq('backlog: the chain is 3 to 4 to 5',
+    (SELECT string_agg(previous_balance || '>' || new_balance, ',' ORDER BY period_end) FROM el_ledger WHERE profile_id = p), '3>4,4>5');
+END $$;
+
+-- weekly offs and holidays are not working days: they never count towards the 20
+DO $$
+DECLARE
+  o uuid := (SELECT v FROM ids WHERE k='org');
+  today date := (now() AT TIME ZONE 'Asia/Kolkata')::date;
+  u uuid := gen_random_uuid(); p uuid; d date := today - 120; n int := 0; worked int := 0;
+BEGIN
+  INSERT INTO auth.users (id, email) VALUES (u, 'sun@t.test');
+  INSERT INTO profiles (org_id, full_name, role, auth_user_id, joined_on, weekly_off, opening_earned_leave)
+  VALUES (o, 'Sunday Sana', 'member', u, d - 5, 'Sunday', 0) RETURNING id INTO p;
+  -- she punches every day for 22 days, Sundays included: that is 22 punches but fewer working days
+  WHILE n < 22 LOOP
+    INSERT INTO attendance (org_id, profile_id, date, marked_at)
+    VALUES (o, p, d, (d::text || ' 09:30')::timestamp AT TIME ZONE 'Asia/Kolkata');
+    IF extract(dow FROM d) <> 0 THEN worked := worked + 1; END IF;
+    d := d + 1; n := n + 1;
+  END LOOP;
+  PERFORM pg_temp.eq('weekly off: only non-Sunday punches count', (SELECT count(*) FROM el_eligible_days(p, date '1900-01-01'))::int, worked);
+  PERFORM pg_temp.eq('weekly off: 22 punches over 3 weeks is fewer than 20 working days, so no leave yet',
+    el_run_credits(p) = 0, worked < 20);
+END $$;
+
 ROLLBACK;
