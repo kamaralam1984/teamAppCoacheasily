@@ -29,6 +29,27 @@
       "when": 1792423640957,
       "tag": "0003_attendance_engine_el_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792425986735,
+      "tag": "0004_audit_trail",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792426032869,
+      "tag": "0005_tasks_goals_workflow",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792426057756,
+      "tag": "0006_dashboards",
+      "breakpoints": true
     }
   ]
 }

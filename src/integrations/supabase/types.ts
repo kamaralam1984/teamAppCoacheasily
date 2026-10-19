@@ -172,7 +172,29 @@ export type Database = {
           summary?: string
           target_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_log_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_log_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       calendar_attendees: {
         Row: {
@@ -992,6 +1014,32 @@ export type Database = {
           },
         ]
       }
+      goal_alerts: {
+        Row: {
+          goal_id: string
+          notified_on: string
+          status: string
+        }
+        Insert: {
+          goal_id: string
+          notified_on?: string
+          status: string
+        }
+        Update: {
+          goal_id?: string
+          notified_on?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_alerts_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goal_comments: {
         Row: {
           author_id: string
@@ -1017,7 +1065,29 @@ export type Database = {
           id?: string
           org_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "goal_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goal_comments_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goal_comments_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       goal_entries: {
         Row: {
@@ -1104,7 +1174,22 @@ export type Database = {
           org_id?: string
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "goal_milestones_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goal_milestones_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       goals: {
         Row: {
@@ -2628,7 +2713,29 @@ export type Database = {
           org_id?: string
           task_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "task_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_comments_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       task_days: {
         Row: {
@@ -2713,7 +2820,29 @@ export type Database = {
           task_id?: string
           to_value?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "task_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_events_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tasks: {
         Row: {
@@ -3006,20 +3135,36 @@ export type Database = {
       }
       attendance_summary: { Args: { p_profile_id?: string }; Returns: Json }
       attendance_team_day: { Args: { p_date?: string }; Returns: Json }
-      dash_hr: { Args: never; Returns: Json }
-      dash_team: { Args: never; Returns: Json }
+      audit_actor: { Args: never; Returns: string }
+      audit_name: { Args: { p_id: string }; Returns: string }
+      audit_write: {
+        Args: {
+          p_action: string
+          p_entity: string
+          p_new?: Json
+          p_old?: Json
+          p_org: string
+          p_subject: string
+          p_summary: string
+          p_target: string
+        }
+        Returns: undefined
+      }
       birthday_nudges: { Args: never; Returns: number }
       calendar_feed: { Args: { p_token: string }; Returns: Json }
       calendar_leave: { Args: { p_from: string; p_to: string }; Returns: Json }
       calendar_prep_nudges: { Args: never; Returns: number }
       can_keep_calendar: { Args: never; Returns: boolean }
       can_read_goal: { Args: { p_goal_id: string }; Returns: boolean }
+      can_read_task: { Args: { p_task_id: string }; Returns: boolean }
       check_out_attendance: { Args: never; Returns: Json }
       checkin_talked: { Args: { p_id: string }; Returns: undefined }
       claim_invite: { Args: { p_email: string }; Returns: Json }
       close_day: { Args: { p_note?: string }; Returns: Json }
       commit_day: { Args: { p_task_ids: string[] }; Returns: Json }
       daily_code_today: { Args: never; Returns: Json }
+      dash_hr: { Args: never; Returns: Json }
+      dash_team: { Args: never; Returns: Json }
       day_report: {
         Args: { p_from: string; p_profile_id: string; p_to: string }
         Returns: Json
@@ -3071,16 +3216,19 @@ export type Database = {
       goal_nudge_me: { Args: never; Returns: boolean }
       goal_owner: { Args: { p_goal_id: string }; Returns: string }
       goal_pct: { Args: { p_goal_id: string }; Returns: number }
+      goal_pct_internal: { Args: { p_goal_id: string }; Returns: number }
       goal_progress: { Args: { p_goal_id: string }; Returns: Json }
-      goals_status_for: {
-        Args: { p_cycle_id?: string; p_profile_id?: string }
-        Returns: Json
-      }
+      goal_status_info: { Args: { p_goal_id: string }; Returns: Json }
       goals_for: {
         Args: { p_cycle_id?: string; p_profile_id?: string }
         Returns: Json
       }
       goals_remind_pending: { Args: { p_cycle_id?: string }; Returns: number }
+      goals_status_for: {
+        Args: { p_cycle_id?: string; p_profile_id?: string }
+        Returns: Json
+      }
+      goals_status_tick: { Args: never; Returns: number }
       has_fixed_weekly_off: { Args: { p_off: string }; Returns: boolean }
       ideas_board: { Args: never; Returns: Json }
       is_ordinary_event_type: { Args: { p_type: string }; Returns: boolean }
@@ -3209,6 +3357,7 @@ export type Database = {
         Returns: undefined
       }
       tasks_blocked_nudges: { Args: never; Returns: number }
+      tasks_due_tick: { Args: never; Returns: number }
       team_goals: { Args: { p_cycle_id?: string }; Returns: Json }
       team_health: { Args: never; Returns: Json }
       theme_patch_is_safe: { Args: { p: Json }; Returns: boolean }
