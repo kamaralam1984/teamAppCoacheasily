@@ -196,6 +196,35 @@ export type Database = {
           },
         ]
       }
+      birthday_reminders_sent: {
+        Row: {
+          birthday_on: string
+          days_before: number
+          profile_id: string
+          sent_at: string
+        }
+        Insert: {
+          birthday_on: string
+          days_before: number
+          profile_id: string
+          sent_at?: string
+        }
+        Update: {
+          birthday_on?: string
+          days_before?: number
+          profile_id?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "birthday_reminders_sent_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_attendees: {
         Row: {
           created_at: string
@@ -1273,8 +1302,76 @@ export type Database = {
           },
         ]
       }
+      holiday_calendar: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          date: string
+          id: string
+          kind: string
+          name: string
+          org_id: string
+          proposed_by: string | null
+          region: string | null
+          source: string
+          status: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          kind?: string
+          name: string
+          org_id: string
+          proposed_by?: string | null
+          region?: string | null
+          source?: string
+          status?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          kind?: string
+          name?: string
+          org_id?: string
+          proposed_by?: string | null
+          region?: string | null
+          source?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "holiday_calendar_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "holiday_calendar_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "holiday_calendar_proposed_by_fkey"
+            columns: ["proposed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       holidays: {
         Row: {
+          calendar_id: string | null
           created_at: string
           date: string
           id: string
@@ -1282,6 +1379,7 @@ export type Database = {
           org_id: string
         }
         Insert: {
+          calendar_id?: string | null
           created_at?: string
           date: string
           id?: string
@@ -1289,6 +1387,7 @@ export type Database = {
           org_id: string
         }
         Update: {
+          calendar_id?: string | null
           created_at?: string
           date?: string
           id?: string
@@ -1296,6 +1395,13 @@ export type Database = {
           org_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "holidays_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "holiday_calendar"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "holidays_org_id_fkey"
             columns: ["org_id"]
@@ -3153,7 +3259,12 @@ export type Database = {
         }
         Returns: undefined
       }
+      birthday_next: {
+        Args: { p_from: string; p_mmdd: string }
+        Returns: string
+      }
       birthday_nudges: { Args: never; Returns: number }
+      birthday_reminders: { Args: never; Returns: number }
       calendar_feed: { Args: { p_token: string }; Returns: Json }
       calendar_leave: { Args: { p_from: string; p_to: string }; Returns: Json }
       calendar_prep_nudges: { Args: never; Returns: number }

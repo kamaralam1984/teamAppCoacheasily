@@ -64,6 +64,13 @@
       "when": 1792428893112,
       "tag": "0008_people_search_360",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792428955660,
+      "tag": "0009_holidays_birthdays",
+      "breakpoints": true
     }
   ]
 }
