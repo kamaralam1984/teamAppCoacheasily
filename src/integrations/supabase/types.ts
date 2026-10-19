@@ -3163,6 +3163,8 @@ export type Database = {
       close_day: { Args: { p_note?: string }; Returns: Json }
       commit_day: { Args: { p_task_ids: string[] }; Returns: Json }
       daily_code_today: { Args: never; Returns: Json }
+      dash_hr: { Args: never; Returns: Json }
+      dash_team: { Args: never; Returns: Json }
       day_report: {
         Args: { p_from: string; p_profile_id: string; p_to: string }
         Returns: Json
