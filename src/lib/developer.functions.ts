@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Json } from "@/integrations/supabase/types";
-import { assertDevTable, DEV_TABLES, istToday, keyColumns } from "@/lib/developerTables";
+import { assertDevDataProfileUpdate, assertDevTable, DEV_TABLES, istToday, keyColumns } from "@/lib/developerTables";
 
 type Row = { [k: string]: Json };
 
@@ -235,10 +235,7 @@ export const devWriteRow = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { db, email } = await gate(context.userId);
     if (data.table === "profiles" && data.op === "update") {
-      const protectedFields = ["title", "department", "manager_id", "role", "opening_earned_leave"];
-      if (protectedFields.some((key) => Object.hasOwn(data.values, key))) {
-        throw new Error("Change title, department, reporting line and access level in the Users tab. Opening earned leave must be changed by a signed-in HR or Admin person.");
-      }
+      assertDevDataProfileUpdate(data.values);
     }
     if (data.op === "insert") {
       const { data: row, error } = await db.from(data.table).insert(data.values).select().maybeSingle();
