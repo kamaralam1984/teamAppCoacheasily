@@ -196,6 +196,35 @@ export type Database = {
           },
         ]
       }
+      birthday_reminders_sent: {
+        Row: {
+          birthday_on: string
+          days_before: number
+          profile_id: string
+          sent_at: string
+        }
+        Insert: {
+          birthday_on: string
+          days_before: number
+          profile_id: string
+          sent_at?: string
+        }
+        Update: {
+          birthday_on?: string
+          days_before?: number
+          profile_id?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "birthday_reminders_sent_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_attendees: {
         Row: {
           created_at: string
@@ -1316,7 +1345,29 @@ export type Database = {
           source?: string
           status?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "holiday_calendar_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "holiday_calendar_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "holiday_calendar_proposed_by_fkey"
+            columns: ["proposed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       holidays: {
         Row: {
@@ -1344,6 +1395,13 @@ export type Database = {
           org_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "holidays_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "holiday_calendar"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "holidays_org_id_fkey"
             columns: ["org_id"]
@@ -3201,7 +3259,12 @@ export type Database = {
         }
         Returns: undefined
       }
+      birthday_next: {
+        Args: { p_from: string; p_mmdd: string }
+        Returns: string
+      }
       birthday_nudges: { Args: never; Returns: number }
+      birthday_reminders: { Args: never; Returns: number }
       calendar_feed: { Args: { p_token: string }; Returns: Json }
       calendar_leave: { Args: { p_from: string; p_to: string }; Returns: Json }
       calendar_prep_nudges: { Args: never; Returns: number }
@@ -3275,11 +3338,6 @@ export type Database = {
         Returns: Json
       }
       goals_remind_pending: { Args: { p_cycle_id?: string }; Returns: number }
-      profile_360: { Args: { p_profile_id: string }; Returns: Json }
-      report_run: {
-        Args: { p_from?: string; p_report: string; p_to?: string }
-        Returns: Json
-      }
       goals_status_for: {
         Args: { p_cycle_id?: string; p_profile_id?: string }
         Returns: Json
@@ -3372,6 +3430,7 @@ export type Database = {
       probation_history: { Args: { p_profile_id: string }; Returns: Json }
       probation_overview: { Args: never; Returns: Json }
       probation_tick: { Args: never; Returns: number }
+      profile_360: { Args: { p_profile_id: string }; Returns: Json }
       pulse_results: { Args: { p_round_id: string }; Returns: Json }
       punctuality_me: { Args: never; Returns: Json }
       punctuality_rows: { Args: { p_month?: string }; Returns: Json }
@@ -3381,6 +3440,43 @@ export type Database = {
       }
       reconcile_roster: { Args: never; Returns: Json }
       release_history: { Args: never; Returns: Json }
+      report_person_metrics: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          absent: number
+          attendance_pct: number
+          department: string
+          full_name: string
+          goal_entries: number
+          goals_at_risk: number
+          goals_completed: number
+          goals_on_track: number
+          goals_overdue: number
+          goals_total: number
+          half_day: number
+          late: number
+          leave_days: number
+          manager_id: string
+          manager_name: string
+          present: number
+          profile_id: string
+          task_comments: number
+          tasks_assigned: number
+          tasks_completed: number
+          tasks_completion_pct: number
+          tasks_on_time: number
+          tasks_overdue: number
+          tasks_pending: number
+          tasks_review: number
+          weekly_reviews: number
+          wfh: number
+          working_days: number
+        }[]
+      }
+      report_run: {
+        Args: { p_from?: string; p_report: string; p_to?: string }
+        Returns: Json
+      }
       request_checkin: { Args: { p_note?: string }; Returns: string }
       retire_departed_warriors: { Args: never; Returns: number }
       revenue_summary: { Args: never; Returns: Json }
