@@ -19,7 +19,7 @@ BEGIN
   BEGIN
     EXECUTE stmt;
   EXCEPTION WHEN OTHERS THEN
-    IF position(expect_text IN SQLERRM) = 0 THEN
+    IF NOT EXISTS (SELECT 1 FROM unnest(string_to_array(expect_text, '|')) alt WHERE position(alt IN SQLERRM) > 0) THEN
       RAISE EXCEPTION 'FAIL %: error was "%", expected to contain "%"', label, SQLERRM, expect_text;
     END IF;
     RAISE NOTICE 'ok   % (%)', label, SQLERRM;
@@ -129,9 +129,27 @@ BEGIN
 
   PERFORM pg_temp.as_user(hr);
   SET LOCAL ROLE authenticated;
-  PERFORM pg_temp.fails('audit access: nobody can write', $q$INSERT INTO audit_log (org_id, entity, action, summary) SELECT org_id, 'x', 'x', 'x' FROM profiles LIMIT 1$q$, 'permission denied');
-  PERFORM pg_temp.fails('audit access: nobody can edit', $q$UPDATE audit_log SET summary = 'x'$q$, 'permission denied');
-  RESET ROLE;
+  PERFORM pg_temp.fails('audit access: nobody can write', $q$INSERT INTO audit_log (org_id, entity, action, summary) SELECT org_id, 'x', 'x', 'x' FROM profiles LIMIT 1$q$, 'permission denied|row-level security');
+  -- either the privilege is missing (error) or row-level security hides every row (0 rows changed)
+  BEGIN
+    UPDATE audit_log SET summary = 'x';
+    GET DIAGNOSTICS n = ROW_COUNT;
+    RESET ROLE;
+    PERFORM pg_temp.eq('audit access: nobody can edit (no rows changed)', n, 0);
+  EXCEPTION WHEN insufficient_privilege THEN
+    RESET ROLE;
+    RAISE NOTICE 'ok   audit access: nobody can edit (permission denied)';
+  END;
+  SET LOCAL ROLE authenticated;
+  BEGIN
+    DELETE FROM audit_log;
+    GET DIAGNOSTICS n = ROW_COUNT;
+    RESET ROLE;
+    PERFORM pg_temp.eq('audit access: nobody can delete (no rows removed)', n, 0);
+  EXCEPTION WHEN insufficient_privilege THEN
+    RESET ROLE;
+    RAISE NOTICE 'ok   audit access: nobody can delete (permission denied)';
+  END;
 END $$;
 
 -- ═══════════ E. TASK LIFECYCLE ═══════════
