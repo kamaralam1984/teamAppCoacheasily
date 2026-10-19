@@ -126,6 +126,54 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_name: string
+          created_at: string
+          entity: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          org_id: string
+          subject_id: string | null
+          subject_name: string | null
+          summary: string
+          target_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_name?: string
+          created_at?: string
+          entity: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          org_id: string
+          subject_id?: string | null
+          subject_name?: string | null
+          summary: string
+          target_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string
+          created_at?: string
+          entity?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          org_id?: string
+          subject_id?: string | null
+          subject_name?: string | null
+          summary?: string
+          target_id?: string | null
+        }
+        Relationships: []
+      }
       calendar_attendees: {
         Row: {
           created_at: string
@@ -944,6 +992,33 @@ export type Database = {
           },
         ]
       }
+      goal_comments: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          goal_id: string
+          id: string
+          org_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          goal_id: string
+          id?: string
+          org_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          goal_id?: string
+          id?: string
+          org_id?: string
+        }
+        Relationships: []
+      }
       goal_entries: {
         Row: {
           amount: number | null
@@ -997,6 +1072,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      goal_milestones: {
+        Row: {
+          created_at: string
+          done: boolean
+          done_at: string | null
+          due_date: string | null
+          goal_id: string
+          id: string
+          org_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          done?: boolean
+          done_at?: string | null
+          due_date?: string | null
+          goal_id: string
+          id?: string
+          org_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          done?: boolean
+          done_at?: string | null
+          due_date?: string | null
+          goal_id?: string
+          id?: string
+          org_id?: string
+          title?: string
+        }
+        Relationships: []
       }
       goals: {
         Row: {
@@ -2492,6 +2600,36 @@ export type Database = {
           },
         ]
       }
+      task_comments: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          evidence_url: string | null
+          id: string
+          org_id: string
+          task_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          evidence_url?: string | null
+          id?: string
+          org_id: string
+          task_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          evidence_url?: string | null
+          id?: string
+          org_id?: string
+          task_id?: string
+        }
+        Relationships: []
+      }
       task_days: {
         Row: {
           day: string
@@ -2544,6 +2682,39 @@ export type Database = {
           },
         ]
       }
+      task_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          from_value: string | null
+          id: string
+          kind: string
+          org_id: string
+          task_id: string
+          to_value: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          from_value?: string | null
+          id?: string
+          kind: string
+          org_id: string
+          task_id: string
+          to_value?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          from_value?: string | null
+          id?: string
+          kind?: string
+          org_id?: string
+          task_id?: string
+          to_value?: string | null
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           blocked_by: string | null
@@ -2556,13 +2727,16 @@ export type Database = {
           done: boolean
           done_at: string | null
           due_date: string | null
+          due_soon_notified_on: string | null
           goal_id: string | null
           id: string
           org_id: string
+          overdue_notified_on: string | null
           owner_id: string
           priority: string
           repeats: string
           slot: string
+          status: string
           title: string
           updated_at: string
         }
@@ -2577,13 +2751,16 @@ export type Database = {
           done?: boolean
           done_at?: string | null
           due_date?: string | null
+          due_soon_notified_on?: string | null
           goal_id?: string | null
           id?: string
           org_id: string
+          overdue_notified_on?: string | null
           owner_id: string
           priority?: string
           repeats?: string
           slot?: string
+          status?: string
           title: string
           updated_at?: string
         }
@@ -2598,13 +2775,16 @@ export type Database = {
           done?: boolean
           done_at?: string | null
           due_date?: string | null
+          due_soon_notified_on?: string | null
           goal_id?: string | null
           id?: string
           org_id?: string
+          overdue_notified_on?: string | null
           owner_id?: string
           priority?: string
           repeats?: string
           slot?: string
+          status?: string
           title?: string
           updated_at?: string
         }
@@ -2826,6 +3006,8 @@ export type Database = {
       }
       attendance_summary: { Args: { p_profile_id?: string }; Returns: Json }
       attendance_team_day: { Args: { p_date?: string }; Returns: Json }
+      dash_hr: { Args: never; Returns: Json }
+      dash_team: { Args: never; Returns: Json }
       birthday_nudges: { Args: never; Returns: number }
       calendar_feed: { Args: { p_token: string }; Returns: Json }
       calendar_leave: { Args: { p_from: string; p_to: string }; Returns: Json }
@@ -2890,6 +3072,10 @@ export type Database = {
       goal_owner: { Args: { p_goal_id: string }; Returns: string }
       goal_pct: { Args: { p_goal_id: string }; Returns: number }
       goal_progress: { Args: { p_goal_id: string }; Returns: Json }
+      goals_status_for: {
+        Args: { p_cycle_id?: string; p_profile_id?: string }
+        Returns: Json
+      }
       goals_for: {
         Args: { p_cycle_id?: string; p_profile_id?: string }
         Returns: Json

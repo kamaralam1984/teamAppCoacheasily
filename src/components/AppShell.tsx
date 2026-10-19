@@ -36,12 +36,14 @@ const BASE_TABS = [
 ] as const;
 
 const LEAD_TABS = [
+  { label: "Overview", to: "/overview" },
   { label: "Team", to: "/team" },
   { label: "Approvals", to: "/approvals" },
 ] as const;
 
 const HR_TABS = [
   { label: "Reports", to: "/reports" },
+  { label: "Audit", to: "/audit" },
   { label: "Settings", to: "/settings" },
 ] as const;
 

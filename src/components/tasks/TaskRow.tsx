@@ -8,6 +8,7 @@ import {
   type Task,
 } from "@/lib/tasks";
 import { CARRY_COACHING, carriedLine } from "@/lib/day";
+import { isOverdue, STATUS_LABEL, STATUS_TONE, statusOf } from "@/lib/taskWorkflow";
 
 export interface TaskRowProps {
   task: Task;
@@ -19,6 +20,8 @@ export interface TaskRowProps {
   blockerLate?: boolean;
   onToggle: (task: Task) => void;
   onDelete?: (task: Task) => void;
+  /** open the full task: comments, evidence and history */
+  onOpen?: (task: Task) => void;
 }
 
 export function TaskRow({
@@ -31,6 +34,7 @@ export function TaskRow({
   blockerLate,
   onToggle,
   onDelete,
+  onOpen,
 }: TaskRowProps) {
   const [armed, setArmed] = useState(false);
 
@@ -65,6 +69,20 @@ export function TaskRow({
         ) : null}
 
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          {statusOf(task) !== "accepted" && statusOf(task) !== "completed" ? (
+            <span
+              className={
+                "rounded-full px-2 py-0.5 text-[11px] font-bold " + STATUS_TONE[statusOf(task)]
+              }
+            >
+              {STATUS_LABEL[statusOf(task)]}
+            </span>
+          ) : null}
+          {isOverdue(task) ? (
+            <span className="rounded-full bg-red/12 px-2 py-0.5 text-[11px] font-bold text-red">
+              Overdue
+            </span>
+          ) : null}
           {task.due_date ? (
             <span className="rounded-full bg-cream px-2 py-0.5 text-[11px] font-bold text-soft">
               {shortDay(task.due_date)}
@@ -105,6 +123,16 @@ export function TaskRow({
             </span>
           ) : null}
         </div>
+
+        {onOpen ? (
+          <button
+            type="button"
+            className="mt-1.5 min-h-9 text-[12px] font-bold text-violet underline-offset-2 hover:underline"
+            onClick={() => onOpen(task)}
+          >
+            Details, comments and history
+          </button>
+        ) : null}
 
         {mine && task.carried_count >= 3 && !task.done ? (
           <p className="mt-1.5 text-[12px] leading-relaxed text-soft">{CARRY_COACHING}</p>

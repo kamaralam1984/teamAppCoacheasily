@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as AuthenticatedApprovalsRouteImport } from './routes/_authenticated/approvals'
 import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
+import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedChangePasswordRouteImport } from './routes/_authenticated/change-password'
 import { Route as AuthenticatedCultureRouteImport } from './routes/_authenticated/culture'
@@ -25,6 +26,7 @@ import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
 import { Route as AuthenticatedIdeasRouteImport } from './routes/_authenticated/ideas'
 import { Route as AuthenticatedLeaveRouteImport } from './routes/_authenticated/leave'
+import { Route as AuthenticatedOverviewRouteImport } from './routes/_authenticated/overview'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -62,6 +64,11 @@ const AuthenticatedApprovalsRoute = AuthenticatedApprovalsRouteImport.update({
 const AuthenticatedAttendanceRoute = AuthenticatedAttendanceRouteImport.update({
   id: '/attendance',
   path: '/attendance',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAuditRoute = AuthenticatedAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
@@ -113,6 +120,11 @@ const AuthenticatedIdeasRoute = AuthenticatedIdeasRouteImport.update({
 const AuthenticatedLeaveRoute = AuthenticatedLeaveRouteImport.update({
   id: '/leave',
   path: '/leave',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOverviewRoute = AuthenticatedOverviewRouteImport.update({
+  id: '/overview',
+  path: '/overview',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
@@ -167,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/join': typeof JoinRoute
   '/approvals': typeof AuthenticatedApprovalsRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
+  '/audit': typeof AuthenticatedAuditRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/change-password': typeof AuthenticatedChangePasswordRoute
   '/culture': typeof AuthenticatedCultureRoute
@@ -177,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/help': typeof AuthenticatedHelpRoute
   '/ideas': typeof AuthenticatedIdeasRoute
   '/leave': typeof AuthenticatedLeaveRoute
+  '/overview': typeof AuthenticatedOverviewRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -193,6 +207,7 @@ export interface FileRoutesByTo {
   '/join': typeof JoinRoute
   '/approvals': typeof AuthenticatedApprovalsRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
+  '/audit': typeof AuthenticatedAuditRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/change-password': typeof AuthenticatedChangePasswordRoute
   '/culture': typeof AuthenticatedCultureRoute
@@ -203,6 +218,7 @@ export interface FileRoutesByTo {
   '/help': typeof AuthenticatedHelpRoute
   '/ideas': typeof AuthenticatedIdeasRoute
   '/leave': typeof AuthenticatedLeaveRoute
+  '/overview': typeof AuthenticatedOverviewRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -221,6 +237,7 @@ export interface FileRoutesById {
   '/join': typeof JoinRoute
   '/_authenticated/approvals': typeof AuthenticatedApprovalsRoute
   '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
+  '/_authenticated/audit': typeof AuthenticatedAuditRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/change-password': typeof AuthenticatedChangePasswordRoute
   '/_authenticated/culture': typeof AuthenticatedCultureRoute
@@ -231,6 +248,7 @@ export interface FileRoutesById {
   '/_authenticated/help': typeof AuthenticatedHelpRoute
   '/_authenticated/ideas': typeof AuthenticatedIdeasRoute
   '/_authenticated/leave': typeof AuthenticatedLeaveRoute
+  '/_authenticated/overview': typeof AuthenticatedOverviewRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -249,6 +267,7 @@ export interface FileRouteTypes {
     | '/join'
     | '/approvals'
     | '/attendance'
+    | '/audit'
     | '/calendar'
     | '/change-password'
     | '/culture'
@@ -259,6 +278,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/ideas'
     | '/leave'
+    | '/overview'
     | '/profile'
     | '/reports'
     | '/settings'
@@ -275,6 +295,7 @@ export interface FileRouteTypes {
     | '/join'
     | '/approvals'
     | '/attendance'
+    | '/audit'
     | '/calendar'
     | '/change-password'
     | '/culture'
@@ -285,6 +306,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/ideas'
     | '/leave'
+    | '/overview'
     | '/profile'
     | '/reports'
     | '/settings'
@@ -302,6 +324,7 @@ export interface FileRouteTypes {
     | '/join'
     | '/_authenticated/approvals'
     | '/_authenticated/attendance'
+    | '/_authenticated/audit'
     | '/_authenticated/calendar'
     | '/_authenticated/change-password'
     | '/_authenticated/culture'
@@ -312,6 +335,7 @@ export interface FileRouteTypes {
     | '/_authenticated/help'
     | '/_authenticated/ideas'
     | '/_authenticated/leave'
+    | '/_authenticated/overview'
     | '/_authenticated/profile'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
@@ -374,6 +398,13 @@ declare module '@tanstack/react-router' {
       path: '/attendance'
       fullPath: '/attendance'
       preLoaderRoute: typeof AuthenticatedAttendanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/audit': {
+      id: '/_authenticated/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof AuthenticatedAuditRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/calendar': {
@@ -446,6 +477,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLeaveRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/overview': {
+      id: '/_authenticated/overview'
+      path: '/overview'
+      fullPath: '/overview'
+      preLoaderRoute: typeof AuthenticatedOverviewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -515,6 +553,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedApprovalsRoute: typeof AuthenticatedApprovalsRoute
   AuthenticatedAttendanceRoute: typeof AuthenticatedAttendanceRoute
+  AuthenticatedAuditRoute: typeof AuthenticatedAuditRoute
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedChangePasswordRoute: typeof AuthenticatedChangePasswordRoute
   AuthenticatedCultureRoute: typeof AuthenticatedCultureRoute
@@ -525,6 +564,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHelpRoute: typeof AuthenticatedHelpRoute
   AuthenticatedIdeasRoute: typeof AuthenticatedIdeasRoute
   AuthenticatedLeaveRoute: typeof AuthenticatedLeaveRoute
+  AuthenticatedOverviewRoute: typeof AuthenticatedOverviewRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -537,6 +577,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedApprovalsRoute: AuthenticatedApprovalsRoute,
   AuthenticatedAttendanceRoute: AuthenticatedAttendanceRoute,
+  AuthenticatedAuditRoute: AuthenticatedAuditRoute,
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedChangePasswordRoute: AuthenticatedChangePasswordRoute,
   AuthenticatedCultureRoute: AuthenticatedCultureRoute,
@@ -547,6 +588,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHelpRoute: AuthenticatedHelpRoute,
   AuthenticatedIdeasRoute: AuthenticatedIdeasRoute,
   AuthenticatedLeaveRoute: AuthenticatedLeaveRoute,
+  AuthenticatedOverviewRoute: AuthenticatedOverviewRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,

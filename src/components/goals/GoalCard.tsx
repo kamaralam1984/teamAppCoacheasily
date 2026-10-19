@@ -1,6 +1,7 @@
 import { toast } from "sonner";
 import { useState } from "react";
 
+import { GoalCollab, GoalStatusChip } from "@/components/goals/GoalCollab";
 import { ProgressNumbers } from "@/components/goals/ProgressNumbers";
 import { Ring } from "@/components/goals/Ring";
 import { StepAdvice } from "@/components/goals/StepAdvice";
@@ -10,6 +11,7 @@ import {
   usePurgeGoal,
   useSaveLearnings,
 } from "@/hooks/useGoals";
+import { useGoalStatus } from "@/hooks/useGoalCollab";
 import { fmt, istToday, weekLine, type GoalWithProgress } from "@/lib/goals";
 
 interface Props {
@@ -33,6 +35,7 @@ export function GoalCard({ item, editable, onEdit, canPurge = false, style }: Pr
   const purge = usePurgeGoal();
   const log = useLogEntry();
   const saveLearnings = useSaveLearnings();
+  const status = useGoalStatus(goal.id, goal.profile_id);
 
   const submitReview = () => {
     if (!reviewValue.trim() && !reviewNote.trim()) {
@@ -70,6 +73,7 @@ export function GoalCard({ item, editable, onEdit, canPurge = false, style }: Pr
         <Ring pct={p?.pct ?? 0} />
         <div className="min-w-[8rem] flex-1">
           <h3 className="font-display text-2xl leading-tight text-ink">{goal.name}</h3>
+          {status ? <GoalStatusChip status={status.status} className="mt-1" /> : null}
           {goal.metric ? <p className="mt-0.5 text-[13px] text-soft">{goal.metric}</p> : null}
         </div>
         {editable ? (
@@ -273,6 +277,8 @@ export function GoalCard({ item, editable, onEdit, canPurge = false, style }: Pr
           {goal.learnings}
         </p>
       ) : null}
+
+      <GoalCollab goalId={goal.id} ownerId={goal.profile_id} />
     </article>
   );
 }

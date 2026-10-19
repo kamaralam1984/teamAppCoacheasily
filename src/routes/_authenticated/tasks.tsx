@@ -9,6 +9,7 @@ import { BrainDump } from "@/components/tasks/BrainDump";
 
 import { QuickAdd } from "@/components/tasks/QuickAdd";
 import { TodayPanel } from "@/components/tasks/TodayPanel";
+import { TaskDetails } from "@/components/tasks/TaskDetails";
 import { TaskRow } from "@/components/tasks/TaskRow";
 import { WeekCard } from "@/components/tasks/WeekCard";
 import { useMyProfile } from "@/hooks/useMyProfile";
@@ -53,6 +54,16 @@ function Page() {
 
   const { data: all } = useWarriors();
   const line = useMemo(() => myLine(all ?? [], me?.id ?? null), [all, me?.id]);
+  const isBossOrHr = me?.role === "hr" || me?.role === "admin";
+  /** Who a task can be handed to. Managers: their line. HR and the boss: anyone in the company. */
+  const assignees = useMemo(
+    () =>
+      isBossOrHr
+        ? (all ?? []).filter((p) => p.status === "active" && p.id !== me?.id)
+        : line,
+    [isBossOrHr, all, line, me?.id],
+  );
+  const [openId, setOpenId] = useState<string | null>(null);
   const nameOf = (id: string | null) =>
     id ? ((all ?? []).find((p) => p.id === id)?.full_name ?? null) : null;
 
@@ -91,8 +102,23 @@ function Page() {
 
   const toggle = (task: Task) => {
     update.mutate({ id: task.id, patch: { done: !task.done } });
-    if (!task.done) setCelebration(`“${task.title}” is done. One less thing.`);
+    if (task.done) return;
+    // Something somebody else asked for is checked by them, so it goes to review, not to done.
+    const handedOver = task.created_by && task.created_by !== task.owner_id;
+    if (handedOver && task.owner_id === me?.id) {
+      setCelebration(
+        `“${task.title}” is with ${nameOf(task.created_by) ?? "the person who asked"} for review.`,
+      );
+    } else {
+      setCelebration(`“${task.title}” is done. One less thing.`);
+    }
   };
+
+  const openTask = (tasks ?? []).find((t) => t.id === openId) ?? null;
+  const lineIds = useMemo(() => new Set(line.map((p) => p.id)), [line]);
+  const reviewerOf = (t: Task) =>
+    t.owner_id !== me?.id &&
+    (t.created_by === me?.id || isBossOrHr || lineIds.has(t.owner_id));
 
   return (
     <AppShell>
@@ -144,7 +170,7 @@ function Page() {
         {me ? (
           <QuickAdd
             meId={me.id}
-            line={line}
+            line={assignees}
             openTasks={mine.filter((t) => !t.done)}
             goals={goalOptions}
             pending={create.isPending}
@@ -185,6 +211,7 @@ function Page() {
                       blocker && !blocker.done && blocker.due_date && blocker.due_date < today,
                     )}
                     onToggle={toggle}
+                    onOpen={(task) => setOpenId(task.id)}
                     onDelete={(task) => remove.mutate(task.id)}
                   />
                 );
@@ -198,6 +225,7 @@ function Page() {
             tasks={(tasks ?? []).filter((t) => t.owner_id !== me?.id && !t.done)}
             nameOf={nameOf}
             onToggle={toggle}
+            onOpen={(task) => setOpenId(task.id)}
           />
         ) : null}
 
@@ -217,6 +245,7 @@ function Page() {
                     key={t.id}
                     task={t}
                     onToggle={toggle}
+                    onOpen={(task) => setOpenId(task.id)}
                     onDelete={(task) => remove.mutate(task.id)}
                   />
                 ))}
@@ -228,7 +257,7 @@ function Page() {
         {me ? (
           <BrainDump
             meId={me.id}
-            line={line}
+            line={assignees}
             pending={create.isPending}
             onConfirm={(inputs) =>
               create.mutate(inputs, {
@@ -246,6 +275,17 @@ function Page() {
         />
       </div>
 
+      {openTask && me ? (
+        <TaskDetails
+          task={openTask}
+          meId={me.id}
+          orgId={me.org_id}
+          isReviewer={reviewerOf(openTask)}
+          nameOf={nameOf}
+          onClose={() => setOpenId(null)}
+        />
+      ) : null}
+
       {celebration ? (
         <Celebrate message={celebration} onDone={() => setCelebration(null)} />
       ) : null}
@@ -257,10 +297,12 @@ function LineTasks({
   tasks,
   nameOf,
   onToggle,
+  onOpen,
 }: {
   tasks: Task[];
   nameOf: (id: string | null) => string | null;
   onToggle: (task: Task) => void;
+  onOpen: (task: Task) => void;
 }) {
   if (tasks.length === 0) return null;
   return (
@@ -270,7 +312,13 @@ function LineTasks({
       </h2>
       <div className="mt-3 space-y-2.5">
         {tasks.map((t) => (
-          <TaskRow key={t.id} task={t} ownerName={nameOf(t.owner_id)} onToggle={onToggle} />
+          <TaskRow
+            key={t.id}
+            task={t}
+            ownerName={nameOf(t.owner_id)}
+            onToggle={onToggle}
+            onOpen={onOpen}
+          />
         ))}
       </div>
     </section>
