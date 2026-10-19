@@ -1,0 +1,3 @@
+- [ ] Add developer-gated impersonation link with fresh eligibility checks and best-effort audit.
+- [ ] Add confirmation, copyable link, and incognito reminder to Users.
+- [ ] Test eligibility, authenticated link flow, and mobile layout.
