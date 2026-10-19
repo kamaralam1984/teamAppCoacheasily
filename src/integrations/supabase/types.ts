@@ -126,6 +126,76 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_name: string
+          created_at: string
+          entity: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          org_id: string
+          subject_id: string | null
+          subject_name: string | null
+          summary: string
+          target_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_name?: string
+          created_at?: string
+          entity: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          org_id: string
+          subject_id?: string | null
+          subject_name?: string | null
+          summary: string
+          target_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string
+          created_at?: string
+          entity?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          org_id?: string
+          subject_id?: string | null
+          subject_name?: string | null
+          summary?: string
+          target_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_log_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_log_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_attendees: {
         Row: {
           created_at: string
@@ -2826,6 +2896,21 @@ export type Database = {
       }
       attendance_summary: { Args: { p_profile_id?: string }; Returns: Json }
       attendance_team_day: { Args: { p_date?: string }; Returns: Json }
+      audit_actor: { Args: never; Returns: string }
+      audit_name: { Args: { p_id: string }; Returns: string }
+      audit_write: {
+        Args: {
+          p_action: string
+          p_entity: string
+          p_new?: Json
+          p_old?: Json
+          p_org: string
+          p_subject: string
+          p_summary: string
+          p_target: string
+        }
+        Returns: undefined
+      }
       birthday_nudges: { Args: never; Returns: number }
       calendar_feed: { Args: { p_token: string }; Returns: Json }
       calendar_leave: { Args: { p_from: string; p_to: string }; Returns: Json }
