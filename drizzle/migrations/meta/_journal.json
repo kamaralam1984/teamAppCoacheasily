@@ -50,6 +50,13 @@
       "when": 1792426057756,
       "tag": "0006_dashboards",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792428845392,
+      "tag": "0007_lock_down_log_tables",
+      "breakpoints": true
     }
   ]
 }
