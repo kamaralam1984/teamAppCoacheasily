@@ -1,0 +1,133 @@
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+
+import { devListUsers, devUpdateProfile, devUserAction } from "@/lib/developer.functions";
+import { errMsg } from "@/hooks/useDeveloper";
+import { Card, Failed, Loading } from "./shared";
+
+type UserRow = Awaited<ReturnType<typeof devListUsers>>["rows"][number];
+
+export function DevUsers() {
+  const fn = useServerFn(devListUsers);
+  const q = useQuery({ queryKey: ["dev-users"], queryFn: () => fn() });
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState<string | null>(null);
+  const rows = useMemo(() => {
+    const s = search.toLowerCase();
+    return (q.data?.rows ?? []).filter((r) =>
+      [r.full_name, r.email, r.department].some((v) => v?.toLowerCase().includes(s)),
+    );
+  }, [q.data, search]);
+  if (q.isLoading) return <Loading what="people" />;
+  if (q.error || !q.data) return <Failed error={q.error} retry={() => void q.refetch()} />;
+  return (
+    <div className="space-y-3">
+      <input className="ce-input w-full" placeholder="Search name, email, department" value={search} onChange={(e) => setSearch(e.target.value)} />
+      {rows.map((r) => (
+        <Card key={r.id}>
+          <button className="flex min-h-11 w-full items-center justify-between gap-2 text-left" onClick={() => setOpen(open === r.id ? null : r.id)}>
+            <span>
+              <span className="block font-semibold text-ink">{r.full_name}</span>
+              <span className="block text-xs text-soft">{r.email ?? "no login"} · {r.role} · {r.status}{r.disabled ? " · disabled" : ""}</span>
+            </span>
+            <span className="text-soft">{open === r.id ? "−" : "+"}</span>
+          </button>
+          {open === r.id && <UserEditor row={r} all={q.data.rows} />}
+        </Card>
+      ))}
+      {q.data.orphans.length > 0 && (
+        <Card>
+          <h3 className="font-semibold text-ink">Logins with no profile</h3>
+          {q.data.orphans.map((o) => (
+            <div key={o.id} className="mt-2 text-sm text-soft break-all">{o.email ?? o.id} · last sign-in {o.last_sign_in_at ? new Date(o.last_sign_in_at).toLocaleString() : "never"}</div>
+          ))}
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function UserEditor({ row, all }: { row: UserRow; all: UserRow[] }) {
+  const qc = useQueryClient();
+  const update = useServerFn(devUpdateProfile);
+  const action = useServerFn(devUserAction);
+  const [f, setF] = useState({
+    title: row.title ?? "", department: row.department ?? "", role: row.role, status: row.status, manager_id: row.manager_id ?? "",
+  });
+  const [link, setLink] = useState<string | null>(null);
+  const [pw, setPw] = useState("");
+
+  const save = useMutation({
+    mutationFn: () => {
+      const patch: Record<string, string | null> = {};
+      if (f.title !== (row.title ?? "")) patch["title"] = f.title || null;
+      if (f.department !== (row.department ?? "")) patch["department"] = f.department || null;
+      if (f.role !== row.role) patch["role"] = f.role;
+      if (f.status !== row.status) patch["status"] = f.status;
+      if (f.manager_id !== (row.manager_id ?? "")) patch["manager_id"] = f.manager_id || null;
+      if (!Object.keys(patch).length) throw new Error("Nothing changed");
+      return update({ data: { id: row.id, patch } });
+    },
+    onSuccess: () => { toast.success("Saved"); void qc.invalidateQueries({ queryKey: ["dev-users"] }); void qc.invalidateQueries({ queryKey: ["dev-overview"] }); },
+    onError: (e) => toast.error(errMsg(e)),
+  });
+  const act = useMutation({
+    mutationFn: (a: "recovery_link" | "set_password" | "disable" | "enable" | "unlink") =>
+      action({ data: { action: a, profileId: row.id, origin: window.location.origin, ...(a === "set_password" ? { password: pw } : {}) } }),
+    onSuccess: (res, a) => {
+      if (res.link) setLink(res.link);
+      if (a === "set_password") setPw("");
+      toast.success("Done");
+      void qc.invalidateQueries({ queryKey: ["dev-users"] });
+      void qc.invalidateQueries({ queryKey: ["dev-audit"] });
+    },
+    onError: (e) => toast.error(errMsg(e)),
+  });
+
+  const manager = all.find((p) => p.id === row.manager_id);
+  return (
+    <div className="mt-3 space-y-3 border-t border-border pt-3 text-sm">
+      <div className="grid gap-1 text-soft break-all">
+        <span>Last sign-in: {row.last_sign_in_at ? new Date(row.last_sign_in_at).toLocaleString() : "never"}</span>
+        <span>Invited: {row.invited_at ? new Date(row.invited_at).toLocaleDateString() : "—"}</span>
+        <span>Email confirmed: {row.email_confirmed ? "yes" : "no"}</span>
+        <span>Manager: {manager?.full_name ?? "—"}</span>
+        <span>Profile id: {row.id}</span>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <input className="ce-input" placeholder="Title" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} />
+        <input className="ce-input" placeholder="Department" value={f.department} onChange={(e) => setF({ ...f, department: e.target.value })} />
+        <select className="ce-input" value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })}>
+          {["member", "manager", "hr", "admin"].map((r) => <option key={r}>{r}</option>)}
+        </select>
+        <select className="ce-input" value={f.status} onChange={(e) => setF({ ...f, status: e.target.value })}>
+          {["active", "exited"].map((r) => <option key={r}>{r}</option>)}
+        </select>
+        <select className="ce-input sm:col-span-2" value={f.manager_id} onChange={(e) => setF({ ...f, manager_id: e.target.value })}>
+          <option value="">Reports to: nobody</option>
+          {all.filter((p) => p.id !== row.id).map((p) => <option key={p.id} value={p.id}>{p.full_name}</option>)}
+        </select>
+      </div>
+      <button className="btn3d w-full sm:w-auto" disabled={save.isPending} onClick={() => save.mutate()}>{save.isPending ? "Saving…" : "Save"}</button>
+
+      {row.auth_user_id ? (
+        <div className="space-y-2 border-t border-border pt-3">
+          <div className="flex flex-wrap gap-2">
+            <button className="btn3d btn3d-ghost" disabled={act.isPending} onClick={() => act.mutate("recovery_link")}>Make reset link</button>
+            <button className="btn3d btn3d-ghost" disabled={act.isPending} onClick={() => act.mutate(row.disabled ? "enable" : "disable")}>{row.disabled ? "Enable login" : "Disable login"}</button>
+            <button className="btn3d btn3d-ghost" disabled={act.isPending} onClick={() => { if (confirm(`Unlink the login from ${row.full_name}?`)) act.mutate("unlink"); }}>Unlink login</button>
+          </div>
+          {link && <textarea readOnly className="ce-input w-full text-xs" rows={3} value={link} onFocus={(e) => e.currentTarget.select()} />}
+          <div className="flex flex-wrap gap-2">
+            <input className="ce-input flex-1" type="password" placeholder="New password (8+ chars)" value={pw} onChange={(e) => setPw(e.target.value)} />
+            <button className="btn3d btn3d-ghost" disabled={act.isPending || pw.length < 8} title={pw.length < 8 ? "At least 8 characters" : undefined} onClick={() => act.mutate("set_password")}>Set password</button>
+          </div>
+        </div>
+      ) : (
+        <p className="text-soft">No login linked.</p>
+      )}
+    </div>
+  );
+}
