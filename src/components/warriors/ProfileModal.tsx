@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -102,6 +103,14 @@ export function ProfileModal({
             <Field label="One human detail" value={profile.fun_fact} />
           </div>
         ) : null}
+
+        <Link
+          to="/people/$profileId"
+          params={{ profileId: profile.id }}
+          className="mt-5 inline-flex min-h-11 items-center text-[13px] font-bold text-violet underline-offset-2 hover:underline"
+        >
+          Open the full profile →
+        </Link>
 
         <div className="mt-6 border-t border-line pt-5">
           {canSeePrivate ? (

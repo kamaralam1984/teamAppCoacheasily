@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { HelpLink } from "@/components/help/HelpLink";
 import { HolidaysCard } from "@/components/calendar/HolidaysCard";
+import { BirthdayRemindersCard } from "@/components/settings/BirthdayRemindersCard";
 import { CyclesCard } from "@/components/settings/CyclesCard";
 import { DepartmentsCard } from "@/components/settings/DepartmentsCard";
 import { EarnedLeavePolicyCard } from "@/components/settings/EarnedLeavePolicyCard";
@@ -68,6 +69,7 @@ function SettingsPage() {
         <LeaveQuotasCard />
         <EarnedLeavePolicyCard orgId={profile?.org_id ?? null} />
         <HolidaysCard orgId={profile?.org_id ?? null} canManage />
+        <BirthdayRemindersCard />
         <CyclesCard />
         <PlaybookEditor orgId={profile?.org_id ?? null} />
 

@@ -1273,8 +1273,54 @@ export type Database = {
           },
         ]
       }
+      holiday_calendar: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          date: string
+          id: string
+          kind: string
+          name: string
+          org_id: string
+          proposed_by: string | null
+          region: string | null
+          source: string
+          status: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          kind?: string
+          name: string
+          org_id: string
+          proposed_by?: string | null
+          region?: string | null
+          source?: string
+          status?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          kind?: string
+          name?: string
+          org_id?: string
+          proposed_by?: string | null
+          region?: string | null
+          source?: string
+          status?: string
+        }
+        Relationships: []
+      }
       holidays: {
         Row: {
+          calendar_id: string | null
           created_at: string
           date: string
           id: string
@@ -1282,6 +1328,7 @@ export type Database = {
           org_id: string
         }
         Insert: {
+          calendar_id?: string | null
           created_at?: string
           date: string
           id?: string
@@ -1289,6 +1336,7 @@ export type Database = {
           org_id: string
         }
         Update: {
+          calendar_id?: string | null
           created_at?: string
           date?: string
           id?: string
@@ -1997,6 +2045,7 @@ export type Database = {
           date_of_birth: string | null
           department: string | null
           email: string | null
+          employee_code: string | null
           exited_on: string | null
           full_name: string
           fun_fact: string | null
@@ -2027,6 +2076,7 @@ export type Database = {
           date_of_birth?: string | null
           department?: string | null
           email?: string | null
+          employee_code?: string | null
           exited_on?: string | null
           full_name: string
           fun_fact?: string | null
@@ -2057,6 +2107,7 @@ export type Database = {
           date_of_birth?: string | null
           department?: string | null
           email?: string | null
+          employee_code?: string | null
           exited_on?: string | null
           full_name?: string
           fun_fact?: string | null
@@ -3224,6 +3275,11 @@ export type Database = {
         Returns: Json
       }
       goals_remind_pending: { Args: { p_cycle_id?: string }; Returns: number }
+      profile_360: { Args: { p_profile_id: string }; Returns: Json }
+      report_run: {
+        Args: { p_from?: string; p_report: string; p_to?: string }
+        Returns: Json
+      }
       goals_status_for: {
         Args: { p_cycle_id?: string; p_profile_id?: string }
         Returns: Json

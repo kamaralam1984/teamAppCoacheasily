@@ -17,6 +17,7 @@ import {
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useOrgSettings } from "@/hooks/useOrg";
 import { useLatestUnseenRelease } from "@/hooks/useReleases";
+import { PeopleSearch } from "@/components/PeopleSearch";
 import { useDeveloperAccess } from "@/hooks/useDeveloper";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +39,7 @@ const BASE_TABS = [
 const LEAD_TABS = [
   { label: "Overview", to: "/overview" },
   { label: "Team", to: "/team" },
+  { label: "Report centre", to: "/report-center" },
   { label: "Approvals", to: "/approvals" },
 ] as const;
 
@@ -110,6 +112,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span data-tour="idea" className="inline-flex">
               <SubmitIdea enabled={Boolean(profile)} />
             </span>
+
+            <PeopleSearch enabled={Boolean(profile)} />
 
             <NotificationBell enabled={Boolean(profile)} />
 

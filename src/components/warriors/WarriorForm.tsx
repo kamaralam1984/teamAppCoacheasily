@@ -52,6 +52,7 @@ export function WarriorForm({
     department: editing?.department ?? "",
     manager_id: editing?.manager_id ?? "",
     role: (editing?.role ?? "member") as Role,
+    employee_code: editing?.employee_code ?? "",
     weekly_off: editing?.weekly_off ?? "Sunday",
     sort_order: String(editing?.sort_order ?? 100),
     opening_earned_leave: String(editing?.opening_earned_leave ?? 0),
@@ -94,6 +95,8 @@ export function WarriorForm({
         department: form.department,
         manager_id: form.manager_id || null,
         role: form.role,
+        // blank on a new person lets the database number them; blank on an edit leaves it as it was
+        ...(form.employee_code.trim() ? { employee_code: form.employee_code.trim() } : {}),
         weekly_off: form.weekly_off,
         sort_order: Number.isFinite(Number(form.sort_order)) && form.sort_order.trim() !== ""
           ? Math.trunc(Number(form.sort_order))
@@ -216,6 +219,17 @@ export function WarriorForm({
                 </option>
               ))}
             </select>
+          </label>
+
+          <label>
+            <Label>Employee ID</Label>
+            <input
+              className="ce-input"
+              placeholder={editing ? "" : "Leave blank to number them automatically"}
+              maxLength={20}
+              value={form.employee_code}
+              onChange={(e) => set("employee_code", e.target.value)}
+            />
           </label>
 
           <label>

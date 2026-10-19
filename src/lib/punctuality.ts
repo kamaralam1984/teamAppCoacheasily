@@ -46,6 +46,12 @@ export interface OrgSettings {
   comp_off_enabled?: boolean;
   /** How many things one person may commit to in a day. */
   daily_priority_cap?: number;
+  /** Where the company is, so holiday suggestions fit it. */
+  holiday_country?: string;
+  holiday_region?: string;
+  /** Birthday notices to HR: on or off, and how many days before. */
+  birthday_reminders_enabled?: boolean;
+  birthday_reminder_days?: number[];
 }
 
 export const DEFAULT_MEETING_TIME = "11:00";

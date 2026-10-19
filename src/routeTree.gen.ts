@@ -28,12 +28,14 @@ import { Route as AuthenticatedIdeasRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedLeaveRouteImport } from './routes/_authenticated/leave'
 import { Route as AuthenticatedOverviewRouteImport } from './routes/_authenticated/overview'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedReportCenterRouteImport } from './routes/_authenticated/report-center'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/tasks'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedWarriorsRouteImport } from './routes/_authenticated/warriors'
 import { Route as AuthenticatedWhatsNewRouteImport } from './routes/_authenticated/whats-new'
+import { Route as AuthenticatedPeopleProfileIdRouteImport } from './routes/_authenticated/people.$profileId'
 import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar/$token'
 import { Route as ApiPublicHooksDigestRouteImport } from './routes/api/public/hooks/digest'
 
@@ -132,6 +134,12 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedReportCenterRoute =
+  AuthenticatedReportCenterRouteImport.update({
+    id: '/report-center',
+    path: '/report-center',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
@@ -162,6 +170,12 @@ const AuthenticatedWhatsNewRoute = AuthenticatedWhatsNewRouteImport.update({
   path: '/whats-new',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPeopleProfileIdRoute =
+  AuthenticatedPeopleProfileIdRouteImport.update({
+    id: '/people/$profileId',
+    path: '/people/$profileId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicCalendarTokenRoute = ApiPublicCalendarTokenRouteImport.update({
   id: '/api/public/calendar/$token',
   path: '/api/public/calendar/$token',
@@ -192,12 +206,14 @@ export interface FileRoutesByFullPath {
   '/leave': typeof AuthenticatedLeaveRoute
   '/overview': typeof AuthenticatedOverviewRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/report-center': typeof AuthenticatedReportCenterRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/team': typeof AuthenticatedTeamRoute
   '/warriors': typeof AuthenticatedWarriorsRoute
   '/whats-new': typeof AuthenticatedWhatsNewRoute
+  '/people/$profileId': typeof AuthenticatedPeopleProfileIdRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/hooks/digest': typeof ApiPublicHooksDigestRoute
 }
@@ -220,12 +236,14 @@ export interface FileRoutesByTo {
   '/leave': typeof AuthenticatedLeaveRoute
   '/overview': typeof AuthenticatedOverviewRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/report-center': typeof AuthenticatedReportCenterRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/team': typeof AuthenticatedTeamRoute
   '/warriors': typeof AuthenticatedWarriorsRoute
   '/whats-new': typeof AuthenticatedWhatsNewRoute
+  '/people/$profileId': typeof AuthenticatedPeopleProfileIdRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/hooks/digest': typeof ApiPublicHooksDigestRoute
 }
@@ -250,12 +268,14 @@ export interface FileRoutesById {
   '/_authenticated/leave': typeof AuthenticatedLeaveRoute
   '/_authenticated/overview': typeof AuthenticatedOverviewRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/report-center': typeof AuthenticatedReportCenterRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/tasks': typeof AuthenticatedTasksRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/warriors': typeof AuthenticatedWarriorsRoute
   '/_authenticated/whats-new': typeof AuthenticatedWhatsNewRoute
+  '/_authenticated/people/$profileId': typeof AuthenticatedPeopleProfileIdRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
   '/api/public/hooks/digest': typeof ApiPublicHooksDigestRoute
 }
@@ -280,12 +300,14 @@ export interface FileRouteTypes {
     | '/leave'
     | '/overview'
     | '/profile'
+    | '/report-center'
     | '/reports'
     | '/settings'
     | '/tasks'
     | '/team'
     | '/warriors'
     | '/whats-new'
+    | '/people/$profileId'
     | '/api/public/calendar/$token'
     | '/api/public/hooks/digest'
   fileRoutesByTo: FileRoutesByTo
@@ -308,12 +330,14 @@ export interface FileRouteTypes {
     | '/leave'
     | '/overview'
     | '/profile'
+    | '/report-center'
     | '/reports'
     | '/settings'
     | '/tasks'
     | '/team'
     | '/warriors'
     | '/whats-new'
+    | '/people/$profileId'
     | '/api/public/calendar/$token'
     | '/api/public/hooks/digest'
   id:
@@ -337,12 +361,14 @@ export interface FileRouteTypes {
     | '/_authenticated/leave'
     | '/_authenticated/overview'
     | '/_authenticated/profile'
+    | '/_authenticated/report-center'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
     | '/_authenticated/tasks'
     | '/_authenticated/team'
     | '/_authenticated/warriors'
     | '/_authenticated/whats-new'
+    | '/_authenticated/people/$profileId'
     | '/api/public/calendar/$token'
     | '/api/public/hooks/digest'
   fileRoutesById: FileRoutesById
@@ -491,6 +517,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/report-center': {
+      id: '/_authenticated/report-center'
+      path: '/report-center'
+      fullPath: '/report-center'
+      preLoaderRoute: typeof AuthenticatedReportCenterRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/reports': {
       id: '/_authenticated/reports'
       path: '/reports'
@@ -533,6 +566,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWhatsNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/people/$profileId': {
+      id: '/_authenticated/people/$profileId'
+      path: '/people/$profileId'
+      fullPath: '/people/$profileId'
+      preLoaderRoute: typeof AuthenticatedPeopleProfileIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/calendar/$token': {
       id: '/api/public/calendar/$token'
       path: '/api/public/calendar/$token'
@@ -566,12 +606,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLeaveRoute: typeof AuthenticatedLeaveRoute
   AuthenticatedOverviewRoute: typeof AuthenticatedOverviewRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedReportCenterRoute: typeof AuthenticatedReportCenterRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTasksRoute: typeof AuthenticatedTasksRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedWarriorsRoute: typeof AuthenticatedWarriorsRoute
   AuthenticatedWhatsNewRoute: typeof AuthenticatedWhatsNewRoute
+  AuthenticatedPeopleProfileIdRoute: typeof AuthenticatedPeopleProfileIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -590,12 +632,14 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLeaveRoute: AuthenticatedLeaveRoute,
   AuthenticatedOverviewRoute: AuthenticatedOverviewRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedReportCenterRoute: AuthenticatedReportCenterRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTasksRoute: AuthenticatedTasksRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedWarriorsRoute: AuthenticatedWarriorsRoute,
   AuthenticatedWhatsNewRoute: AuthenticatedWhatsNewRoute,
+  AuthenticatedPeopleProfileIdRoute: AuthenticatedPeopleProfileIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
