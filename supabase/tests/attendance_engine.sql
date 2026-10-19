@@ -39,27 +39,23 @@ GRANT ALL ON ids TO PUBLIC;
 
 DO $$
 DECLARE
-  o uuid; hr uuid; mgr uuid; a uuid; b uuid; u uuid;
-  today date := (now() AT TIME ZONE 'Asia/Kolkata')::date;
+  o uuid; hr uuid; mgr uuid; a uuid; b uuid;
+  -- four brand-new logins; never reuse anyone who already exists in the database
+  uids uuid[] := ARRAY[gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid()];
 BEGIN
   INSERT INTO organisations (name, settings) VALUES ('T', '{"daily_meeting_time":"11:00"}') RETURNING id INTO o;
   INSERT INTO ids VALUES ('org', o);
 
-  FOR u IN SELECT unnest(ARRAY[gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid()]) LOOP
-    INSERT INTO auth.users (id, email) VALUES (u, u::text || '@t.test');
-  END LOOP;
+  INSERT INTO auth.users (id, email) SELECT x, x::text || '@t.test' FROM unnest(uids) AS x;
 
   INSERT INTO profiles (org_id, full_name, role, auth_user_id, joined_on, weekly_off)
-  SELECT o, 'HR Hema', 'hr', id, date '2025-01-01', 'Sunday' FROM auth.users ORDER BY id LIMIT 1 RETURNING id INTO hr;
+  VALUES (o, 'HR Hema', 'hr', uids[1], date '2025-01-01', 'Sunday') RETURNING id INTO hr;
   INSERT INTO profiles (org_id, full_name, role, auth_user_id, joined_on, weekly_off, manager_id)
-  SELECT o, 'Manager Mohan', 'manager', id, date '2025-01-01', 'Sunday', hr FROM auth.users
-   WHERE id NOT IN (SELECT auth_user_id FROM profiles WHERE auth_user_id IS NOT NULL) ORDER BY id LIMIT 1 RETURNING id INTO mgr;
+  VALUES (o, 'Manager Mohan', 'manager', uids[2], date '2025-01-01', 'Sunday', hr) RETURNING id INTO mgr;
   INSERT INTO profiles (org_id, full_name, role, auth_user_id, joined_on, weekly_off, manager_id)
-  SELECT o, 'Member Asha', 'member', id, date '2025-01-01', 'Sunday', mgr FROM auth.users
-   WHERE id NOT IN (SELECT auth_user_id FROM profiles WHERE auth_user_id IS NOT NULL) ORDER BY id LIMIT 1 RETURNING id INTO a;
+  VALUES (o, 'Member Asha', 'member', uids[3], date '2025-01-01', 'Sunday', mgr) RETURNING id INTO a;
   INSERT INTO profiles (org_id, full_name, role, auth_user_id, joined_on, weekly_off)
-  SELECT o, 'Member Bala', 'member', id, date '2025-01-01', 'Sunday' FROM auth.users
-   WHERE id NOT IN (SELECT auth_user_id FROM profiles WHERE auth_user_id IS NOT NULL) ORDER BY id LIMIT 1 RETURNING id INTO b;
+  VALUES (o, 'Member Bala', 'member', uids[4], date '2025-01-01', 'Sunday') RETURNING id INTO b;
   INSERT INTO ids VALUES ('hr', hr), ('mgr', mgr), ('a', a), ('b', b);
 END $$;
 
