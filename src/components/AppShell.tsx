@@ -17,6 +17,7 @@ import {
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useOrgSettings } from "@/hooks/useOrg";
 import { useLatestUnseenRelease } from "@/hooks/useReleases";
+import { useDeveloperAccess } from "@/hooks/useDeveloper";
 
 import { supabase } from "@/integrations/supabase/client";
 import { isTestingActive, prettyTestingDate } from "@/lib/testing";
@@ -53,6 +54,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navRef = useRef<HTMLDivElement | null>(null);
   const { data: orgSettings } = useOrgSettings(Boolean(data?.profile));
   const { data: unseenRelease } = useLatestUnseenRelease(Boolean(data?.profile));
+  const { data: dev } = useDeveloperAccess(Boolean(data?.user));
 
 
   const profile = data?.profile ?? null;
@@ -62,6 +64,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     ...BASE_TABS,
     ...(role === "manager" || role === "hr" || role === "admin" ? LEAD_TABS : []),
     ...(role === "hr" || role === "admin" ? HR_TABS : []),
+    ...(dev?.isDeveloper ? [{ label: "Developer", to: "/developer" } as const] : []),
   ];
 
   useEffect(() => {
