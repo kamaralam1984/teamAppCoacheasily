@@ -22,6 +22,13 @@
       "when": 1792419717666,
       "tag": "0002_el_engine_probation",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792423640957,
+      "tag": "0003_attendance_engine_el_rules",
+      "breakpoints": true
     }
   ]
 }

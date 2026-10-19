@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       attendance: {
         Row: {
+          check_out_at: string | null
           created_at: string
           date: string
           focus: string | null
@@ -24,8 +25,10 @@ export type Database = {
           on_time: boolean | null
           org_id: string
           profile_id: string
+          status: string
         }
         Insert: {
+          check_out_at?: string | null
           created_at?: string
           date?: string
           focus?: string | null
@@ -34,8 +37,10 @@ export type Database = {
           on_time?: boolean | null
           org_id: string
           profile_id: string
+          status?: string
         }
         Update: {
+          check_out_at?: string | null
           created_at?: string
           date?: string
           focus?: string | null
@@ -44,6 +49,7 @@ export type Database = {
           on_time?: boolean | null
           org_id?: string
           profile_id?: string
+          status?: string
         }
         Relationships: [
           {
@@ -55,6 +61,64 @@ export type Database = {
           },
           {
             foreignKeyName: "attendance_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendance_corrections: {
+        Row: {
+          corrected_by: string | null
+          created_at: string
+          date: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          org_id: string
+          profile_id: string
+          reason: string
+        }
+        Insert: {
+          corrected_by?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          org_id: string
+          profile_id: string
+          reason: string
+        }
+        Update: {
+          corrected_by?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          org_id?: string
+          profile_id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_corrections_corrected_by_fkey"
+            columns: ["corrected_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_corrections_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_corrections_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -512,6 +576,57 @@ export type Database = {
         }
         Relationships: []
       }
+      el_lapses: {
+        Row: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          carry_limit: number
+          created_at: string
+          id: string
+          lapse_on: string
+          org_id: string
+          profile_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          carry_limit: number
+          created_at?: string
+          id?: string
+          lapse_on: string
+          org_id: string
+          profile_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          balance_before?: number
+          carry_limit?: number
+          created_at?: string
+          id?: string
+          lapse_on?: string
+          org_id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "el_lapses_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "el_lapses_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       el_ledger: {
         Row: {
           amount: number
@@ -577,7 +692,12 @@ export type Database = {
       }
       el_policy: {
         Row: {
+          carry_forward_limit: number | null
+          carry_forward_since: string | null
           count_approved_leave: boolean
+          count_during_probation: boolean
+          count_half_day: boolean
+          count_wfh: boolean
           credit_amount: number
           exclude_holidays: boolean
           exclude_weekly_off: boolean
@@ -586,9 +706,15 @@ export type Database = {
           required_days: number
           updated_at: string
           updated_by: string | null
+          year_start_month: number
         }
         Insert: {
+          carry_forward_limit?: number | null
+          carry_forward_since?: string | null
           count_approved_leave?: boolean
+          count_during_probation?: boolean
+          count_half_day?: boolean
+          count_wfh?: boolean
           credit_amount?: number
           exclude_holidays?: boolean
           exclude_weekly_off?: boolean
@@ -597,9 +723,15 @@ export type Database = {
           required_days?: number
           updated_at?: string
           updated_by?: string | null
+          year_start_month?: number
         }
         Update: {
+          carry_forward_limit?: number | null
+          carry_forward_since?: string | null
           count_approved_leave?: boolean
+          count_during_probation?: boolean
+          count_half_day?: boolean
+          count_wfh?: boolean
           credit_amount?: number
           exclude_holidays?: boolean
           exclude_weekly_off?: boolean
@@ -608,6 +740,7 @@ export type Database = {
           required_days?: number
           updated_at?: string
           updated_by?: string | null
+          year_start_month?: number
         }
         Relationships: [
           {
@@ -2663,13 +2796,43 @@ export type Database = {
     }
     Functions: {
       appraisal_matrix: { Args: never; Returns: Json }
+      attendance_correct: {
+        Args: {
+          p_action: string
+          p_check_in?: string
+          p_check_out?: string
+          p_date: string
+          p_profile_id: string
+          p_reason?: string
+          p_status?: string
+        }
+        Returns: Json
+      }
+      attendance_corrections_for: {
+        Args: { p_profile_id?: string }
+        Returns: Json
+      }
+      attendance_day_info: {
+        Args: { p_date: string; p_profile_id: string }
+        Returns: Json
+      }
+      attendance_month: {
+        Args: { p_month?: string; p_profile_id?: string }
+        Returns: Json
+      }
+      attendance_range_report: {
+        Args: { p_from: string; p_to: string }
+        Returns: Json
+      }
       attendance_summary: { Args: { p_profile_id?: string }; Returns: Json }
+      attendance_team_day: { Args: { p_date?: string }; Returns: Json }
       birthday_nudges: { Args: never; Returns: number }
       calendar_feed: { Args: { p_token: string }; Returns: Json }
       calendar_leave: { Args: { p_from: string; p_to: string }; Returns: Json }
       calendar_prep_nudges: { Args: never; Returns: number }
       can_keep_calendar: { Args: never; Returns: boolean }
       can_read_goal: { Args: { p_goal_id: string }; Returns: boolean }
+      check_out_attendance: { Args: never; Returns: Json }
       checkin_talked: { Args: { p_id: string }; Returns: undefined }
       claim_invite: { Args: { p_email: string }; Returns: Json }
       close_day: { Args: { p_note?: string }; Returns: Json }
@@ -2722,6 +2885,7 @@ export type Database = {
         Args: { p_notify?: boolean; p_profile_id: string; p_source?: string }
         Returns: number
       }
+      el_run_lapses: { Args: { p_profile_id: string }; Returns: number }
       goal_nudge_me: { Args: never; Returns: boolean }
       goal_owner: { Args: { p_goal_id: string }; Returns: string }
       goal_pct: { Args: { p_goal_id: string }; Returns: number }
@@ -2790,7 +2954,10 @@ export type Database = {
         Returns: Json
       }
       manages: { Args: { target_id: string }; Returns: boolean }
-      mark_attendance: { Args: { p_focus?: string }; Returns: Json }
+      mark_attendance: {
+        Args: { p_focus?: string; p_status?: string }
+        Returns: Json
+      }
       mark_release_seen: { Args: { p_release_id: string }; Returns: undefined }
       my_day: { Args: { p_day?: string }; Returns: Json }
       my_org: { Args: never; Returns: string }
