@@ -8,12 +8,19 @@ export type EarnedLeavePolicy = Tables<"el_policy">;
 /** One automatic credit. HR/Admin also receive the calculation behind it. */
 export interface LedgerEntry {
   id: string;
-  /** a credit, or the part of the balance that lapsed when a new leave year began */
-  kind: "credit" | "lapse";
+  /** one line of the account: the opening balance, a credit, a lapse, leave used, or a request still pending */
+  kind: "opening" | "credit" | "lapse" | "used" | "pending";
   credited_on: string;
   amount: number;
-  /** negative for a lapse */
+  /** negative for a lapse or for leave used */
   credited: number;
+  /** the same as credited, as a plain signed change to the balance (0 for a pending request) */
+  delta?: number;
+  /** the balance after this line, counting from the opening balance */
+  available_after?: number;
+  /** leave used or pending: the last day, and whether it was half a day */
+  to_date?: string;
+  half_day?: boolean;
   previous_balance: number | null;
   new_balance: number | null;
   /** lapses: the carry-forward limit that applied */
@@ -110,6 +117,69 @@ export function useRecalculateEarnedLeave() {
       void qc.invalidateQueries({ queryKey: ["el-ledger"] });
       void qc.invalidateQueries({ queryKey: ["attendance-summary"] });
       void qc.invalidateQueries({ queryKey: ["leave-balances"] });
+    },
+  });
+}
+
+export interface RebuildRow {
+  profile_id: string;
+  full_name: string;
+  joined_on: string | null;
+  first_punch: string | null;
+  opening: number;
+  working_days: number;
+  credits_now: number;
+  credits_new: number;
+  lapsed: number;
+  used: number;
+  balance_now: number;
+  balance_new: number;
+  available_now: number;
+  available_new: number;
+  change: number;
+  note: string | null;
+}
+
+export interface RebuildPreview {
+  mode_now: "punches" | "joining_date";
+  today: string;
+  people: RebuildRow[];
+}
+
+/** HR/Admin: what counting from the joining date would do to everyone's earned leave. Changes nothing. */
+export function useRebuildPreview() {
+  return useMutation({
+    mutationFn: async (): Promise<RebuildPreview> => {
+      const { data, error } = await supabase.rpc("el_rebuild_preview");
+      if (error) throw error;
+      return data as unknown as RebuildPreview;
+    },
+  });
+}
+
+/** HR/Admin: switch to counting from the joining date and rebuild every ledger. Archives the old rows. */
+export function useRebuildApply() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (confirm: string): Promise<number> => {
+      const { data, error } = await supabase.rpc("el_rebuild_apply", { p_confirm: confirm });
+      if (error) throw error;
+      return data ?? 0;
+    },
+    onSuccess: () => {
+      for (const key of [
+        "el-policy",
+        "el-policy-log",
+        "el-ledger",
+        "attendance-summary",
+        "leave-balances",
+        "audit-log",
+        "dash-hr",
+        "profile-360",
+        "report",
+      ]) {
+        void qc.invalidateQueries({ queryKey: [key] });
+      }
     },
   });
 }

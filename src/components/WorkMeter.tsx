@@ -10,7 +10,8 @@ export interface WorkMeterProps {
 
 /** The earned-leave work meter. One component, so Dashboard and Leave never disagree. */
 export function WorkMeter({ summary, showStreak = true, className, style }: WorkMeterProps) {
-  const days = summary?.days_marked ?? 0;
+  const fromJoining = summary?.count_from === "joining_date";
+  const days = fromJoining ? (summary?.el_days_total ?? 0) : (summary?.days_marked ?? 0);
   const required = summary?.el_required_days ?? 20;
   const done = summary?.el_progress ?? 0;
   const toNext = summary?.to_next_leave ?? required;
@@ -21,10 +22,11 @@ export function WorkMeter({ summary, showStreak = true, className, style }: Work
     <section className={`ce-rise ce-card p-6 ${className ?? ""}`} style={style}>
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h2 className="font-display text-2xl text-ink">
-          🔥 {days} {days === 1 ? "day" : "days"} worked in the app
+          🔥 {days} {fromJoining ? "working " : ""}
+          {days === 1 ? "day" : "days"} {fromJoining ? "since you joined" : "worked in the app"}
         </h2>
         <p className="text-[13px] font-semibold text-goldD">
-          {toNext} more and you earn a paid leave
+          {toNext} more {fromJoining ? "working days " : ""}and you earn a paid leave
         </p>
       </div>
 
@@ -43,8 +45,10 @@ export function WorkMeter({ summary, showStreak = true, className, style }: Work
       </div>
 
       <p className="mt-3 text-[13px] leading-relaxed text-soft">
-        Starts the day you first mark attendance here. 1 paid leave for every {required} working
-        days, counted by the company's leave policy.
+        {fromJoining
+          ? `Counted from your joining date${summary?.joined_on ? ` (${new Date(`${summary.joined_on}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })})` : ""}, whether or not you marked attendance on a day. Weekly offs, holidays and days on leave aren't counted. `
+          : "Starts the day you first mark attendance here. "}
+        1 paid leave for every {required} working days, counted by the company's leave policy.
       </p>
 
       {showStreak && streak >= 2 ? (

@@ -8,6 +8,7 @@ import {
   useSaveEarnedLeavePolicy,
   type PolicyEdit,
 } from "@/hooks/useEarnedLeave";
+import { JoiningDateSwitch } from "@/components/settings/JoiningDateSwitch";
 import { useWarriors } from "@/hooks/useWarriors";
 
 const FIELDS: { key: keyof PolicyEdit; label: string }[] = [
@@ -76,6 +77,7 @@ const PLAIN: Record<string, string> = {
   count_during_probation: "count probation days",
   carry_forward_limit: "carry-forward limit",
   year_start_month: "leave year starts in month",
+  count_from: "days counted from",
 };
 
 function describeChange(oldP: Record<string, unknown>, newP: Record<string, unknown>) {
@@ -214,6 +216,8 @@ export function EarnedLeavePolicyCard({ orgId }: { orgId: string | null }) {
           </div>
         </div>
       </div>
+
+      <JoiningDateSwitch />
 
       <div className="mt-4 flex flex-wrap gap-2">
         <button

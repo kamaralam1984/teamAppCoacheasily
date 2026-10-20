@@ -794,6 +794,7 @@ export type Database = {
           carry_forward_limit: number | null
           carry_forward_since: string | null
           count_approved_leave: boolean
+          count_from: string
           count_during_probation: boolean
           count_half_day: boolean
           count_wfh: boolean
@@ -811,6 +812,7 @@ export type Database = {
           carry_forward_limit?: number | null
           carry_forward_since?: string | null
           count_approved_leave?: boolean
+          count_from?: string
           count_during_probation?: boolean
           count_half_day?: boolean
           count_wfh?: boolean
@@ -828,6 +830,7 @@ export type Database = {
           carry_forward_limit?: number | null
           carry_forward_since?: string | null
           count_approved_leave?: boolean
+          count_from?: string
           count_during_probation?: boolean
           count_half_day?: boolean
           count_wfh?: boolean
@@ -3278,6 +3281,8 @@ export type Database = {
       commit_day: { Args: { p_task_ids: string[] }; Returns: Json }
       daily_code_today: { Args: never; Returns: Json }
       dash_hr: { Args: never; Returns: Json }
+      el_rebuild_apply: { Args: { p_confirm?: string }; Returns: number }
+      el_rebuild_preview: { Args: never; Returns: Json }
       dash_team: { Args: never; Returns: Json }
       day_report: {
         Args: { p_from: string; p_profile_id: string; p_to: string }

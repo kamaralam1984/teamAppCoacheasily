@@ -16,6 +16,10 @@ export interface AttendanceSummary {
   el_progress: number;
   streak: number;
   comp_off_available: number;
+  /** how many days have counted so far, and whether they are counted from the joining date or from attendance */
+  el_days_total?: number;
+  count_from?: "punches" | "joining_date";
+  joined_on?: string | null;
   /** how today was marked, and whether the person has checked out */
   today_status?: WorkMode | null;
   checked_out?: boolean;

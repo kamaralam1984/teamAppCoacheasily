@@ -116,7 +116,7 @@ DO $$
 DECLARE
   o uuid := (SELECT v FROM ids WHERE k='org'); a uuid := (SELECT v FROM ids WHERE k='a');
   today date := (now() AT TIME ZONE 'Asia/Kolkata')::date;
-  d_hol date; d_off date; d_leave date; d_late date; d_absent date;
+  d_hol date; d_off date; d_leave date; d_late date; d_absent date; d_future date;
 BEGIN
   -- four distinct working days (not Sundays) going back from yesterday, and the latest Sunday
   d_late := today - 1;   WHILE extract(dow FROM d_late)   = 0 LOOP d_late   := d_late   - 1; END LOOP;
@@ -124,6 +124,7 @@ BEGIN
   d_hol := d_leave - 1;  WHILE extract(dow FROM d_hol)    = 0 LOOP d_hol    := d_hol    - 1; END LOOP;
   d_absent := d_hol - 1; WHILE extract(dow FROM d_absent) = 0 LOOP d_absent := d_absent - 1; END LOOP;
   d_off := today - 1;    WHILE extract(dow FROM d_off)    <> 0 LOOP d_off   := d_off    - 1; END LOOP;
+  d_future := today + 5; WHILE extract(dow FROM d_future) = 0 LOOP d_future := d_future + 1; END LOOP;
 
   INSERT INTO holidays (org_id, date, name) VALUES (o, d_hol, 'Fest');
   INSERT INTO leave_requests (org_id, profile_id, type, from_date, to_date, days, status)
@@ -139,7 +140,7 @@ BEGIN
   PERFORM pg_temp.eq('kind: leave',       attendance_day_info(a, d_leave)->>'kind',  'leave');
   PERFORM pg_temp.eq('kind: absent',      attendance_day_info(a, d_absent)->>'kind', 'absent');
   PERFORM pg_temp.eq('kind: today is present or late', attendance_day_info(a, today)->>'kind' IN ('present', 'late'), true);
-  PERFORM pg_temp.eq('kind: upcoming',    attendance_day_info(a, today + 5)->>'kind','upcoming');
+  PERFORM pg_temp.eq('kind: upcoming',    attendance_day_info(a, d_future)->>'kind','upcoming');
   PERFORM pg_temp.eq('kind: before joining', attendance_day_info(a, date '2024-12-01')->>'kind', 'not_joined');
   PERFORM pg_temp.eq('kind: today unmarked is not absent',
                      attendance_day_info((SELECT v FROM ids WHERE k='hr'), today)->>'kind', 'not_marked');
