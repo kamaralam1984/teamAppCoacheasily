@@ -789,12 +789,67 @@ export type Database = {
           },
         ]
       }
+      el_ledger_archive: {
+        Row: {
+          amount: number
+          archived_at: string
+          archived_reason: string | null
+          created_at: string
+          credited: number
+          eligible_days: number
+          id: string
+          new_balance: number
+          org_id: string
+          period_end: string
+          period_start: string
+          policy: Json
+          previous_balance: number
+          profile_id: string
+          source: string
+        }
+        Insert: {
+          amount: number
+          archived_at?: string
+          archived_reason?: string | null
+          created_at?: string
+          credited: number
+          eligible_days: number
+          id?: string
+          new_balance: number
+          org_id: string
+          period_end: string
+          period_start: string
+          policy: Json
+          previous_balance: number
+          profile_id: string
+          source?: string
+        }
+        Update: {
+          amount?: number
+          archived_at?: string
+          archived_reason?: string | null
+          created_at?: string
+          credited?: number
+          eligible_days?: number
+          id?: string
+          new_balance?: number
+          org_id?: string
+          period_end?: string
+          period_start?: string
+          policy?: Json
+          previous_balance?: number
+          profile_id?: string
+          source?: string
+        }
+        Relationships: []
+      }
       el_policy: {
         Row: {
           carry_forward_limit: number | null
           carry_forward_since: string | null
           count_approved_leave: boolean
           count_during_probation: boolean
+          count_from: string
           count_half_day: boolean
           count_wfh: boolean
           credit_amount: number
@@ -812,6 +867,7 @@ export type Database = {
           carry_forward_since?: string | null
           count_approved_leave?: boolean
           count_during_probation?: boolean
+          count_from?: string
           count_half_day?: boolean
           count_wfh?: boolean
           credit_amount?: number
@@ -829,6 +885,7 @@ export type Database = {
           carry_forward_since?: string | null
           count_approved_leave?: boolean
           count_during_probation?: boolean
+          count_from?: string
           count_half_day?: boolean
           count_wfh?: boolean
           credit_amount?: number
@@ -3315,11 +3372,32 @@ export type Database = {
         }[]
       }
       digests_enabled: { Args: never; Returns: boolean }
+      el_days_joining: {
+        Args: { p_after: string; p_profile_id: string }
+        Returns: string[]
+      }
+      el_days_punches: {
+        Args: { p_after: string; p_profile_id: string }
+        Returns: string[]
+      }
       el_eligible_days: {
         Args: { p_after: string; p_profile_id: string }
         Returns: string[]
       }
       el_ledger_for: { Args: { p_profile_id?: string }; Returns: Json }
+      el_plan_credits: {
+        Args: { p_profile_id: string }
+        Returns: {
+          credited: number
+          k: number
+          new_balance: number
+          period_end: string
+          period_start: string
+          previous_balance: number
+        }[]
+      }
+      el_rebuild_apply: { Args: { p_confirm?: string }; Returns: number }
+      el_rebuild_preview: { Args: never; Returns: Json }
       el_recalculate: { Args: never; Returns: number }
       el_run_all: { Args: never; Returns: number }
       el_run_credits: {
