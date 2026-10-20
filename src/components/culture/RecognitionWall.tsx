@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 
 import { useGiveRecognition } from "@/hooks/useCulture";
 import { BADGES, joinedLabel, shelfOrder, tenureLabel, whenLabel, type Recognition } from "@/lib/culture";
-import { daysSince, isNewWarrior, type Profile } from "@/lib/warriors";
+import { ACCESS_LEVELS, daysSince, isNewWarrior, type Profile } from "@/lib/warriors";
 import { WarriorAvatar } from "@/components/warriors/Avatar";
 
 
@@ -170,6 +170,12 @@ export function RecognitionCard({
           <p className="text-[15px] leading-tight font-bold text-ink">
             {to?.full_name ?? "A warrior"}
           </p>
+          {row.kind === "welcome" && to ? (
+            <p className="text-[13px] leading-snug font-semibold text-goldD">
+              {to.title?.trim() || "Post not set"}
+              {to.department ? ` · ${to.department}` : ""}
+            </p>
+          ) : null}
           <p className="text-[12px] text-soft">
             {row.kind === "welcome"
               ? "joined CoachEasily"
@@ -182,6 +188,11 @@ export function RecognitionCard({
       {row.kind === "badge" && row.badge_name ? (
         <span className="mt-3 inline-block rounded-full border border-gold bg-gold/15 px-3 py-1 text-[12px] font-bold text-goldD">
           🏅 {row.badge_name}
+        </span>
+      ) : null}
+      {row.kind === "welcome" && to ? (
+        <span className="mt-3 mr-2 inline-block rounded-full border border-gold/50 bg-gold/10 px-3 py-1 text-[12px] font-bold text-goldD">
+          {ACCESS_LEVELS.find((a) => a.value === to.role)?.label ?? "Warrior"}
         </span>
       ) : null}
       {row.kind === "welcome" && to && isNewWarrior(to) ? (
