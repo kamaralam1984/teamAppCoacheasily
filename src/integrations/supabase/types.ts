@@ -1592,6 +1592,24 @@ export type Database = {
           },
         ]
       }
+      invite_checks: {
+        Row: {
+          checked_at: string
+          id: number
+          source: string
+        }
+        Insert: {
+          checked_at?: string
+          id?: number
+          source: string
+        }
+        Update: {
+          checked_at?: string
+          id?: number
+          source?: string
+        }
+        Relationships: []
+      }
       leave_requests: {
         Row: {
           approver_id: string | null
