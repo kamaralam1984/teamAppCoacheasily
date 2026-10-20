@@ -2233,7 +2233,6 @@ export type Database = {
           role: string
           sort_order: number
           status: string
-          team_order: number | null
           title: string | null
           wedding_anniversary: string | null
           weekly_off: string | null
@@ -2265,7 +2264,6 @@ export type Database = {
           role?: string
           sort_order?: number
           status?: string
-          team_order?: number | null
           title?: string | null
           wedding_anniversary?: string | null
           weekly_off?: string | null
@@ -2297,7 +2295,6 @@ export type Database = {
           role?: string
           sort_order?: number
           status?: string
-          team_order?: number | null
           title?: string | null
           wedding_anniversary?: string | null
           weekly_off?: string | null
