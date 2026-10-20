@@ -3408,6 +3408,7 @@ export type Database = {
           previous_balance: number
         }[]
       }
+      el_credit_me: { Args: never; Returns: number }
       el_rebuild_apply: {
         Args: { p_confirm?: string; p_mode?: string }
         Returns: number

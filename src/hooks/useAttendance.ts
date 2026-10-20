@@ -18,6 +18,8 @@ export interface AttendanceSummary {
   comp_off_available: number;
   /** how many days have counted so far, and whether they are counted from the joining date or from attendance */
   el_days_total?: number;
+  /** credits already earned by the days counted, not yet written to the earned leave account */
+  el_due?: number;
   count_from?: "punches" | "joining_date";
   joined_on?: string | null;
   /** how today was marked, and whether the person has checked out */
@@ -36,18 +38,36 @@ export const WORK_MODE_LABEL: Record<WorkMode, string> = {
 };
 
 export function useAttendanceSummary(profileId?: string | null) {
+  const qc = useQueryClient();
   return useQuery({
     queryKey: ["attendance-summary", profileId ?? "me"],
     enabled: profileId !== null,
     staleTime: 15 * 60_000,
     gcTime: 15 * 60_000,
     queryFn: async (): Promise<AttendanceSummary | null> => {
-      const { data, error } = await supabase.rpc(
-        "attendance_summary",
-        profileId ? { p_profile_id: profileId } : {},
-      );
-      if (error) throw error;
-      return (data as unknown as AttendanceSummary) ?? null;
+      const read = async () => {
+        const { data, error } = await supabase.rpc(
+          "attendance_summary",
+          profileId ? { p_profile_id: profileId } : {},
+        );
+        if (error) throw error;
+        return (data as unknown as AttendanceSummary) ?? null;
+      };
+      let summary = await read();
+
+      // A credit that is already due (the days have counted) is added now, not at the night job.
+      // Only for the signed-in person, and only when one is due.
+      if (!profileId && (summary?.el_due ?? 0) > 0) {
+        try {
+          await supabase.rpc("el_credit_me");
+          summary = await read();
+          void qc.invalidateQueries({ queryKey: ["el-ledger"] });
+          void qc.invalidateQueries({ queryKey: ["leave-balances"] });
+        } catch {
+          /* the nightly job will add it */
+        }
+      }
+      return summary;
     },
   });
 }

@@ -273,4 +273,47 @@ BEGIN
   PERFORM pg_temp.fails('catch-up: an unknown way of counting is refused', $q$SELECT el_rebuild_preview('weekly')$q$, 'Unknown way');
 END $$;
 
+-- ═══════════ 6. A CREDIT THAT IS DUE IS SHOWN AS DUE, AND CAN BE TAKEN AT ONCE ═══════════
+DO $$
+DECLARE
+  o uuid := (SELECT v FROM ids WHERE k='org'); other uuid := (SELECT v FROM ids WHERE k='n');
+  today date := (now() AT TIME ZONE 'Asia/Kolkata')::date;
+  u uuid := gen_random_uuid(); p uuid; start_day date := today - 160; i int; sm jsonb;
+BEGIN
+  INSERT INTO auth.users (id, email) VALUES (u, 'due@t.test');
+  INSERT INTO profiles (org_id, full_name, role, auth_user_id, joined_on, weekly_off)
+  VALUES (o, 'Due Dara', 'member', u, start_day - 5, 'Sunday') RETURNING id INTO p;
+  -- 44 days in a row. Counted the old way (worked Sundays left out) she has one credit...
+  FOR i IN 0..43 LOOP
+    INSERT INTO attendance (org_id, profile_id, date, marked_at)
+    VALUES (o, p, start_day + i, ((start_day + i)::text || ' 09:30')::timestamp AT TIME ZONE 'Asia/Kolkata');
+  END LOOP;
+  UPDATE el_policy SET count_weekly_off_work = false WHERE org_id = o;
+  PERFORM pg_temp.eq('due: the old rule gave her one credit', el_run_credits(p), 1);
+  -- ...and with worked Sundays counted, 21 days are left after it: one more is due
+  UPDATE el_policy SET count_weekly_off_work = true WHERE org_id = o;
+
+  PERFORM pg_temp.as_user(p);
+  sm := attendance_summary(p);
+  PERFORM pg_temp.eq('due: the summary says one credit is due', (sm->>'el_due')::int, 1);
+  PERFORM pg_temp.eq('due: ...although the days left over are only 1', (sm->>'el_progress')::int, 1);
+  PERFORM pg_temp.eq('due: ...and the balance has not caught up yet', (sm->>'earned_available')::int, 1);
+
+  PERFORM pg_temp.as_user(other);
+  PERFORM pg_temp.eq('due: someone else asking changes nothing for her', el_credit_me(), 0);
+  PERFORM pg_temp.eq('due: her account is still as it was', (SELECT count(*) FROM el_ledger WHERE profile_id = p)::int, 1);
+
+  PERFORM pg_temp.as_user(p);
+  PERFORM pg_temp.eq('due: she takes it at once', el_credit_me(), 1);
+  sm := attendance_summary(p);
+  PERFORM pg_temp.eq('due: the balance is now 2', (sm->>'earned_available')::int, 2);
+  PERFORM pg_temp.eq('due: nothing is due any more', (sm->>'el_due')::int, 0);
+  PERFORM pg_temp.eq('due: asking again adds nothing', el_credit_me(), 0);
+  PERFORM pg_temp.eq('due: she is told of each credit, once', (SELECT count(*) FROM notifications WHERE profile_id = p AND title LIKE '+1 earned leave credited')::int, 2);
+
+  -- nobody signed in
+  PERFORM set_config('request.jwt.claim.sub', '', true);
+  PERFORM pg_temp.eq('due: with nobody signed in it does nothing', el_credit_me(), 0);
+END $$;
+
 ROLLBACK;

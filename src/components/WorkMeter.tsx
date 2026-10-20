@@ -51,6 +51,13 @@ export function WorkMeter({ summary, showStreak = true, className, style }: Work
         1 paid leave for every {required} working days, counted by the company's leave policy.
       </p>
 
+      {(summary?.el_due ?? 0) > 0 ? (
+        <p className="mt-3 text-[13px] font-semibold text-emer">
+          {summary?.el_due} paid leave {summary?.el_due === 1 ? "is" : "are"} due and being added to your
+          account.
+        </p>
+      ) : null}
+
       {!fromJoining && summary?.el_days_total !== undefined && summary.days_marked > summary.el_days_total ? (
         <p className="mt-3 text-[13px] leading-relaxed text-soft">
           You have marked attendance on <b className="text-ink">{summary.days_marked}</b> days.{" "}
