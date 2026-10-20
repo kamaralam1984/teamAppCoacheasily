@@ -419,6 +419,32 @@ export type Database = {
           },
         ]
       }
+      cycle_notices: {
+        Row: {
+          cycle_id: string
+          kind: string
+          sent_on: string
+        }
+        Insert: {
+          cycle_id: string
+          kind: string
+          sent_on?: string
+        }
+        Update: {
+          cycle_id?: string
+          kind?: string
+          sent_on?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cycle_notices_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "cycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cycles: {
         Row: {
           created_at: string
@@ -3386,6 +3412,7 @@ export type Database = {
       claim_invite: { Args: { p_email: string }; Returns: Json }
       close_day: { Args: { p_note?: string }; Returns: Json }
       commit_day: { Args: { p_task_ids: string[] }; Returns: Json }
+      cycles_tick: { Args: never; Returns: number }
       daily_code_today: { Args: never; Returns: Json }
       dash_hr: { Args: never; Returns: Json }
       dash_team: { Args: never; Returns: Json }
