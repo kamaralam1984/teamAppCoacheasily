@@ -1588,7 +1588,6 @@ export type Database = {
           approver_id: string | null
           created_at: string
           days: number
-          decision_note: string | null
           decided_at: string | null
           decided_by: string | null
           from_date: string
@@ -1609,7 +1608,6 @@ export type Database = {
           approver_id?: string | null
           created_at?: string
           days?: number
-          decision_note?: string | null
           decided_at?: string | null
           decided_by?: string | null
           from_date: string
@@ -1630,7 +1628,6 @@ export type Database = {
           approver_id?: string | null
           created_at?: string
           days?: number
-          decision_note?: string | null
           decided_at?: string | null
           decided_by?: string | null
           from_date?: string
@@ -3429,7 +3426,6 @@ export type Database = {
       is_ordinary_event_type: { Args: { p_type: string }; Returns: boolean }
       latest_unseen_release: { Args: never; Returns: Json }
       leave_approver_for: { Args: { p_profile_id: string }; Returns: string }
-      leave_expire_pending: { Args: never; Returns: number }
       leave_balances: { Args: { p_profile_id?: string }; Returns: Json }
       leave_check: {
         Args: {
