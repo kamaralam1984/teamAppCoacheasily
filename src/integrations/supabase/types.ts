@@ -3022,6 +3022,29 @@ export type Database = {
           },
         ]
       }
+      task_pending_digests: {
+        Row: {
+          profile_id: string
+          sent_on: string
+        }
+        Insert: {
+          profile_id: string
+          sent_on: string
+        }
+        Update: {
+          profile_id?: string
+          sent_on?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_pending_digests_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           blocked_by: string | null
@@ -3506,6 +3529,7 @@ export type Database = {
       my_org: { Args: never; Returns: string }
       my_profile_id: { Args: never; Returns: string }
       my_pulse: { Args: never; Returns: Json }
+      my_report: { Args: { p_from: string; p_to: string }; Returns: Json }
       my_role: { Args: never; Returns: string }
       open_cycle: {
         Args: { p_end_date: string; p_name?: string }
@@ -3605,6 +3629,7 @@ export type Database = {
       }
       tasks_blocked_nudges: { Args: never; Returns: number }
       tasks_due_tick: { Args: never; Returns: number }
+      tasks_pending_digest: { Args: never; Returns: number }
       team_goals: { Args: { p_cycle_id?: string }; Returns: Json }
       team_health: { Args: never; Returns: Json }
       theme_patch_is_safe: { Args: { p: Json }; Returns: boolean }
