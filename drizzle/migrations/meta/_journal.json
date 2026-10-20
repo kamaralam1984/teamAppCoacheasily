@@ -99,6 +99,13 @@
       "when": 1792491771862,
       "tag": "0013_weekly_off_work",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792492619737,
+      "tag": "0014_el_credit_me",
+      "breakpoints": true
     }
   ]
 }
