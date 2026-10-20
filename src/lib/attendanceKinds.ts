@@ -20,6 +20,8 @@ export interface DayInfo {
   check_out: string | null;
   hours: number | null;
   note: string | null;
+  /** marked attendance on the person's own weekly off (the reason is in note) */
+  weekly_off_work?: boolean;
 }
 
 export const KIND_LABEL: Record<DayKind, string> = {

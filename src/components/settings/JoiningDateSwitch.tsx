@@ -5,6 +5,7 @@ import {
   useEarnedLeavePolicy,
   useRebuildApply,
   useRebuildPreview,
+  type CountMode,
   type RebuildRow,
 } from "@/hooks/useEarnedLeave";
 import { niceDate } from "@/lib/calendar";
@@ -26,6 +27,7 @@ export function JoiningDateSwitch() {
 
   const fromJoining = policy?.count_from === "joining_date";
   const rows: RebuildRow[] = preview.data?.people ?? [];
+  const previewMode: CountMode = preview.data?.mode_preview ?? "joining_date";
   const changed = rows.filter((r) => r.change !== 0);
   const noted = rows.filter((r) => r.note);
   const totalChange = rows.reduce((n, r) => n + r.change, 0);
@@ -49,26 +51,43 @@ export function JoiningDateSwitch() {
         )}
       </p>
 
-      <button
-        type="button"
-        className="btn3d btn3d-ghost mt-3"
-        disabled={preview.isPending}
-        onClick={() =>
-          preview.mutate(undefined, {
-            onError: (e) => toast.error((e as Error).message || "The preview couldn't be made."),
-          })
-        }
-      >
-        {preview.isPending
-          ? "Working it out…"
-          : fromJoining
-            ? "Preview a fresh count from the joining date"
-            : "Preview counting from the joining date"}
-      </button>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {(fromJoining
+          ? ([
+              ["joining_date", "Preview a fresh count from the joining date"],
+              ["punches", "Preview counting attendance days instead"],
+            ] as [CountMode, string][])
+          : ([
+              ["punches", "Preview a recount of attendance days"],
+              ["joining_date", "Preview counting from the joining date"],
+            ] as [CountMode, string][])
+        ).map(([mode, label]) => (
+          <button
+            key={mode}
+            type="button"
+            className="btn3d btn3d-ghost"
+            disabled={preview.isPending}
+            onClick={() =>
+              preview.mutate(mode, {
+                onError: (e) =>
+                  toast.error((e as Error).message || "The preview couldn't be made."),
+              })
+            }
+          >
+            {preview.isPending && preview.variables === mode ? "Working it out…" : label}
+          </button>
+        ))}
+      </div>
+      <p className="mt-2 text-[12px] leading-relaxed text-soft">
+        A recount of attendance days catches up days that were left out before, such as weekly offs
+        that were worked, without changing how days are counted.
+      </p>
 
       {preview.data ? (
         <div className="mt-4 space-y-3">
           <p className="text-sm text-ink">
+            Counting{" "}
+            <b>{previewMode === "punches" ? "attendance days" : "from the joining date"}</b>:{" "}
             <b>{changed.length}</b> of {rows.length} people would change, by{" "}
             <b>{change(totalChange)}</b> earned leave in all. Nothing has been changed yet.
           </p>
@@ -155,22 +174,29 @@ export function JoiningDateSwitch() {
               className="btn3d"
               disabled={word !== "REBUILD" || apply.isPending}
               onClick={() =>
-                apply.mutate(word, {
-                  onSuccess: (n) => {
-                    toast.success(
-                      n === 0
-                        ? "Everything already matched."
-                        : `${n} ${n === 1 ? "person" : "people"} updated.`,
-                    );
-                    setWord("");
-                    preview.reset();
+                apply.mutate(
+                  { confirm: word, mode: previewMode },
+                  {
+                    onSuccess: (n) => {
+                      toast.success(
+                        n === 0
+                          ? "Everything already matched."
+                          : `${n} ${n === 1 ? "person" : "people"} updated.`,
+                      );
+                      setWord("");
+                      preview.reset();
+                    },
+                    onError: (e) =>
+                      toast.error((e as Error).message || "The rebuild didn't go through."),
                   },
-                  onError: (e) =>
-                    toast.error((e as Error).message || "The rebuild didn't go through."),
-                })
+                )
               }
             >
-              {apply.isPending ? "Rebuilding…" : "Count from the joining date and rebuild"}
+              {apply.isPending
+                ? "Rebuilding…"
+                : previewMode === "punches"
+                  ? "Recount attendance days and rebuild"
+                  : "Count from the joining date and rebuild"}
             </button>
           </div>
         </div>

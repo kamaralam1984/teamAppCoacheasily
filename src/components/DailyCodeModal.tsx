@@ -10,7 +10,9 @@ export interface DailyCodeModalProps {
   pending?: boolean;
   error?: boolean;
   onClose: () => void;
-  onPledge: (focus: string, status: WorkMode) => void;
+  onPledge: (focus: string, status: WorkMode, offReason: string) => void;
+  /** the signed-in person's weekly off, e.g. "Monday" */
+  weeklyOff?: string | null;
 }
 
 const FALLBACK_PLEDGE = "I'm here, and I'll work honestly today";
@@ -26,9 +28,18 @@ export function DailyCodeModal({
   error,
   onClose,
   onPledge,
+  weeklyOff = null,
 }: DailyCodeModalProps) {
   const [focus, setFocus] = useState("");
   const [mode, setMode] = useState<WorkMode>("present");
+  const [offReason, setOffReason] = useState("");
+  const todayName = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    timeZone: "Asia/Kolkata",
+  });
+  /** Everybody has one weekly off and it differs from person to person. */
+  const onWeeklyOff = Boolean(weeklyOff) && weeklyOff === todayName;
+  const needsReason = onWeeklyOff && offReason.trim().length < 3;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -100,12 +111,34 @@ export function DailyCodeModal({
           </div>
         </fieldset>
 
+        {onWeeklyOff ? (
+          <div className="mt-5 rounded-[12px] border border-gold/50 bg-goldL/15 p-4">
+            <label htmlFor="dc-off" className="ce-label">
+              Today is your weekly off ({weeklyOff}). Why are you working today?
+            </label>
+            <input
+              id="dc-off"
+              className="ce-input"
+              maxLength={200}
+              required
+              value={offReason}
+              placeholder="Client launch, covering for the team…"
+              onChange={(e) => setOffReason(e.target.value)}
+            />
+            <p className="mt-1.5 text-[12px] text-soft">
+              The day counts as a working day. Your manager and HR can see the reason.
+            </p>
+          </div>
+        ) : null}
+
         <div className="mt-5">
           <button
             type="button"
             className="btn3d w-full"
-            disabled={pending}
-            onClick={() => onPledge(focus.trim().slice(0, 120), mode)}
+            disabled={pending || needsReason}
+            onClick={() =>
+              onPledge(focus.trim().slice(0, 120), mode, offReason.trim().slice(0, 200))
+            }
           >
             {pending ? "One moment…" : (code?.pledge ?? FALLBACK_PLEDGE)}
           </button>

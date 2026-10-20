@@ -21,12 +21,22 @@ const TOGGLES: { key: keyof PolicyEdit; label: string; hint: string }[] = [
   {
     key: "exclude_weekly_off",
     label: "Skip weekly offs",
-    hint: "A day worked on someone's weekly off doesn't count (it earns comp-off instead).",
+    hint: "A weekly off nobody worked isn't a working day. (A weekly off that was worked is counted: see the next switch.)",
+  },
+  {
+    key: "count_weekly_off_work",
+    label: "Count a weekly off that was worked",
+    hint: "Everybody has their own weekly off. If someone marks attendance on theirs, they have to say why, and the day counts as a working day.",
   },
   {
     key: "exclude_holidays",
     label: "Skip company holidays",
     hint: "A day worked on a holiday in the holiday calendar doesn't count.",
+  },
+  {
+    key: "count_holiday_work",
+    label: "Count a company holiday that was worked",
+    hint: "Off by default. Turn it on to count a holiday as a working day for people who marked attendance on it.",
   },
   {
     key: "count_approved_leave",
@@ -73,6 +83,8 @@ const PLAIN: Record<string, string> = {
   exclude_holidays: "skip holidays",
   count_approved_leave: "count approved leave",
   count_wfh: "count work from home",
+  count_weekly_off_work: "count worked weekly offs",
+  count_holiday_work: "count worked holidays",
   count_half_day: "count half days",
   count_during_probation: "count probation days",
   carry_forward_limit: "carry-forward limit",
@@ -105,6 +117,8 @@ export function EarnedLeavePolicyCard({ orgId }: { orgId: string | null }) {
       exclude_holidays: policy.exclude_holidays,
       count_approved_leave: policy.count_approved_leave,
       count_wfh: policy.count_wfh,
+      count_weekly_off_work: policy.count_weekly_off_work,
+      count_holiday_work: policy.count_holiday_work,
       count_half_day: policy.count_half_day,
       count_during_probation: policy.count_during_probation,
       carry_forward_limit: policy.carry_forward_limit,

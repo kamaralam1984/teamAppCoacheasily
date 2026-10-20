@@ -199,8 +199,8 @@ function Dashboard() {
     });
   }, [profile, myBirthday, birthdayKey]);
 
-  const onMark = (focus: string, status: WorkMode) => {
-    mark.mutate({ focus, status }, {
+  const onMark = (focus: string, status: WorkMode, offReason: string) => {
+    mark.mutate({ focus, status, offReason }, {
       onError: () => undefined,
       onSuccess: (res) => {
         setCodeOpen(false);
@@ -549,6 +549,7 @@ function Dashboard() {
           error={mark.isError}
           onClose={() => setCodeOpen(false)}
           onPledge={onMark}
+          weeklyOff={profile?.weekly_off ?? null}
         />
       ) : null}
 

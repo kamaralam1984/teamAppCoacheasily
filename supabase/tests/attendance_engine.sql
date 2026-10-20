@@ -468,9 +468,16 @@ BEGIN
     IF extract(dow FROM d) <> 0 THEN worked := worked + 1; END IF;
     d := d + 1; n := n + 1;
   END LOOP;
-  PERFORM pg_temp.eq('weekly off: only non-Sunday punches count', (SELECT count(*) FROM el_eligible_days(p, date '1900-01-01'))::int, worked);
-  PERFORM pg_temp.eq('weekly off: 22 punches over 3 weeks is fewer than 20 working days, so no leave yet',
+  -- by default a weekly off that was worked counts as a working day
+  PERFORM pg_temp.eq('weekly off: a worked weekly off counts by default',
+    (SELECT count(*) FROM el_eligible_days(p, date '1900-01-01'))::int, 22);
+  -- switched off, the old rule: only the non-Sunday punches count
+  UPDATE el_policy SET count_weekly_off_work = false WHERE org_id = o;
+  PERFORM pg_temp.eq('weekly off: switched off, only non-Sunday punches count',
+    (SELECT count(*) FROM el_eligible_days(p, date '1900-01-01'))::int, worked);
+  PERFORM pg_temp.eq('weekly off: ...and 22 punches over 3 weeks is then fewer than 20 working days, so no leave yet',
     el_run_credits(p) = 0, worked < 20);
+  UPDATE el_policy SET count_weekly_off_work = true WHERE org_id = o;
 END $$;
 
 ROLLBACK;

@@ -51,6 +51,8 @@ export type PolicyEdit = Pick<
   | "exclude_holidays"
   | "count_approved_leave"
   | "count_wfh"
+  | "count_weekly_off_work"
+  | "count_holiday_work"
   | "count_half_day"
   | "count_during_probation"
   | "carry_forward_limit"
@@ -140,8 +142,11 @@ export interface RebuildRow {
   note: string | null;
 }
 
+export type CountMode = "punches" | "joining_date";
+
 export interface RebuildPreview {
-  mode_now: "punches" | "joining_date";
+  mode_now: CountMode;
+  mode_preview: CountMode;
   today: string;
   people: RebuildRow[];
 }
@@ -149,8 +154,8 @@ export interface RebuildPreview {
 /** HR/Admin: what counting from the joining date would do to everyone's earned leave. Changes nothing. */
 export function useRebuildPreview() {
   return useMutation({
-    mutationFn: async (): Promise<RebuildPreview> => {
-      const { data, error } = await supabase.rpc("el_rebuild_preview");
+    mutationFn: async (mode: CountMode): Promise<RebuildPreview> => {
+      const { data, error } = await supabase.rpc("el_rebuild_preview", { p_mode: mode });
       if (error) throw error;
       return data as unknown as RebuildPreview;
     },
@@ -161,8 +166,11 @@ export function useRebuildPreview() {
 export function useRebuildApply() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (confirm: string): Promise<number> => {
-      const { data, error } = await supabase.rpc("el_rebuild_apply", { p_confirm: confirm });
+    mutationFn: async (input: { confirm: string; mode: CountMode }): Promise<number> => {
+      const { data, error } = await supabase.rpc("el_rebuild_apply", {
+        p_confirm: input.confirm,
+        p_mode: input.mode,
+      });
       if (error) throw error;
       return data ?? 0;
     },

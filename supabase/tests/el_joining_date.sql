@@ -157,7 +157,9 @@ DECLARE
   opal uuid := (SELECT v FROM ids WHERE k='opal'); nodate uuid := (SELECT v FROM ids WHERE k='nodate');
   today date := (now() AT TIME ZONE 'Asia/Kolkata')::date; r jsonb; row_j jsonb; row_m jsonb; row_o jsonb;
   nj int := pg_temp.non_sundays(today - 59, today - 1);
-  nm int := pg_temp.non_sundays(today - 60, today - 1);
+  nm int := pg_temp.non_sundays(today - 60, today - 1)
+            + (SELECT count(*)::int FROM attendance WHERE profile_id = (SELECT v FROM ids WHERE k='maya')
+                                                       AND extract(dow FROM date) = 0 AND date < today);
 BEGIN
   PERFORM pg_temp.as_user(joan);
   PERFORM pg_temp.fails('preview: a member cannot see it', 'SELECT el_rebuild_preview()', 'Not allowed');
@@ -190,7 +192,10 @@ DECLARE
   joan uuid := (SELECT v FROM ids WHERE k='joan'); maya uuid := (SELECT v FROM ids WHERE k='maya'); opal uuid := (SELECT v FROM ids WHERE k='opal');
   today date := (now() AT TIME ZONE 'Asia/Kolkata')::date; n int; audits_before int;
   nj int := pg_temp.non_sundays(today - 59, today - 1);
-  nm int := pg_temp.non_sundays(today - 60, today - 1);
+  -- Maya worked some Sundays, and a worked weekly off counts
+  nm int := pg_temp.non_sundays(today - 60, today - 1)
+            + (SELECT count(*)::int FROM attendance WHERE profile_id = (SELECT v FROM ids WHERE k='maya')
+                                                       AND extract(dow FROM date) = 0 AND date < today);
 BEGIN
   PERFORM pg_temp.as_user(hr);
   PERFORM pg_temp.fails('rebuild: needs the word REBUILD', 'SELECT el_rebuild_apply(NULL)', 'Type REBUILD');
@@ -208,7 +213,7 @@ BEGIN
        ON a.profile_id = b.profile_id AND a.period_end < b.period_end WHERE a.profile_id = joan), true);
   PERFORM pg_temp.eq('rebuild: Maya''s credits are recounted', (SELECT coalesce(sum(credited), 0) FROM el_ledger WHERE profile_id = maya)::int, nm / 20);
   PERFORM pg_temp.eq('rebuild: Maya''s old row is kept in the archive, not deleted',
-    (SELECT count(*) FROM el_ledger_archive WHERE profile_id = maya AND archived_reason LIKE 'rebuilt%')::int, 1);
+    (SELECT count(*) FROM el_ledger_archive WHERE profile_id = maya AND archived_reason LIKE 'recounted%')::int, 1);
   PERFORM pg_temp.eq('rebuild: the balance includes the opening', (attendance_summary(opal)->>'earned_available')::int, 3 + pg_temp.non_sundays(today - 90, today - 1) / 20);
   PERFORM pg_temp.eq('rebuild: the summary says where counting starts', attendance_summary(joan)->>'count_from', 'joining_date');
   PERFORM pg_temp.eq('rebuild: ...and how many days have counted', (attendance_summary(joan)->>'el_days_total')::int, nj);

@@ -87,13 +87,19 @@ export function useMarkAttendance(profileId?: string | null, orgId?: string | nu
     mutationFn: async (input: {
       focus?: string;
       status?: WorkMode;
+      /** required on the person's own weekly off: why they are working today */
+      offReason?: string;
     }): Promise<MarkResult & { summary: AttendanceSummary | null }> => {
       if (!profileId || !orgId) throw new Error("Your profile isn't set up yet.");
 
       // One trip: the insert, the comp-off look-up and the summary all happen in Postgres.
       const { data, error } = await supabase.rpc(
         "mark_attendance" as never,
-        { p_focus: input.focus?.trim() || null, p_status: input.status ?? "present" } as never,
+        {
+          p_focus: input.focus?.trim() || null,
+          p_status: input.status ?? "present",
+          p_off_reason: input.offReason?.trim() || null,
+        } as never,
       );
       if (error) throw error;
 

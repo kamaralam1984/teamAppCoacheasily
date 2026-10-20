@@ -131,7 +131,7 @@ export function AttendanceCalendar({
                 <>
                   <span className="text-[13px] font-bold">{dayNumber(d.date)}</span>
                   <span className="mt-0.5 block truncate text-[9px] leading-tight font-semibold">
-                    {attended(d.kind) ? (d.check_in ?? "") : d.kind === "absent" ? "Absent" : ""}
+                    {attended(d.kind) ? `${d.check_in ?? ""}${d.weekly_off_work ? " ★" : ""}` : d.kind === "absent" ? "Absent" : ""}
                   </span>
                 </>
               );
@@ -187,6 +187,9 @@ export function AttendanceCalendar({
                 {KIND_LABEL[k]}
               </li>
             ))}
+            <li className="rounded-full bg-cream px-2.5 py-1 text-[11px] font-bold text-soft">
+              ★ Worked on a weekly off (tap a day to see why)
+            </li>
           </ul>
         </>
       )}
