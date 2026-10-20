@@ -17,6 +17,7 @@ export interface GoalProgress {
   totals: number[];
   week_totals: number[];
   prev_week_totals: number[];
+  /** number goals: how far the figure moved this week / the week before (not a sum of the figures) */
   week_sum: number;
   prev_week_sum: number;
   week_rate: number | null;
@@ -311,7 +312,54 @@ export function weekLine(goal: Goal, p: GoalProgress | null): string | null {
     return `This week: ${flow}${rate ? ` · ${rate}` : ""}${delta ? ` ${delta}` : ""}`;
   }
   const delta = deltaLabel(p.week_sum, p.prev_week_sum);
-  return `This week: ${fmt(p.week_sum)} ${goal.unit ?? ""}`.trim() + (delta ? ` · ${delta}` : "");
+  return (
+    `This week: moved ${signed(p.week_sum)} ${goal.unit ?? ""}`.trim() + (delta ? ` · ${delta}` : "")
+  );
+}
+
+/** "+5", "−45", "0": a movement, never a bare number that could be mistaken for a total. */
+export function signed(n: number): string {
+  if (n === 0 || Number.isNaN(n)) return "0";
+  return `${n > 0 ? "+" : "−"}${fmt(Math.abs(n))}`;
+}
+
+/**
+ * Where a number goal stood just before a day: the latest figure logged before it, or the starting
+ * number when nothing had been logged yet.
+ */
+export function levelBefore(entries: GoalEntry[], day: string, baseline: number): number {
+  let best: GoalEntry | null = null;
+  for (const e of entries) {
+    if (e.value === null || e.date >= day) continue;
+    if (!best || e.date > best.date) best = e;
+  }
+  return best ? Number(best.value) : baseline;
+}
+
+/**
+ * How far a number goal's figure travelled in each week since the cycle began. The figure logged is where
+ * the person is, so a week's movement is end-of-week minus start-of-week, not the sum of the figures.
+ */
+export function weeklyMovement(
+  entries: GoalEntry[],
+  cycleStart: string,
+  baseline: number,
+  today = istToday(),
+): { start: string; value: number }[] {
+  const out: { start: string; value: number }[] = [];
+  let start = cycleStart;
+  let guard = 0;
+  while (start <= today && guard < 60) {
+    const nextStart = addDays(start, 7);
+    out.push({
+      start,
+      value:
+        levelBefore(entries, nextStart, baseline) - levelBefore(entries, start, baseline),
+    });
+    start = nextStart;
+    guard += 1;
+  }
+  return out;
 }
 
 /** Which of the last n days have no entry — so people can fill the gaps. */

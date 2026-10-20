@@ -29,6 +29,8 @@ export function CyclePanel({
   const isWed = weekdayName(end) === "Wednesday";
   const near = isWed ? end : nearestWednesday(end);
   const length = daysBetween(today, end);
+  const ended = Boolean(cycle && cycle.end_date < today);
+  const endedDays = cycle ? daysBetween(cycle.end_date, today) : 0;
 
   return (
     <section className="ce-rise ce-card p-6" style={style}>
@@ -41,14 +43,27 @@ export function CyclePanel({
           {cycle ? (
             <p className="mt-1 text-[13px] text-soft">
               {shortDate(cycle.start_date)} → {shortDate(cycle.end_date)} ·{" "}
-              {Math.max(0, daysBetween(today, cycle.end_date))} days to the strategic meeting
+              {ended
+                ? `ended ${endedDays} day${endedDays === 1 ? "" : "s"} ago`
+                : `${Math.max(0, daysBetween(today, cycle.end_date))} days to the strategic meeting`}
+            </p>
+          ) : null}
+          {cycle && ended ? (
+            <p className="mt-3 rounded-xl border border-saff/40 bg-saff/10 p-3 text-[13px] leading-relaxed font-semibold text-[color:var(--ce-saffBtn)]">
+              {canOpen
+                ? "This cycle has ended. Open the next cycle so everyone can write fresh goals."
+                : "This cycle has ended. HR will open the next one; keep logging your numbers until then and they stay on this cycle."}
             </p>
           ) : null}
         </div>
         {canOpen ? (
           <button
             type="button"
-            className="min-h-11 rounded-full border border-line px-4 text-[12px] font-bold text-goldD"
+            className={
+              ended && !open
+                ? "btn3d"
+                : "min-h-11 rounded-full border border-line px-4 text-[12px] font-bold text-goldD"
+            }
             onClick={() => setOpen((o) => !o)}
           >
             {open ? "Close" : "Open the next cycle"}
@@ -94,11 +109,7 @@ export function CyclePanel({
             <p className="mt-3 text-[13px] font-semibold text-[color:var(--ce-saffBtn)]">
               ⚠️ that is a {weekdayName(end)}; your meetings run on Wednesdays — nearest is{" "}
               {shortDate(near)}.{" "}
-              <button
-                type="button"
-                className="underline"
-                onClick={() => setEnd(near)}
-              >
+              <button type="button" className="underline" onClick={() => setEnd(near)}>
                 Use it
               </button>
             </p>

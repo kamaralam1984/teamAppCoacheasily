@@ -79,6 +79,8 @@ export const HELP_TOPICS: HelpTopic[] = [
       "Log your number once a day, from “Today's numbers” on the dashboard or from the goal itself on the Goals page. You can back-date a day you missed, but never a day that has not happened.",
       "The goal always shows three things: where you started, where you are now (your latest number), and where you are going. Progress is how far you have travelled from the start towards the target, so going from 0 to 7 of 20 is counted as real work.",
       "The status tells you how you are doing against an even pace through the cycle. On track means close to that pace. At risk means you are 20 points or more behind it. Completed means the target is reached. Overdue means the cycle ended and the target was not reached.",
+      "“This week” shows how far your number moved in the week (for example +8 tickets), compared with the week before. It is not the sum of the numbers you logged, so a running total of 3, 5, 8 reads as +8, not 16.",
+      "Under each goal, “Tasks for this goal” lists the tasks that move it, shows how many are done, and lets you add one on the spot. When you finish one of those tasks, the app reminds you to put in the new number.",
       "Every week, write a line about what you will do to move the numbers, and fill in the weekly review. Add milestones for the big steps and comments when something changes. Your manager is told when you log numbers and when a goal slips.",
       "To see everything you logged for any stretch of days, open My report.",
     ],
@@ -207,7 +209,8 @@ export const HELP_TOPICS: HelpTopic[] = [
     title: "Cycles, and closing one off",
     group: "Goals and numbers",
     body: [
-      "HR opens and closes cycles. When one closes, the last-cycle card asks where you actually finished so the record is true.",
+      "HR opens and closes cycles. When a cycle passes its end date the Goals page says it has ended, and HR and admin are told three days before and again the day after, so the next one is not forgotten. Until HR opens the next cycle, numbers you log still count on the ended one.",
+      "When a new cycle opens, the last-cycle card asks where you actually finished so the record is true.",
       "You can carry a goal into the next cycle. It brings the closing number across as the new starting point, and the old target with it.",
       "Goals are archived, never deleted. What was logged stays logged.",
     ],

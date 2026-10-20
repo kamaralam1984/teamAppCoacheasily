@@ -2,6 +2,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 
 import { GoalCollab, GoalStatusChip } from "@/components/goals/GoalCollab";
+import { GoalTasks } from "@/components/goals/GoalTasks";
 import { ProgressNumbers } from "@/components/goals/ProgressNumbers";
 import { Ring } from "@/components/goals/Ring";
 import { StepAdvice } from "@/components/goals/StepAdvice";
@@ -276,6 +277,10 @@ export function GoalCard({ item, editable, onEdit, canPurge = false, style }: Pr
           <br />
           {goal.learnings}
         </p>
+      ) : null}
+
+      {editable ? (
+        <GoalTasks goalId={goal.id} profileId={goal.profile_id} orgId={goal.org_id} />
       ) : null}
 
       <GoalCollab goalId={goal.id} ownerId={goal.profile_id} />

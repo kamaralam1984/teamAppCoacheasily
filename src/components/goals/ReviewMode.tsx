@@ -12,6 +12,8 @@ import {
   deltaLabel,
   fmt,
   istToday,
+  signed,
+  weeklyMovement,
   type Cycle,
   type GoalEntry,
   type GoalWithProgress,
@@ -124,22 +126,25 @@ function weeklyTrend(
   cycleStart: string,
   kind: string,
   stageCount: number,
+  baseline: number,
 ): Bucket[] {
   const today = istToday();
+  if (!(kind === "funnel" && stageCount >= 2)) {
+    return weeklyMovement(entries, cycleStart, baseline, today).map((w) => ({
+      start: w.start,
+      label: dayLabel(w.start),
+      value: w.value,
+    }));
+  }
   const out: Bucket[] = [];
   let start = cycleStart;
   let guard = 0;
   while (start <= today && guard < 30) {
     const end = addDays(start, 6);
     const inWeek = entries.filter((e) => e.date >= start && e.date <= end);
-    let value = 0;
-    if (kind === "funnel" && stageCount >= 2) {
-      const first = inWeek.reduce((s, e) => s + (e.counts?.[0] ?? 0), 0);
-      const last = inWeek.reduce((s, e) => s + (e.counts?.[stageCount - 1] ?? 0), 0);
-      value = first > 0 ? Math.round((last / first) * 1000) / 10 : 0;
-    } else {
-      value = inWeek.reduce((s, e) => s + Number(e.value ?? 0), 0);
-    }
+    const first = inWeek.reduce((s, e) => s + (e.counts?.[0] ?? 0), 0);
+    const last = inWeek.reduce((s, e) => s + (e.counts?.[stageCount - 1] ?? 0), 0);
+    const value = first > 0 ? Math.round((last / first) * 1000) / 10 : 0;
     out.push({ start, label: dayLabel(start), value });
     start = addDays(start, 7);
     guard += 1;
@@ -153,10 +158,10 @@ function Slide({ cycle, slide }: { cycle: Cycle; slide: ReviewSlide }) {
   const stageCount = goal.stages?.length ?? 0;
 
   const buckets = useMemo(
-    () => weeklyTrend(entries ?? [], cycle.start_date, goal.kind, stageCount),
-    [entries, cycle.start_date, goal.kind, stageCount],
+    () => weeklyTrend(entries ?? [], cycle.start_date, goal.kind, stageCount, goal.baseline),
+    [entries, cycle.start_date, goal.kind, stageCount, goal.baseline],
   );
-  const peak = Math.max(1, ...buckets.map((b) => b.value));
+  const peak = Math.max(1, ...buckets.map((b) => Math.abs(b.value)));
 
   const thisWeek = goal.kind === "funnel" ? p?.week_rate ?? null : p?.week_sum ?? null;
   const lastWeek = goal.kind === "funnel" ? p?.prev_week_rate ?? null : p?.prev_week_sum ?? null;
@@ -190,7 +195,9 @@ function Slide({ cycle, slide }: { cycle: Cycle; slide: ReviewSlide }) {
         <div className="ce-card p-5">
           <p className="ce-label">This week vs last week</p>
           <p className="mt-2 font-display text-3xl text-ink sm:text-4xl">
-            {thisWeek === null ? "—" : `${fmt(thisWeek)}${suffix ? ` ${suffix}` : ""}`}
+            {thisWeek === null
+              ? "—"
+              : `${goal.kind === "funnel" ? fmt(thisWeek) : signed(thisWeek)}${suffix ? ` ${suffix}` : ""}`}
           </p>
           <p className="mt-1 text-[15px] font-bold text-soft">
             {deltaLabel(thisWeek, lastWeek) ?? "no numbers last week"}
@@ -227,11 +234,11 @@ function Slide({ cycle, slide }: { cycle: Cycle; slide: ReviewSlide }) {
           {buckets.map((b) => (
             <div key={b.start} className="flex min-w-0 flex-1 flex-col items-center gap-1">
               <span className="text-[12px] font-bold text-ink sm:text-[14px]">
-                {b.value === 0 ? "" : fmt(b.value)}
+                {b.value === 0 ? "" : goal.kind === "funnel" ? fmt(b.value) : signed(b.value)}
               </span>
               <div
                 className="w-full rounded-t-md bg-gradient-to-t from-gold to-goldL"
-                style={{ height: `${Math.max(6, (b.value / peak) * 120)}px` }}
+                style={{ height: `${Math.max(6, (Math.abs(b.value) / peak) * 120)}px` }}
               />
               <span className="truncate text-[10px] text-soft sm:text-[12px]">{b.label}</span>
             </div>

@@ -77,7 +77,14 @@ function Page() {
   const saveReflection = useSaveReflection(me?.id ?? null, me?.org_id ?? null);
   useBlockedNudge(Boolean(me));
 
-  const [celebration, setCelebration] = useState<string | null>(null);
+  const [celebration, setCelebrationText] = useState<string | null>(null);
+  const [celebrationAction, setCelebrationAction] = useState<{ label: string; href: string } | null>(
+    null,
+  );
+  const setCelebration = (message: string | null, action: { label: string; href: string } | null = null) => {
+    setCelebrationText(message);
+    setCelebrationAction(action);
+  };
 
   const mine = useMemo(() => (tasks ?? []).filter((t) => t.owner_id === me?.id), [tasks, me?.id]);
   const groups = useMemo(() => groupTasks(mine, today), [mine, today]);
@@ -102,6 +109,12 @@ function Page() {
     if (handedOver && task.owner_id === me?.id) {
       setCelebration(
         `“${task.title}” is with ${nameOf(task.created_by) ?? "the person who asked"} for review.`,
+      );
+    } else if (task.goal_id && goalNameOf(task.goal_id)) {
+      // a task that moves a goal: remind them the number is theirs to update
+      setCelebration(
+        `“${task.title}” is done. It was for “${goalNameOf(task.goal_id)}” — put in today's number.`,
+        { label: "Update the goal →", href: "/goals" },
       );
     } else {
       setCelebration(`“${task.title}” is done. One less thing.`);
@@ -265,7 +278,11 @@ function Page() {
       ) : null}
 
       {celebration ? (
-        <Celebrate message={celebration} onDone={() => setCelebration(null)} />
+        <Celebrate
+          message={celebration}
+          action={celebrationAction}
+          onDone={() => setCelebration(null)}
+        />
       ) : null}
     </AppShell>
   );
