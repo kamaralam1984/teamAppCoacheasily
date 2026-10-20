@@ -22,7 +22,6 @@ export type Database = {
           focus: string | null
           id: string
           marked_at: string
-          off_day_reason: string | null
           on_time: boolean | null
           org_id: string
           profile_id: string
@@ -35,7 +34,6 @@ export type Database = {
           focus?: string | null
           id?: string
           marked_at?: string
-          off_day_reason?: string | null
           on_time?: boolean | null
           org_id: string
           profile_id: string
@@ -48,7 +46,6 @@ export type Database = {
           focus?: string | null
           id?: string
           marked_at?: string
-          off_day_reason?: string | null
           on_time?: boolean | null
           org_id?: string
           profile_id?: string
@@ -854,8 +851,6 @@ export type Database = {
           count_during_probation: boolean
           count_from: string
           count_half_day: boolean
-          count_holiday_work: boolean
-          count_weekly_off_work: boolean
           count_wfh: boolean
           credit_amount: number
           exclude_holidays: boolean
@@ -874,8 +869,6 @@ export type Database = {
           count_during_probation?: boolean
           count_from?: string
           count_half_day?: boolean
-          count_holiday_work?: boolean
-          count_weekly_off_work?: boolean
           count_wfh?: boolean
           credit_amount?: number
           exclude_holidays?: boolean
@@ -894,8 +887,6 @@ export type Database = {
           count_during_probation?: boolean
           count_from?: string
           count_half_day?: boolean
-          count_holiday_work?: boolean
-          count_weekly_off_work?: boolean
           count_wfh?: boolean
           credit_amount?: number
           exclude_holidays?: boolean
@@ -3408,11 +3399,8 @@ export type Database = {
           previous_balance: number
         }[]
       }
-      el_rebuild_apply: {
-        Args: { p_confirm?: string; p_mode?: string }
-        Returns: number
-      }
-      el_rebuild_preview: { Args: { p_mode?: string }; Returns: Json }
+      el_rebuild_apply: { Args: { p_confirm?: string }; Returns: number }
+      el_rebuild_preview: { Args: never; Returns: Json }
       el_recalculate: { Args: never; Returns: number }
       el_run_all: { Args: never; Returns: number }
       el_run_credits: {
@@ -3497,7 +3485,7 @@ export type Database = {
       }
       manages: { Args: { target_id: string }; Returns: boolean }
       mark_attendance: {
-        Args: { p_focus?: string; p_off_reason?: string; p_status?: string }
+        Args: { p_focus?: string; p_status?: string }
         Returns: Json
       }
       mark_release_seen: { Args: { p_release_id: string }; Returns: undefined }
