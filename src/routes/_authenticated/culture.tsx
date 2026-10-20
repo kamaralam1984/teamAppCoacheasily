@@ -12,6 +12,7 @@ import {
 import { useRecognitions } from "@/hooks/useCulture";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useWarriors } from "@/hooks/useWarriors";
+import { compareTeam } from "@/lib/teamOrder";
 
 export const Route = createFileRoute("/_authenticated/culture")({
   head: () => ({
@@ -49,6 +50,21 @@ function Page() {
   const [tab, setTab] = useState<Tab>("wall");
 
   const feed = useMemo(() => rows ?? [], [rows]);
+
+  /** Appreciation and badges stay newest-first; the "joined" cards are the team, listed in order of post. */
+  const wall = useMemo(() => {
+    const byId = new Map((people ?? []).map((p) => [p.id, p]));
+    const moments = feed.filter((r) => r.kind !== "welcome");
+    const team = feed
+      .filter((r) => r.kind === "welcome")
+      .map((r) => ({ row: r, who: byId.get(r.to_id) }))
+      .filter((x) => x.who === undefined || x.who.status === "active")
+      .sort((a, b) =>
+        a.who && b.who ? compareTeam(a.who, b.who) : a.who ? -1 : b.who ? 1 : 0,
+      )
+      .map((x) => x.row);
+    return { moments, team };
+  }, [feed, people]);
 
   return (
     <AppShell>
@@ -108,16 +124,38 @@ function Page() {
                 </p>
               </section>
             ) : (
-              <div className="space-y-3">
-                {feed.map((r, i) => (
-                  <RecognitionCard
-                    key={r.id}
-                    row={r}
-                    people={people ?? []}
-                    style={{ animationDelay: `${Math.min(i, 8) * 30}ms` }}
-                  />
-                ))}
-              </div>
+              <>
+                {wall.moments.length > 0 ? (
+                  <div className="space-y-3">
+                    {wall.moments.map((r, i) => (
+                      <RecognitionCard
+                        key={r.id}
+                        row={r}
+                        people={people ?? []}
+                        style={{ animationDelay: `${Math.min(i, 8) * 30}ms` }}
+                      />
+                    ))}
+                  </div>
+                ) : null}
+                {wall.team.length > 0 ? (
+                  <section aria-label="The team" className="space-y-3">
+                    <div>
+                      <h2 className="font-display text-2xl text-ink">The team</h2>
+                      <p className="text-[12px] text-soft">
+                        Founder first, then People & Culture, then everyone by role and post.
+                      </p>
+                    </div>
+                    {wall.team.map((r, i) => (
+                      <RecognitionCard
+                        key={r.id}
+                        row={r}
+                        people={people ?? []}
+                        style={{ animationDelay: `${Math.min(i, 8) * 30}ms` }}
+                      />
+                    ))}
+                  </section>
+                ) : null}
+              </>
             )}
           </>
         ) : tab === "shelf" ? (
