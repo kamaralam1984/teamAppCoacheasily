@@ -37,12 +37,27 @@ describe("How the team is listed", () => {
       ["Purushottam", "Shubhangi", "Supriya"],
     );
   });
-  test("within the rest, managers come before members, and heads before executives", () => {
+  test("within the rest, the post decides first: Head, then Manager, then the rest", () => {
     const rest = teamOrder([caller, salesExec, salesMgr, techExec, contentHead]).map(
       (x) => x.full_name,
     );
-    equal(rest[0], "Saurabh");
-    equal(rest.indexOf("Milan") < rest.indexOf("Sushma"), true);
+    equal(rest[0], "Milan");
+    equal(rest[1], "Saurabh");
+  });
+  test("a Head who is a Warrior still sits above a Manager", () => {
+    const techHead = p("Kamar", "AI Developer Engineer — Tech Head", "member", "Technology");
+    const seniorCoach = p(
+      "Mahadev",
+      "Senior Private Coach — MCA & MCA Elite",
+      "member",
+      "Private Coaching",
+    );
+    const sorted = teamOrder([seniorCoach, salesMgr, techHead, salesExec]).map((x) => x.full_name);
+    deepEqual(sorted, ["Kamar", "Saurabh", "Mahadev", "Sushma"]);
+  });
+  test("with the same post, the access role breaks the tie", () => {
+    const warriorMgr = p("Wanda", "Sales Manager", "member", "Sales");
+    equal(compareTeam(salesMgr, warriorMgr) < 0, true);
   });
   test("part-timers come last", () => {
     equal(teamOrder([caller, salesExec, techExec]).at(-1)!.full_name, "Sarika");

@@ -142,7 +142,7 @@ function Page() {
                     <div>
                       <h2 className="font-display text-2xl text-ink">The team</h2>
                       <p className="text-[12px] text-soft">
-                        Founder first, then People & Culture, then everyone by role and post.
+                        Founder first, then People & Culture, then everyone by post and role.
                       </p>
                     </div>
                     {wall.team.map((r, i) => (

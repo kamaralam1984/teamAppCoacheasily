@@ -1,8 +1,8 @@
 import { DEPARTMENTS, type Profile } from "@/lib/warriors";
 
 /**
- * How the team is listed: the founder first, then People & Culture, then everybody else by role and by post
- * (heads and managers before executives), then by department, then by name.
+ * How the team is listed: the founder first, then People & Culture, then everybody else by post (heads, then
+ * managers, then seniors, then the rest), then by access role, then by department, then by name.
  */
 
 const FOUNDER = /\b(founder|co-founder|ceo|chief executive|managing director)\b/i;
@@ -38,12 +38,13 @@ export function tier(p: Profile): 0 | 1 | 2 {
 export function compareTeam(a: Profile, b: Profile): number {
   const byTier = tier(a) - tier(b);
   if (byTier !== 0) return byTier;
+  // the post comes first: a Head sits above a Manager, a Manager above a Senior, whatever the access role
+  const bySeniority = seniority(a.title) - seniority(b.title);
+  if (bySeniority !== 0) return bySeniority;
   if (tier(a) === 2) {
     const byRole = (ROLE_ORDER[a.role] ?? 2) - (ROLE_ORDER[b.role] ?? 2);
     if (byRole !== 0) return byRole;
   }
-  const bySeniority = seniority(a.title) - seniority(b.title);
-  if (bySeniority !== 0) return bySeniority;
   const dept = (p: Profile) => {
     const i = DEPARTMENTS.indexOf((p.department ?? "") as (typeof DEPARTMENTS)[number]);
     return i === -1 ? DEPARTMENTS.length : i;
