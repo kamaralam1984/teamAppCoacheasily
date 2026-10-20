@@ -3568,7 +3568,6 @@ export type Database = {
           working_days: number
         }[]
       }
-      my_report: { Args: { p_from: string; p_to: string }; Returns: Json }
       report_run: {
         Args: { p_from?: string; p_report: string; p_to?: string }
         Returns: Json
