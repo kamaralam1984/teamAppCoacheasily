@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useOrgSettings } from "@/hooks/useOrg";
+import { BirthdayTakeover } from "@/components/birthday/BirthdayTakeover";
 import { useLatestUnseenRelease } from "@/hooks/useReleases";
 import { PeopleSearch } from "@/components/PeopleSearch";
 import { useDeveloperAccess } from "@/hooks/useDeveloper";
@@ -32,6 +33,7 @@ const BASE_TABS = [
   { label: "Culture", to: "/culture" },
   { label: "Leave", to: "/leave" },
   { label: "Attendance", to: "/attendance" },
+  { label: "My report", to: "/my-report" },
   { label: "Warriors", to: "/warriors" },
   { label: "Ideas", to: "/ideas" },
 ] as const;
@@ -93,6 +95,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="relative z-10 min-h-screen">
       <OfflineGate />
+      <BirthdayTakeover me={profile} showTeam={orgSettings?.team_birthdays !== false} />
       <header className="sticky top-0 z-40 bg-night">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
           <Link to="/dashboard" className="flex items-center gap-2.5">

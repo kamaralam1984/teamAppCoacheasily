@@ -36,7 +36,11 @@ export function WeekCard({ tasks, reflections, saving, onSave, style }: WeekCard
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="mt-2 text-[13px] text-soft">{pct}% of the last seven days finished.</p>
+      <p className="mt-2 text-[13px] text-soft">
+        {total === 0
+          ? "No tasks were due in the last seven days."
+          : `${pct}% of the last seven days finished.`}
+      </p>
 
       <div className="mt-6 border-t border-line pt-5">
         <label htmlFor="wk-reflect" className="ce-label">

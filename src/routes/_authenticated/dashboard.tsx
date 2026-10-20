@@ -49,7 +49,7 @@ import {
   punchMessage,
 } from "@/lib/punctuality";
 import { shortDate } from "@/lib/warriors";
-import { birthdaysOn, firstName, isBirthdayToday, istToday } from "@/lib/birthdays";
+import { birthdaysOn, isBirthdayToday, istToday } from "@/lib/birthdays";
 import { useTheme } from "@/hooks/useTheme";
 import { HelpLink } from "@/components/help/HelpLink";
 import { Tour } from "@/components/help/Tour";
@@ -187,17 +187,6 @@ function Dashboard() {
         : [],
     [roster, istDay, profile?.id, showBirthdays],
   );
-
-  /** Once a day, on first load — never on every navigation. */
-  const birthdayKey = `ce-birthday-${profile?.id ?? "me"}-${istDay}`;
-  useEffect(() => {
-    if (!profile || !myBirthday) return;
-    if (window.localStorage.getItem(birthdayKey) === "1") return;
-    window.localStorage.setItem(birthdayKey, "1");
-    setCelebration({
-      message: `Happy birthday, ${firstName(profile.full_name)}. 🎉 The whole team is glad you're here.`,
-    });
-  }, [profile, myBirthday, birthdayKey]);
 
   const onMark = (focus: string, status: WorkMode, offReason: string) => {
     mark.mutate({ focus, status, offReason }, {

@@ -42,3 +42,32 @@ export function firstName(full: string): string {
 }
 
 export const BIRTHDAY_WISH_PREFIX = "🎂 Happy birthday";
+
+export interface BirthdayPlan {
+  /** the signed-in person's own birthday today: they get the full-screen greeting */
+  mine: boolean;
+  /** colleagues whose birthday is today, for the "today's birthdays" popup */
+  others: Profile[];
+}
+
+/**
+ * What to show when the app opens. The person whose day it is sees the full-screen greeting first; everybody
+ * sees who else is celebrating, unless the organisation has switched team birthdays off.
+ */
+export function birthdayPlan(
+  me: Profile | null | undefined,
+  roster: Profile[],
+  dateIso: string,
+  showTeam = true,
+): BirthdayPlan {
+  if (!me) return { mine: false, others: [] };
+  return {
+    mine: isBirthdayOn(me, dateIso),
+    others: showTeam ? birthdaysOn(roster, dateIso).filter((p) => p.id !== me.id) : [],
+  };
+}
+
+/** One look per person per day per browser tab: a reload shows it again, moving around the app does not. */
+export function birthdaySeenKey(profileId: string, dateIso: string): string {
+  return `ce-birthday-seen-${profileId}-${dateIso}`;
+}

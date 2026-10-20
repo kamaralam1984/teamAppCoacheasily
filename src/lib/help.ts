@@ -5,6 +5,7 @@
  */
 
 export type HelpGroup =
+  | "Start here"
   | "Your day"
   | "Goals and numbers"
   | "Leave"
@@ -16,6 +17,7 @@ export type HelpGroup =
   | "For HR";
 
 export const HELP_GROUPS: HelpGroup[] = [
+  "Start here",
   "Your day",
   "Goals and numbers",
   "Leave",
@@ -53,6 +55,79 @@ export interface HelpTopic {
 }
 
 export const HELP_TOPICS: HelpTopic[] = [
+  /* ── Start here ───────────────────────────────────────── */
+  {
+    key: "first-goal",
+    title: "Set your first goal, step by step",
+    group: "Start here",
+    body: [
+      "1. Open Goals. A goal lives inside a cycle, and HR opens the cycle. If you see no cycle, ask HR to open one first.",
+      "2. Press “+ Write a goal”. You will see a few ready-made starting points for your department. Pick one, or write your own from nothing.",
+      "3. Name it. Use something you will be able to say “done” about, like “Support tickets resolved” or “GHL modules completed”.",
+      "4. Say what you are counting. A number goal follows one figure (tickets, percent, minutes). A funnel goal follows steps in order, like Calls → Connected → Closed, and measures how many make it to the end.",
+      "5. Say where you are today. That is your starting number. Use 0 for something you count up from nothing, and today's real figure for a percent or a level you already have.",
+      "6. Say where you will be at the end of the cycle. That is your target. A target below your start works too, for things that should come down, like downtime.",
+      "7. Save. You can edit the goal later, but changing the start or the target after you have logged numbers changes how far along it looks, so settle them early.",
+      "Worth knowing: for a number goal, the figure you log is where you are NOW, as a running total (3, then 5, then 8), not just today's count. Funnel goals are different: each day you enter that day's count at every step.",
+    ],
+  },
+  {
+    key: "track-goal",
+    title: "Track a goal day by day",
+    group: "Start here",
+    body: [
+      "Log your number once a day, from “Today's numbers” on the dashboard or from the goal itself on the Goals page. You can back-date a day you missed, but never a day that has not happened.",
+      "The goal always shows three things: where you started, where you are now (your latest number), and where you are going. Progress is how far you have travelled from the start towards the target, so going from 0 to 7 of 20 is counted as real work.",
+      "The status tells you how you are doing against an even pace through the cycle. On track means close to that pace. At risk means you are 20 points or more behind it. Completed means the target is reached. Overdue means the cycle ended and the target was not reached.",
+      "Every week, write a line about what you will do to move the numbers, and fill in the weekly review. Add milestones for the big steps and comments when something changes. Your manager is told when you log numbers and when a goal slips.",
+      "To see everything you logged for any stretch of days, open My report.",
+    ],
+  },
+  {
+    key: "first-task",
+    title: "Make a task and finish it",
+    group: "Start here",
+    body: [
+      "1. Open Tasks and type in the “Add a task” line. You can set a date, a part of the day (morning, afternoon, evening), a priority, and tie it to one of your goals.",
+      "2. Have a lot to write down? Paste it all into the Brain dump. It proposes separate tasks, and nothing is saved until you confirm.",
+      "3. Each morning pick the few things that matter most today and commit to them. In the evening, close the day to see what you kept.",
+      "4. A task moves from Assigned to Accepted to In progress, then to Completed. A task you made for yourself you can complete straight away. A task somebody else gave you goes to them for review first, and they approve it or send it back.",
+      "5. Managers and HR can hand a task to someone. The person receives a notification and can accept it or start it.",
+    ],
+  },
+  {
+    key: "pending-tasks",
+    title: "What is still left, and the evening reminder",
+    group: "Start here",
+    body: [
+      "At the top of Tasks, “What is left” lists every task that is not finished and says what is missing for each: how many days late, due today, not started, waiting for review, or waiting on another task. Late work comes first.",
+      "At 6 pm every working day you get one reminder if anything is overdue or due today, with the first few titles. It stays quiet on your weekly off, on holidays and when you are on approved leave. A task that is with someone else for review does not count against you.",
+      "You also get a note the day a task becomes overdue, and one when it is due today or tomorrow.",
+      "Below the list, “Completed” keeps everything you have finished, newest first, with the day you finished it and whether it was on time or late.",
+    ],
+  },
+  {
+    key: "my-report",
+    title: "My report — your 45 days, to download",
+    group: "Start here",
+    body: [
+      "Open My report from the menu. Choose the days (the last 45 days is the first choice, matching a goal cycle) and press Show report.",
+      "You get three tabs: your tasks, your goals as they stand on the last day, and every number you logged, day by day. Each tab downloads as CSV, Excel or PDF.",
+      "It only ever shows your own work. Nobody can use it to look at somebody else's.",
+      "A report can cover up to a year at a time. The PDF prints names in plain Latin letters; use the CSV or Excel file if a name has other scripts.",
+    ],
+  },
+  {
+    key: "birthdays",
+    title: "Birthdays",
+    group: "Start here",
+    body: [
+      "On your birthday the app opens on a full-screen Happy Birthday with your name, sparks and fireworks. Press Thank you to carry on.",
+      "On other people's birthdays, you see a small popup when you open the app saying whose day it is. From there you can go to the dashboard and send your wishes in one tap.",
+      "The greeting shows once each time you open the app, not on every page. If your device is set to reduce motion, the fireworks are left out.",
+    ],
+  },
+
   /* ── Your day ─────────────────────────────────────────── */
   {
     key: "dashboard",

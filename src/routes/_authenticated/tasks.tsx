@@ -7,11 +7,13 @@ import { Celebrate } from "@/components/Celebrate";
 import { Playbook } from "@/components/culture/Playbook";
 import { BrainDump } from "@/components/tasks/BrainDump";
 
+import { CompletedTasks } from "@/components/tasks/CompletedTasks";
 import { QuickAdd } from "@/components/tasks/QuickAdd";
 import { TodayPanel } from "@/components/tasks/TodayPanel";
 import { TaskDetails } from "@/components/tasks/TaskDetails";
 import { TaskRow } from "@/components/tasks/TaskRow";
 import { WeekCard } from "@/components/tasks/WeekCard";
+import { WhatsLeft } from "@/components/tasks/WhatsLeft";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useWarriors } from "@/hooks/useWarriors";
 import { useGoalsFor } from "@/hooks/useGoals";
@@ -75,18 +77,10 @@ function Page() {
   const saveReflection = useSaveReflection(me?.id ?? null, me?.org_id ?? null);
   useBlockedNudge(Boolean(me));
 
-  const [showDone, setShowDone] = useState(false);
   const [celebration, setCelebration] = useState<string | null>(null);
 
   const mine = useMemo(() => (tasks ?? []).filter((t) => t.owner_id === me?.id), [tasks, me?.id]);
   const groups = useMemo(() => groupTasks(mine, today), [mine, today]);
-  const done = useMemo(
-    () =>
-      mine
-        .filter((t) => t.done)
-        .sort((a, b) => (b.done_at ?? "").localeCompare(a.done_at ?? "")),
-    [mine],
-  );
   const byId = useMemo(() => new Map((tasks ?? []).map((t) => [t.id, t])), [tasks]);
 
   const { data: myGoals } = useGoalsFor(me?.id ?? null);
@@ -188,6 +182,8 @@ function Page() {
 
         {isLoading ? <p className="text-sm text-soft">Loading your tasks…</p> : null}
 
+        <WhatsLeft tasks={mine} byId={byId} today={today} onOpen={(task) => setOpenId(task.id)} />
+
         {groups.map((g) => (
           <section key={g.key} className="ce-rise">
             <div className="flex items-center gap-2">
@@ -229,30 +225,12 @@ function Page() {
           />
         ) : null}
 
-        {done.length > 0 ? (
-          <section className="ce-rise">
-            <button
-              type="button"
-              className="min-h-11 text-[11px] font-bold tracking-[0.16em] text-soft uppercase"
-              onClick={() => setShowDone((v) => !v)}
-            >
-              {showDone ? "Hide" : "Show"} done · {done.length}
-            </button>
-            {showDone ? (
-              <div className="mt-3 space-y-2.5">
-                {done.slice(0, 40).map((t) => (
-                  <TaskRow
-                    key={t.id}
-                    task={t}
-                    onToggle={toggle}
-                    onOpen={(task) => setOpenId(task.id)}
-                    onDelete={(task) => remove.mutate(task.id)}
-                  />
-                ))}
-              </div>
-            ) : null}
-          </section>
-        ) : null}
+        <CompletedTasks
+          tasks={mine}
+          onToggle={toggle}
+          onOpen={(task) => setOpenId(task.id)}
+          onDelete={(task) => remove.mutate(task.id)}
+        />
 
         {me ? (
           <BrainDump
