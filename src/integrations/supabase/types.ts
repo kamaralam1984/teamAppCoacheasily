@@ -1590,6 +1590,7 @@ export type Database = {
           days: number
           decided_at: string | null
           decided_by: string | null
+          decision_note: string | null
           from_date: string
           half_day: boolean
           handover_task_ids: string[] | null
@@ -1610,6 +1611,7 @@ export type Database = {
           days?: number
           decided_at?: string | null
           decided_by?: string | null
+          decision_note?: string | null
           from_date: string
           half_day?: boolean
           handover_task_ids?: string[] | null
@@ -1630,6 +1632,7 @@ export type Database = {
           days?: number
           decided_at?: string | null
           decided_by?: string | null
+          decision_note?: string | null
           from_date?: string
           half_day?: boolean
           handover_task_ids?: string[] | null
@@ -3451,6 +3454,7 @@ export type Database = {
         }
         Returns: number
       }
+      leave_expire_pending: { Args: never; Returns: number }
       leave_host_conflicts: {
         Args: { p_from: string; p_profile_id: string; p_to: string }
         Returns: Json
