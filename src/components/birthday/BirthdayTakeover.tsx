@@ -7,6 +7,13 @@ import { useWarriors } from "@/hooks/useWarriors";
 import { birthdayPlan, birthdaySeenKey, firstName, istToday } from "@/lib/birthdays";
 import type { Profile } from "@/lib/warriors";
 
+const SAMPLE_COLLEAGUE = {
+  id: "preview",
+  full_name: "Sample Colleague",
+  title: "Preview only",
+  department: "Technology",
+} as unknown as Profile;
+
 function prefersReducedMotion() {
   return (
     typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -53,18 +60,28 @@ export function BirthdayTakeover({
   const [stage, setStage] = useState<"idle" | "mine" | "others">("idle");
   const decided = useRef(false);
 
+  /** Adding ?birthday=preview to any address shows both screens without touching anybody's data. */
+  const [preview, setPreview] = useState(false);
   useEffect(() => {
-    if (decided.current || !me || !key) return;
+    if (new URLSearchParams(window.location.search).get("birthday") === "preview") {
+      setPreview(true);
+      setStage("mine");
+    }
+  }, []);
+  const others = preview ? [SAMPLE_COLLEAGUE] : plan.others;
+
+  useEffect(() => {
+    if (preview || decided.current || !me || !key) return;
     if (!plan.mine && plan.others.length === 0) return;
     decided.current = true;
     if (seen(key)) return;
     markSeen(key);
     setStage(plan.mine ? "mine" : "others");
-  }, [me, key, plan]);
+  }, [me, key, plan, preview]);
 
   const closeMine = useCallback(() => {
-    setStage(plan.others.length > 0 ? "others" : "idle");
-  }, [plan.others.length]);
+    setStage(others.length > 0 ? "others" : "idle");
+  }, [others.length]);
 
   if (stage === "mine" && me) {
     return <FullScreenGreeting name={firstName(me.full_name)} onClose={closeMine} />;
@@ -78,11 +95,11 @@ export function BirthdayTakeover({
       <DialogContent className="max-h-[85vh] overflow-y-auto rounded-2xl border-gold/50 bg-ivory sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl text-ink">
-            🎂 {plan.others.length === 1 ? "A birthday today" : "Birthdays today"}
+            🎂 {others.length === 1 ? "A birthday today" : "Birthdays today"}
           </DialogTitle>
         </DialogHeader>
         <ul className="space-y-2">
-          {plan.others.map((p) => (
+          {others.map((p) => (
             <li
               key={p.id}
               className="flex items-center gap-3 rounded-xl border border-gold/40 bg-gold/10 px-3 py-2.5"
