@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Json } from "@/integrations/supabase/types";
 import { impersonationBlockedReason, validateImpersonationInput } from "@/lib/developerImpersonation";
+import { validateTeamOrderInput } from "@/lib/teamOrder";
 import { assertDevDataProfileUpdate, assertDevTable, DEV_TABLES, istToday, keyColumns } from "@/lib/developerTables";
 
 type Row = { [k: string]: Json };
@@ -395,4 +396,55 @@ export const devAuditLog = createServerFn({ method: "GET" })
       rows: (data ?? []) as { id: string; actor_email: string; action: string; target: string | null; detail: Json; created_at: string }[],
       missing: false,
     };
+  });
+
+/** Everybody still here, with what the team list needs to be ordered and shown. */
+export const devTeamList = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { db } = await gate(context.userId);
+    const { data, error } = await db
+      .from("profiles")
+      .select("id, full_name, title, department, role, manager_id, status, team_order, sort_order, joined_on, avatar_url")
+      .eq("status", "active");
+    if (error) throw new Error(error.message);
+    return (data ?? []) as {
+      id: string; full_name: string; title: string | null; department: string | null; role: string;
+      manager_id: string | null; status: string; team_order: number | null; sort_order: number | null;
+      joined_on: string | null; avatar_url: string | null;
+    }[];
+  });
+
+/** Places people on the Culture page's team list by hand (10, 20, 30…), or goes back to the rule. */
+export const devSaveTeamOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(validateTeamOrderInput)
+  .handler(async ({ data, context }) => {
+    const { db, email } = await gate(context.userId);
+    const { data: current, error } = await db
+      .from("profiles")
+      .select("id, full_name, team_order")
+      .eq("status", "active");
+    if (error) throw new Error(error.message);
+    const byId = new Map((current ?? []).map((p: { id: string; full_name: string; team_order: number | null }) => [p.id, p]));
+
+    if ("reset" in data) {
+      const { error: e } = await db.from("profiles").update({ team_order: null }).eq("status", "active");
+      if (e) throw new Error(e.message);
+      await log(db, email, "team_order.reset", null, { people: byId.size });
+      return { changed: byId.size };
+    }
+
+    const changes: Row = {};
+    for (const [i, id] of data.orderedIds.entries()) {
+      const person = byId.get(id);
+      if (!person) throw new Error("Somebody in that list is not an active person.");
+      const place = (i + 1) * 10;
+      if (person.team_order === place) continue;
+      const { error: e } = await db.from("profiles").update({ team_order: place }).eq("id", id);
+      if (e) throw new Error(e.message);
+      changes[person.full_name] = { before: person.team_order, after: place };
+    }
+    await log(db, email, "team_order.save", null, changes);
+    return { changed: Object.keys(changes).length };
   });

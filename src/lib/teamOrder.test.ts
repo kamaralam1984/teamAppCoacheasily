@@ -1,8 +1,9 @@
 import { describe, it as test } from "node:test";
 import { deepEqual, equal } from "node:assert/strict";
-import { compareTeam, isFounder, seniority, teamOrder } from "./teamOrder";
+import { compareTeam, isFounder, seniority, teamOrder, validateTeamOrderInput } from "./teamOrder";
 import type { Profile } from "./warriors";
 
+const placed = (who: Profile, team_order: number | null) => ({ ...who, team_order }) as Profile;
 const p = (
   full_name: string,
   title: string | null,
@@ -85,5 +86,68 @@ describe("How the team is listed", () => {
     const a = p("Anu", "Sales Executive", "member", "Sales");
     const b = p("Bela", "Sales Executive", "member", "Sales");
     equal(compareTeam(a, b) < 0, true);
+  });
+
+  test("a place chosen by hand beats the rule", () => {
+    const coach = placed(p("Mahadev", "Senior Private Coach", "member", "Private Coaching"), 10);
+    const head = placed(contentHead, 20);
+    deepEqual(
+      teamOrder([head, coach]).map((x) => x.full_name),
+      ["Mahadev", "Milan"],
+    );
+  });
+  test("people placed come before people nobody has placed", () => {
+    const coach = placed(p("Mahadev", "Senior Private Coach", "member", "Private Coaching"), 50);
+    deepEqual(teamOrder([contentHead, salesMgr, coach]).map((x) => x.full_name)[0], "Mahadev");
+  });
+  test("with no places chosen, the rule is unchanged", () => {
+    deepEqual(
+      teamOrder([salesExec, salesMgr, contentHead]).map((x) => x.full_name),
+      ["Milan", "Saurabh", "Sushma"],
+    );
+  });
+  test("the same place falls back to the rule", () => {
+    const a = placed(salesMgr, 10);
+    const b = placed(salesExec, 10);
+    equal(compareTeam(a, b) < 0, true);
+  });
+});
+
+describe("What the developer panel may send for the team order", () => {
+  const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+  test("a list of people in order", () => {
+    deepEqual(validateTeamOrderInput({ orderedIds: [id(1), id(2)] }), {
+      orderedIds: [id(1), id(2)],
+    });
+  });
+  test("an instruction to go back to the rule", () => {
+    deepEqual(validateTeamOrderInput({ reset: true }), { reset: true });
+  });
+  test("nothing, not a list, or not ids is refused", () => {
+    for (const bad of [
+      null,
+      {},
+      { orderedIds: [] },
+      { orderedIds: "x" },
+      { orderedIds: ["not-an-id"] },
+      { orderedIds: [1] },
+    ]) {
+      let refused = false;
+      try {
+        validateTeamOrderInput(bad);
+      } catch {
+        refused = true;
+      }
+      equal(refused, true);
+    }
+  });
+  test("the same person twice is refused", () => {
+    let refused = false;
+    try {
+      validateTeamOrderInput({ orderedIds: [id(1), id(1)] });
+    } catch {
+      refused = true;
+    }
+    equal(refused, true);
   });
 });

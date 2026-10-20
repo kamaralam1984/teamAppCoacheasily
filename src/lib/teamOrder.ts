@@ -2,7 +2,8 @@ import { DEPARTMENTS, type Profile } from "@/lib/warriors";
 
 /**
  * How the team is listed: the founder first, then People & Culture, then everybody else by post (heads, then
- * managers, then seniors, then the rest), then by access role, then by department, then by name.
+ * managers, then seniors, then the rest), then by access role, then by department, then by name. A place set by
+ * hand (team_order) comes before all of that.
  */
 
 const FOUNDER = /\b(founder|co-founder|ceo|chief executive|managing director)\b/i;
@@ -36,6 +37,12 @@ export function tier(p: Profile): 0 | 1 | 2 {
 }
 
 export function compareTeam(a: Profile, b: Profile): number {
+  // a place chosen by hand beats the rule; people nobody has placed yet come after those who were placed
+  const placeA = a.team_order ?? null;
+  const placeB = b.team_order ?? null;
+  if (placeA !== null && placeB !== null && placeA !== placeB) return placeA - placeB;
+  if (placeA !== null && placeB === null) return -1;
+  if (placeA === null && placeB !== null) return 1;
   const byTier = tier(a) - tier(b);
   if (byTier !== 0) return byTier;
   // the post comes first: a Head sits above a Manager, a Manager above a Senior, whatever the access role
@@ -58,4 +65,23 @@ export function compareTeam(a: Profile, b: Profile): number {
 
 export function teamOrder(people: Profile[]): Profile[] {
   return [...people].sort(compareTeam);
+}
+
+export type TeamOrderInput = { orderedIds: string[] } | { reset: true };
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** What the developer panel may send: a list of people in order, or an instruction to go back to the rule. */
+export function validateTeamOrderInput(input: unknown): TeamOrderInput {
+  const i = input as { orderedIds?: unknown; reset?: unknown } | null;
+  if (i?.reset === true) return { reset: true };
+  const ids = i?.orderedIds;
+  if (!Array.isArray(ids) || ids.length === 0)
+    throw new Error("Send the people in the order you want.");
+  if (ids.length > 500) throw new Error("That is too many people.");
+  if (!ids.every((x): x is string => typeof x === "string" && UUID.test(x))) {
+    throw new Error("Every entry must be a person's id.");
+  }
+  if (new Set(ids).size !== ids.length) throw new Error("A person is listed twice.");
+  return { orderedIds: ids };
 }
