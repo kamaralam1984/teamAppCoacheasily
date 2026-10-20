@@ -92,6 +92,13 @@
       "when": 1792488744994,
       "tag": "0012_leave_auto_reject",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792491771862,
+      "tag": "0013_weekly_off_work",
+      "breakpoints": true
     }
   ]
 }

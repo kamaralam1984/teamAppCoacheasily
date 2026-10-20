@@ -3398,7 +3398,7 @@ export type Database = {
       }
       el_ledger_for: { Args: { p_profile_id?: string }; Returns: Json }
       el_plan_credits: {
-        Args: { p_profile_id: string }
+        Args: { p_mode?: string; p_profile_id: string }
         Returns: {
           credited: number
           k: number
