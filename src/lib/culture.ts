@@ -39,6 +39,14 @@ export function whenLabel(iso: string): string {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
+/**
+ * The date shown on a "joined CoachEasily" card is the day the person actually joined. The card itself was
+ * written when their profile was created, which for people added in one go is the same day for everybody.
+ */
+export function joinedLabel(joinedOn: string | null | undefined, createdAt: string): string {
+  return whenLabel(joinedOn ? `${joinedOn}T12:00:00+05:30` : createdAt);
+}
+
 /** Badges first, then appreciation — newest first inside each. */
 export function shelfOrder(rows: Recognition[]): Recognition[] {
   const rank = (r: Recognition) => (r.kind === "badge" ? 0 : r.kind === "welcome" ? 2 : 1);

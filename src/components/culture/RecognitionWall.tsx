@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 
 import { useGiveRecognition } from "@/hooks/useCulture";
-import { BADGES, shelfOrder, whenLabel, type Recognition } from "@/lib/culture";
+import { BADGES, joinedLabel, shelfOrder, whenLabel, type Recognition } from "@/lib/culture";
 import type { Profile } from "@/lib/warriors";
 import { WarriorAvatar } from "@/components/warriors/Avatar";
 
@@ -174,7 +174,7 @@ export function RecognitionCard({
             {row.kind === "welcome"
               ? "joined CoachEasily"
               : `from ${from?.full_name ?? "a teammate"}`}{" "}
-            · {whenLabel(row.created_at)}
+            · {row.kind === "welcome" ? joinedLabel(to?.joined_on, row.created_at) : whenLabel(row.created_at)}
           </p>
         </div>
       </div>
@@ -244,7 +244,10 @@ export function MyShelf({
                 {r.kind === "welcome"
                   ? "The day you joined"
                   : (people.find((p) => p.id === r.from_id)?.full_name ?? "A teammate")}{" "}
-                · {whenLabel(r.created_at)}
+                ·{" "}
+                {r.kind === "welcome"
+                  ? joinedLabel(people.find((p) => p.id === r.to_id)?.joined_on, r.created_at)
+                  : whenLabel(r.created_at)}
               </p>
             </div>
           ))
