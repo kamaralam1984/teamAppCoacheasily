@@ -120,6 +120,13 @@
       "when": 1792500442563,
       "tag": "0016_security_hardening",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792500505744,
+      "tag": "0017_goal_week_cycle_ended",
+      "breakpoints": true
     }
   ]
 }
