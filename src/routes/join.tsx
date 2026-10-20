@@ -56,7 +56,11 @@ function JoinPage() {
       setError("We couldn't check that just now. Please try again.");
       return;
     }
-    const row = (data ?? {}) as { expected?: boolean; first_name?: string };
+    const row = (data ?? {}) as { expected?: boolean; first_name?: string; limited?: boolean };
+    if (row.limited) {
+      setError("Too many tries from this connection. Please wait an hour and try again.");
+      return;
+    }
     if (!row.expected) {
       setNotExpected(true);
       return;
