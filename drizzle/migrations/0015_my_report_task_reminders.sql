@@ -67,7 +67,7 @@ BEGIN
   SELECT coalesce(jsonb_agg(row_to_json(x)::jsonb ORDER BY x.cycle_start, x.created_at), '[]'::jsonb)
     INTO v_goals
     FROM (
-       SELECT g.created_at, c.start_date AS cycle_start,
+      SELECT g.created_at, c.start_date AS cycle_start,
              g.name AS goal, c.name AS cycle,
              CASE g.kind WHEN 'funnel' THEN 'Funnel' ELSE 'Number' END AS kind,
              coalesce(g.unit, '') AS unit,
@@ -77,7 +77,7 @@ BEGIN
              CASE WHEN g.kind = 'funnel' OR g.target = g.baseline THEN
                     CASE WHEN g.kind = 'funnel' THEN n.now_value ELSE 0 END
                   ELSE round(greatest(0, least(100, (n.now_value - g.baseline) / (g.target - g.baseline) * 100)), 1)
-              END AS progress_pct,
+             END AS progress_pct,
              (SELECT count(*) FROM goal_entries e WHERE e.goal_id = g.id AND e.date BETWEEN v_from AND v_to) AS numbers_logged,
              (SELECT max(e.date) FROM goal_entries e WHERE e.goal_id = g.id AND e.date <= v_to) AS last_logged,
              initcap(replace(goal_status_info(g.id)->>'status', '_', ' ')) AS status_today
@@ -87,7 +87,7 @@ BEGIN
           SELECT CASE WHEN g.kind = 'funnel' THEN
                         coalesce((SELECT CASE WHEN sum(coalesce(e.counts[1], 0)) > 0
                                   THEN round(sum(coalesce(e.counts[array_length(g.stages, 1)], 0))::numeric
-                                              / sum(coalesce(e.counts[1], 0)) * 100, 1) ELSE 0 END
+                                             / sum(coalesce(e.counts[1], 0)) * 100, 1) ELSE 0 END
                                     FROM goal_entries e WHERE e.goal_id = g.id AND e.date <= v_to), 0)
                       ELSE coalesce((SELECT e.value FROM goal_entries e
                                       WHERE e.goal_id = g.id AND e.value IS NOT NULL AND e.date <= v_to
@@ -107,7 +107,7 @@ BEGIN
                           ELSE e.value::text END,
            'amount', e.amount,
            'note', e.note)
-          ORDER BY e.date, g.name), '[]'::jsonb)
+         ORDER BY e.date, g.name), '[]'::jsonb)
     INTO v_numbers
     FROM goal_entries e
     JOIN goals g ON g.id = e.goal_id
@@ -117,7 +117,7 @@ BEGIN
   SELECT jsonb_build_object(
            'tasks', jsonb_array_length(v_tasks),
            'completed', (SELECT count(*) FROM jsonb_array_elements(v_tasks) r WHERE r->>'status' = 'Completed'),
-            'overdue', (SELECT count(*) FROM jsonb_array_elements(v_tasks) r WHERE r->>'status' = 'Overdue'),
+           'overdue', (SELECT count(*) FROM jsonb_array_elements(v_tasks) r WHERE r->>'status' = 'Overdue'),
            'pending', (SELECT count(*) FROM jsonb_array_elements(v_tasks) r WHERE r->>'status' <> 'Completed'),
            'on_time', (SELECT count(*) FROM jsonb_array_elements(v_tasks) r WHERE r->>'on_time' = 'Yes'),
            'goals', jsonb_array_length(v_goals),
@@ -197,7 +197,7 @@ BEGIN
        ORDER BY t.due_date, t.created_at LIMIT 3) x;
 
     INSERT INTO notifications (org_id, profile_id, title, body, link)
-     VALUES (r.org_id, r.id,
+    VALUES (r.org_id, r.id,
             format('%s task%s still pending', r.late + r.today, CASE WHEN r.late + r.today = 1 THEN '' ELSE 's' END),
             CASE WHEN r.late > 0 AND r.today > 0 THEN format('%s overdue and %s due today. ', r.late, r.today)
                  WHEN r.late > 0 THEN format('%s overdue. ', r.late)
