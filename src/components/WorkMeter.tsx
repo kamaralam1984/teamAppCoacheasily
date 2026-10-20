@@ -51,6 +51,16 @@ export function WorkMeter({ summary, showStreak = true, className, style }: Work
         1 paid leave for every {required} working days, counted by the company's leave policy.
       </p>
 
+      {!fromJoining && summary?.el_days_total !== undefined && summary.days_marked > summary.el_days_total ? (
+        <p className="mt-3 text-[13px] leading-relaxed text-soft">
+          You have marked attendance on <b className="text-ink">{summary.days_marked}</b> days.{" "}
+          <b className="text-ink">{summary.el_days_total}</b> of them count towards earned leave:{" "}
+          {summary.days_marked - summary.el_days_total === 1
+            ? "1 day doesn't count: it was a weekly off, a holiday or a half day."
+            : `${summary.days_marked - summary.el_days_total} days don't count: they were weekly offs, holidays or half days.`}
+        </p>
+      ) : null}
+
       {showStreak && streak >= 2 ? (
         <p className="mt-3 text-[13px] font-semibold text-emer">
           {streak} days in a row — just for you, never on a leaderboard.
