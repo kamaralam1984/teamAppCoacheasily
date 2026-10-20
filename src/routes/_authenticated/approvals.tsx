@@ -178,6 +178,12 @@ function RequestCard({
         <p className="mt-1 text-[12px] text-soft">
           Waiting since {shortDate(request.created_at.slice(0, 10))}
         </p>
+        {request.created_at.slice(0, 10) < request.from_date ? (
+          <p className="mt-1 text-[12px] font-semibold text-goldD">
+            Decide before {shortDate(request.from_date)}. If nobody does, it is rejected automatically
+            that day and can't be approved afterwards.
+          </p>
+        ) : null}
       </div>
 
       {isMine ? (

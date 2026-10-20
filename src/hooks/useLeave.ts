@@ -81,12 +81,25 @@ export function useLeaveCheck(args: {
   });
 }
 
+/**
+ * A request nobody decided before its first day is rejected when that day arrives. The database
+ * does it every night; asking first means a screen never shows an out-of-date "pending".
+ */
+export async function closeStaleRequests() {
+  try {
+    await supabase.rpc("leave_expire_pending");
+  } catch {
+    /* the nightly job will catch it */
+  }
+}
+
 /** My leave history, newest first. */
 export function useMyLeave(profileId?: string | null) {
   return useQuery({
     queryKey: ["leave-history", profileId ?? "none"],
     enabled: Boolean(profileId),
     queryFn: async (): Promise<LeaveRequest[]> => {
+      await closeStaleRequests();
       const { data, error } = await supabase
         .from("leave_requests")
         .select("*")
@@ -168,6 +181,7 @@ export function usePendingApprovals(enabled: boolean) {
     queryKey: ["leave-pending"],
     enabled,
     queryFn: async (): Promise<PendingRequest[]> => {
+      await closeStaleRequests();
       const { data, error } = await supabase
         .from("leave_requests")
         .select("*, applicant:profiles!leave_requests_profile_id_fkey(id, full_name, title, department)")

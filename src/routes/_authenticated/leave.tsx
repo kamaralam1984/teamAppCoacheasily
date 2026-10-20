@@ -417,6 +417,17 @@ function LeavePage() {
                       {r.half_day ? " · half day" : ""}
                       {nameOf(r.handover_to) ? ` · handover to ${nameOf(r.handover_to)}` : ""}
                     </p>
+                    {r.status === "rejected" && r.decision_note ? (
+                      <p className="mt-0.5 text-[12px] text-red">
+                        {r.decision_note} Apply again if you still need the leave.
+                      </p>
+                    ) : null}
+                    {r.status === "pending" && r.created_at.slice(0, 10) < r.from_date ? (
+                      <p className="mt-0.5 text-[12px] text-soft">
+                        Waiting for a decision. If nobody decides before {shortDate(r.from_date)}, it is
+                        rejected automatically that day.
+                      </p>
+                    ) : null}
                   </div>
                   <span
                     className={`rounded-full border px-3 py-1 text-[11px] font-bold tracking-[0.08em] uppercase ${STATUS_STYLE[r.status]}`}

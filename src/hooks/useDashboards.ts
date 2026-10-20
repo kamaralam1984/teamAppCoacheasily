@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
+import { closeStaleRequests } from "@/hooks/useLeave";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import type { DayInfo } from "@/lib/attendanceKinds";
@@ -91,6 +92,7 @@ export function useDashTeam(enabled: boolean) {
     enabled,
     staleTime: 60_000,
     queryFn: async (): Promise<DashTeam> => {
+      await closeStaleRequests();
       const { data, error } = await supabase.rpc("dash_team");
       if (error) throw error;
       return data as unknown as DashTeam;
@@ -104,6 +106,7 @@ export function useDashHr(enabled: boolean) {
     enabled,
     staleTime: 60_000,
     queryFn: async (): Promise<DashHr> => {
+      await closeStaleRequests();
       const { data, error } = await supabase.rpc("dash_hr");
       if (error) throw error;
       return data as unknown as DashHr;
