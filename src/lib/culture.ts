@@ -47,6 +47,15 @@ export function joinedLabel(joinedOn: string | null | undefined, createdAt: stri
   return whenLabel(joinedOn ? `${joinedOn}T12:00:00+05:30` : createdAt);
 }
 
+/** How long somebody has been here, for the people who are no longer new: "With us 7 years", "With us 5 months". */
+export function tenureLabel(days: number | null): string | null {
+  if (days === null || days < 0) return null;
+  const years = Math.floor(days / 365);
+  if (years >= 1) return `With us ${years} year${years === 1 ? "" : "s"}`;
+  const months = Math.floor(days / 30);
+  return months >= 1 ? `With us ${months} month${months === 1 ? "" : "s"}` : null;
+}
+
 /** Badges first, then appreciation — newest first inside each. */
 export function shelfOrder(rows: Recognition[]): Recognition[] {
   const rank = (r: Recognition) => (r.kind === "badge" ? 0 : r.kind === "welcome" ? 2 : 1);

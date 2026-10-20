@@ -1,6 +1,6 @@
 import { describe, it as test } from "node:test";
 import { equal } from "node:assert/strict";
-import { joinedLabel } from "./culture";
+import { joinedLabel, tenureLabel } from "./culture";
 
 describe("The date on a 'joined CoachEasily' card", () => {
   test("is the day the person joined, not the day their card was written", () => {
@@ -15,5 +15,16 @@ describe("The date on a 'joined CoachEasily' card", () => {
     const a = joinedLabel("2026-01-05", "2026-08-14T05:00:00Z");
     const b = joinedLabel("2026-02-09", "2026-08-14T05:00:00Z");
     equal(a === b, false);
+  });
+});
+
+describe("How long somebody has been here", () => {
+  test("years, months, or nothing for somebody who is still new", () => {
+    equal(tenureLabel(365 * 7 + 20), "With us 7 years");
+    equal(tenureLabel(366), "With us 1 year");
+    equal(tenureLabel(200), "With us 6 months");
+    equal(tenureLabel(10), null);
+    equal(tenureLabel(null), null);
+    equal(tenureLabel(-3), null);
   });
 });

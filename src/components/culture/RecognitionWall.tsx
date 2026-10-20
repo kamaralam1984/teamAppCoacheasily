@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 
 import { useGiveRecognition } from "@/hooks/useCulture";
-import { BADGES, joinedLabel, shelfOrder, whenLabel, type Recognition } from "@/lib/culture";
-import type { Profile } from "@/lib/warriors";
+import { BADGES, joinedLabel, shelfOrder, tenureLabel, whenLabel, type Recognition } from "@/lib/culture";
+import { daysSince, isNewWarrior, type Profile } from "@/lib/warriors";
 import { WarriorAvatar } from "@/components/warriors/Avatar";
 
 
@@ -184,9 +184,14 @@ export function RecognitionCard({
           🏅 {row.badge_name}
         </span>
       ) : null}
-      {row.kind === "welcome" ? (
+      {row.kind === "welcome" && to && isNewWarrior(to) ? (
         <span className="mt-3 inline-block rounded-full border border-emer/40 bg-emer/10 px-3 py-1 text-[12px] font-bold text-emer">
           👋 New warrior
+        </span>
+      ) : null}
+      {row.kind === "welcome" && to && !isNewWarrior(to) && tenureLabel(daysSince(to.joined_on)) ? (
+        <span className="mt-3 inline-block rounded-full border border-line bg-cream px-3 py-1 text-[12px] font-bold text-soft">
+          {tenureLabel(daysSince(to.joined_on))}
         </span>
       ) : null}
 
