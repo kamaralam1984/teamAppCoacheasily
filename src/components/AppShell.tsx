@@ -204,20 +204,31 @@ export function AppShell({ children }: { children: ReactNode }) {
             {tabs.map((tab) => {
               const active = pathname === tab.to;
               return (
-                <Link
-                  key={tab.label}
-                  to={tab.to}
-                  data-active={active}
-                  data-tour={tab.to === "/leave" ? "tab-leave" : undefined}
+                <Fragment key={tab.label}>
+                  <Link
+                    to={tab.to}
+                    data-active={active}
+                    data-tour={tab.to === "/leave" ? "tab-leave" : undefined}
 
-                  className={
-                    active
-                      ? "flex min-h-11 shrink-0 items-center rounded-full bg-night px-4 text-sm font-bold whitespace-nowrap text-goldL"
-                      : "flex min-h-11 shrink-0 items-center rounded-full px-4 text-sm font-semibold whitespace-nowrap text-mist transition-colors hover:text-goldL"
-                  }
-                >
-                  {tab.label}
-                </Link>
+                    className={
+                      active
+                        ? "flex min-h-11 shrink-0 items-center rounded-full bg-night px-4 text-sm font-bold whitespace-nowrap text-goldL"
+                        : "flex min-h-11 shrink-0 items-center rounded-full px-4 text-sm font-semibold whitespace-nowrap text-mist transition-colors hover:text-goldL"
+                    }
+                  >
+                    {tab.label}
+                  </Link>
+                  {tab.label === "Reports" ? (
+                    <a
+                      href={SIR_AVAILABILITY_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex min-h-11 shrink-0 items-center rounded-full px-4 text-sm font-semibold whitespace-nowrap text-mist transition-colors hover:text-goldL"
+                    >
+                      Sir&apos;s availability
+                    </a>
+                  ) : null}
+                </Fragment>
               );
             })}
           </div>
