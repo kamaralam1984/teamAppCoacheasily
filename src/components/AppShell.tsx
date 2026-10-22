@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, KeyRound, LifeBuoy, LogOut, Sparkles, UserRound } from "lucide-react";
@@ -50,6 +50,9 @@ const HR_TABS = [
   { label: "Audit", to: "/audit" },
   { label: "Settings", to: "/settings" },
 ] as const;
+
+const SIR_AVAILABILITY_URL =
+  "https://n8n.srv1623478.hstgr.cloud/webhook/ph-availability?k=M84hry9rj5R9dHk6O2wT8X_A";
 
 
 export function AppShell({ children }: { children: ReactNode }) {
