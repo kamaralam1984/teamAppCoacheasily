@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 
 import type { CalendarData } from "@/hooks/useCalendar";
 import { addDays, daysBetween, niceDate, rangeLabel, timeLabel, todayIso } from "@/lib/calendar";
-import type { Profile } from "@/lib/warriors";
+import { weeklyOffLabel, type Profile } from "@/lib/warriors";
 
 interface Item {
   key: string;
@@ -170,7 +170,7 @@ export function ComingUp({
 
       {me?.weekly_off ? (
         <p className="mt-4 border-t border-line pt-3 text-[13px] text-soft">
-          Your weekly off: <span className="font-bold text-ink">{me.weekly_off}</span>
+          Your weekly off: <span className="font-bold text-ink">{weeklyOffLabel(me.weekly_off)}</span>
         </p>
       ) : null}
 

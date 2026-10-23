@@ -2,7 +2,7 @@ import type { EditTarget } from "@/components/calendar/EventEditor";
 import type { CalendarData } from "@/hooks/useCalendar";
 import { MARKER_COLOUR, WEEKDAYS, monthGrid, parseIso, weekdayName } from "@/lib/calendar";
 import { buildDayView } from "@/lib/calendarDerive";
-import type { Profile } from "@/lib/warriors";
+import { isOffOn, type Profile } from "@/lib/warriors";
 
 interface Props {
   year: number;
@@ -64,7 +64,7 @@ export function MonthGrid({
             ...view.events.map((e) => ({ key: e.id, kind: "event" as const, type: e.type, label: e.name })),
           ];
           const isToday = cell.date === today;
-          const isOff = viewerWeeklyOff && weekdayName(cell.date) === viewerWeeklyOff;
+          const isOff = isOffOn(viewerWeeklyOff, weekdayName(cell.date));
           const isSelected = cell.date === selected;
 
           return (

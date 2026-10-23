@@ -12,6 +12,8 @@ import {
   WEEKLY_OFFS,
   accessBlurb,
   downlineIds,
+  isOffOn,
+  weeklyOffValue,
   type Profile,
   type Role,
 } from "@/lib/warriors";
@@ -232,20 +234,43 @@ export function WarriorForm({
             />
           </label>
 
-          <label>
+          <fieldset>
             <Label>Weekly off</Label>
-            <select
-              className="ce-input"
-              value={form.weekly_off}
-              onChange={(e) => set("weekly_off", e.target.value)}
-            >
-              {WEEKLY_OFFS.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-          </label>
+            <div className="flex flex-wrap gap-2">
+              {WEEKLY_OFFS.map((d) => {
+                const flexible = d === "Based on work";
+                const on = flexible ? form.weekly_off === d : isOffOn(form.weekly_off, d);
+                return (
+                  <label
+                    key={d}
+                    className={`cursor-pointer rounded-full border px-3 py-1.5 text-[13px] font-bold ${
+                      on ? "border-violet bg-violet text-white" : "border-line bg-cream text-ink"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      checked={on}
+                      onChange={() => {
+                        if (flexible) {
+                          set("weekly_off", on ? "Sunday" : d);
+                          return;
+                        }
+                        const days = WEEKLY_OFFS.filter((x) => x !== "Based on work" && isOffOn(form.weekly_off, x));
+                        const next = on ? days.filter((x) => x !== d) : [...days, d];
+                        // at least one day stays selected
+                        set("weekly_off", next.length > 0 ? weeklyOffValue(next) : form.weekly_off);
+                      }}
+                    />
+                    {d}
+                  </label>
+                );
+              })}
+            </div>
+            <span className="mt-2 block text-[13px] leading-relaxed text-soft">
+              Pick one day or more, for example Saturday and Sunday. "Based on work" means no fixed day.
+            </span>
+          </fieldset>
 
           <label>
             <Label>Display order</Label>

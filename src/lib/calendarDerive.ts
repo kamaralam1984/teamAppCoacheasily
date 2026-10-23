@@ -1,6 +1,6 @@
 import type { CalEvent, CalendarData, Holiday, LeaveDay, Program } from "@/hooks/useCalendar";
 import { daysBetween, niceDate, rangeLabel, weekdayName } from "@/lib/calendar";
-import type { Profile } from "@/lib/warriors";
+import { isOffOn, type Profile } from "@/lib/warriors";
 import { isBirthdayOn } from "@/lib/birthdays";
 
 export interface DayView {
@@ -89,7 +89,7 @@ export function buildDayView(
         `⚖️ ${p.name} runs on ${view.holiday.name}, a company holiday. Whoever works today should get a comp-off.`,
       );
     }
-    if (host && host.weekly_off === dayName && !away.has(host.id)) {
+    if (host && isOffOn(host.weekly_off, dayName) && !away.has(host.id)) {
       view.compOff.push(
         `⚖️ ${host.full_name} is hosting ${p.name} on their weekly off (${dayName}). Whoever works today should get a comp-off.`,
       );

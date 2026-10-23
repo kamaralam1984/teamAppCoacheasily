@@ -9,7 +9,7 @@ import { useMyProfile } from "@/hooks/useMyProfile";
 import { useProfile360, type Profile360Full } from "@/hooks/useProfile360";
 import { niceDate } from "@/lib/calendar";
 import { PROBATION_LABEL } from "@/lib/probation";
-import { roleLabel } from "@/lib/warriors";
+import { roleLabel, weeklyOffLabel } from "@/lib/warriors";
 
 export const Route = createFileRoute("/_authenticated/people/$profileId")({
   head: () => ({
@@ -75,7 +75,7 @@ function Full({ p }: { p: Profile360Full }) {
         <Card title="Probation and HR">
           <p>
             Joined {p.joined_on ? niceDate(p.joined_on) : "—"}
-            {p.weekly_off ? ` · weekly off ${p.weekly_off}` : ""}
+            {p.weekly_off ? ` · weekly off ${weeklyOffLabel(p.weekly_off)}` : ""}
           </p>
           {p.probation ? (
             <>

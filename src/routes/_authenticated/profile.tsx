@@ -21,7 +21,7 @@ import { useUpdateMyProfile } from "@/hooks/useMyDetails";
 import { useWarriors } from "@/hooks/useWarriors";
 import { removeAvatarFile, uploadAvatar } from "@/lib/avatar";
 import { signAvatar } from "@/hooks/useAvatars";
-import { roleLabel } from "@/lib/warriors";
+import { roleLabel, weeklyOffLabel } from "@/lib/warriors";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
@@ -286,7 +286,7 @@ function ProfilePage() {
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <Read label="Department" value={profile.department ?? "—"} />
             <Read label="Reports to" value={manager?.full_name ?? "—"} />
-            <Read label="Weekly off" value={profile.weekly_off ?? "—"} />
+            <Read label="Weekly off" value={profile.weekly_off ? weeklyOffLabel(profile.weekly_off) : "—"} />
             <Read label="Joined" value={profile.joined_on ?? "—"} />
           </div>
         </Section>

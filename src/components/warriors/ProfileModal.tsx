@@ -7,7 +7,7 @@ import { ProbationSection } from "@/components/probation/ProbationSection";
 import { WarriorAvatar } from "@/components/warriors/Avatar";
 import { HrRecord } from "@/components/warriors/HrRecord";
 import { supabase } from "@/integrations/supabase/client";
-import { daysSince, isNewWarrior, isPrivileged, roleLabel, type Profile } from "@/lib/warriors";
+import { daysSince, isNewWarrior, isPrivileged, roleLabel, weeklyOffLabel, type Profile } from "@/lib/warriors";
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
@@ -89,7 +89,7 @@ export function ProfileModal({
         <div className="mt-5 grid grid-cols-2 gap-5">
           <Field label="Department" value={profile.department ?? "—"} />
           <Field label="Reports to" value={manager?.full_name ?? "—"} />
-          <Field label="Weekly off" value={profile.weekly_off ?? "—"} />
+          <Field label="Weekly off" value={profile.weekly_off ? weeklyOffLabel(profile.weekly_off) : "—"} />
           <Field label="Joined" value={profile.joined_on ?? "—"} />
         </div>
 

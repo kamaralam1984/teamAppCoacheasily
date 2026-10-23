@@ -39,6 +39,7 @@ import {
   todayIso,
 } from "@/lib/calendar";
 import { monthConflicts } from "@/lib/calendarDerive";
+import { weeklyOffLabel } from "@/lib/warriors";
 import { canAddEvents, canEditEvent, canEditProgram, whoToAsk } from "@/lib/calendarPerms";
 
 export const Route = createFileRoute("/_authenticated/calendar")({
@@ -494,7 +495,7 @@ function CalendarPage() {
           )}
           {profile?.weekly_off ? (
             <p className="mt-3 border-t border-line pt-3 text-[13px] text-soft">
-              Your weekly off is <strong className="text-ink">{profile.weekly_off}</strong> — those
+              Your weekly off is <strong className="text-ink">{weeklyOffLabel(profile.weekly_off)}</strong> — those
               days are tinted on the grid. Today is {niceDate(today)}.
             </p>
           ) : null}

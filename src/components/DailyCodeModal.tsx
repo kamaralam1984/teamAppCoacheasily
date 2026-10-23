@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Mark } from "@/components/Mark";
 import { WORK_MODE_LABEL, type WorkMode } from "@/hooks/useAttendance";
 import type { DailyCode } from "@/hooks/useDailyCode";
+import { isOffOn, weeklyOffLabel } from "@/lib/warriors";
 
 export interface DailyCodeModalProps {
   code: DailyCode | null;
@@ -11,7 +12,7 @@ export interface DailyCodeModalProps {
   error?: boolean;
   onClose: () => void;
   onPledge: (focus: string, status: WorkMode, offReason: string) => void;
-  /** the signed-in person's weekly off, e.g. "Monday" */
+  /** the signed-in person's weekly off, e.g. "Monday" or "Saturday,Sunday" */
   weeklyOff?: string | null;
 }
 
@@ -37,8 +38,8 @@ export function DailyCodeModal({
     weekday: "long",
     timeZone: "Asia/Kolkata",
   });
-  /** Everybody has one weekly off and it differs from person to person. */
-  const onWeeklyOff = Boolean(weeklyOff) && weeklyOff === todayName;
+  /** Everybody has their own weekly off, one day or more, and it differs from person to person. */
+  const onWeeklyOff = isOffOn(weeklyOff, todayName);
   const needsReason = onWeeklyOff && offReason.trim().length < 3;
 
   useEffect(() => {
@@ -114,7 +115,7 @@ export function DailyCodeModal({
         {onWeeklyOff ? (
           <div className="mt-5 rounded-[12px] border border-gold/50 bg-goldL/15 p-4">
             <label htmlFor="dc-off" className="ce-label">
-              Today is your weekly off ({weeklyOff}). Why are you working today?
+              Today is your weekly off ({weeklyOffLabel(weeklyOff)}). Why are you working today?
             </label>
             <input
               id="dc-off"

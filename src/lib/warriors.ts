@@ -177,8 +177,32 @@ export function todayName() {
   return WEEKDAYS[new Date().getDay()]!;
 }
 
+/** The day names in a weekly-off value: "Saturday,Sunday" gives both; "Based on work" gives none. */
+export function weeklyOffDays(value: string | null | undefined): string[] {
+  return (value ?? "")
+    .split(",")
+    .map((d) => d.trim())
+    .filter((d) => (WEEKDAYS as readonly string[]).includes(d));
+}
+
+/** Is `dayName` (for example "Saturday") one of the days in this weekly-off value? */
+export function isOffOn(value: string | null | undefined, dayName: string): boolean {
+  return weeklyOffDays(value).includes(dayName);
+}
+
+/** "Saturday & Sunday", or the value as it is for "Based on work". */
+export function weeklyOffLabel(value: string | null | undefined): string {
+  const days = weeklyOffDays(value);
+  return days.length > 0 ? days.join(" & ") : (value ?? "");
+}
+
+/** Pick days from the form and store them in week order, e.g. "Saturday,Sunday" is stored as "Sunday,Saturday". */
+export function weeklyOffValue(days: string[]): string {
+  return WEEKDAYS.filter((d) => days.includes(d)).join(",");
+}
+
 export function isOffToday(p: Profile) {
-  return p.weekly_off === todayName();
+  return isOffOn(p.weekly_off, todayName());
 }
 
 const ROLE_RANK: Record<string, number> = { hr: 0, admin: 0, manager: 1, member: 2 };
