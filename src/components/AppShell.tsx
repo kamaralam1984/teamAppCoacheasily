@@ -53,6 +53,8 @@ const HR_TABS = [
 
 const SIR_AVAILABILITY_URL =
   "https://n8n.srv1623478.hstgr.cloud/webhook/ph-availability?k=M84hry9rj5R9dHk6O2wT8X_A";
+// People (by first name) who see the PH Sir Availability link besides HR and Admin.
+const SIR_AVAILABILITY_PEOPLE = ["shubhangi", "supriya", "prachi", "saurabh", "pranjal", "sapana"];
 
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -76,6 +78,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     ...(role === "hr" || role === "admin" ? HR_TABS : []),
     ...(dev?.isDeveloper ? [{ label: "Developer", to: "/developer" } as const] : []),
   ];
+  const firstName = (profile?.full_name ?? "").trim().split(/\s+/)[0]?.toLowerCase() ?? "";
+  const showAvailability =
+    role === "hr" ||
+    role === "admin" ||
+    SIR_AVAILABILITY_PEOPLE.includes(firstName);
+  const hasReports = tabs.some((t) => t.label === "Reports");
 
   useEffect(() => {
     const active = navRef.current?.querySelector<HTMLElement>("[data-active='true']");
@@ -218,7 +226,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                   >
                     {tab.label}
                   </Link>
-                  {tab.label === "Reports" ? (
+                  {showAvailability &&
+                  (tab.label === "Reports" || (!hasReports && i === tabs.length - 1)) ? (
                     <a
                       href={SIR_AVAILABILITY_URL}
                       target="_blank"
