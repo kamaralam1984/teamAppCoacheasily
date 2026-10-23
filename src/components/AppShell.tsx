@@ -225,7 +225,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                       rel="noopener noreferrer"
                       className="flex min-h-11 shrink-0 items-center rounded-full px-4 text-sm font-semibold whitespace-nowrap text-mist transition-colors hover:text-goldL"
                     >
-                      Sir&apos;s availability
+                      PH Sir Availability
                     </a>
                   ) : null}
                 </Fragment>
