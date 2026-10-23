@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, KeyRound, LifeBuoy, LogOut, Sparkles, UserRound } from "lucide-react";
@@ -51,6 +51,11 @@ const HR_TABS = [
   { label: "Settings", to: "/settings" },
 ] as const;
 
+const SIR_AVAILABILITY_URL =
+  "https://n8n.srv1623478.hstgr.cloud/webhook/ph-availability?k=M84hry9rj5R9dHk6O2wT8X_A";
+// People (by first name) who see the PH Sir Availability link besides HR and Admin.
+const SIR_AVAILABILITY_PEOPLE = ["shubhangi", "supriya", "prachi", "saurabh", "pranjal", "sapana"];
+
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { data, isLoading } = useMyProfile();
@@ -73,6 +78,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     ...(role === "hr" || role === "admin" ? HR_TABS : []),
     ...(dev?.isDeveloper ? [{ label: "Developer", to: "/developer" } as const] : []),
   ];
+  const firstName = (profile?.full_name ?? "").trim().split(/\s+/)[0]?.toLowerCase() ?? "";
+  const showAvailability =
+    role === "hr" ||
+    role === "admin" ||
+    SIR_AVAILABILITY_PEOPLE.includes(firstName);
+  const hasReports = tabs.some((t) => t.label === "Reports");
 
   useEffect(() => {
     const active = navRef.current?.querySelector<HTMLElement>("[data-active='true']");
@@ -198,23 +209,35 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         <nav className="no-scrollbar overflow-x-auto border-t border-night2 bg-night2">
           <div ref={navRef} className="mx-auto flex max-w-6xl items-center gap-1 px-2 py-2">
-            {tabs.map((tab) => {
+            {tabs.map((tab, i) => {
               const active = pathname === tab.to;
               return (
-                <Link
-                  key={tab.label}
-                  to={tab.to}
-                  data-active={active}
-                  data-tour={tab.to === "/leave" ? "tab-leave" : undefined}
+                <Fragment key={tab.label}>
+                  <Link
+                    to={tab.to}
+                    data-active={active}
+                    data-tour={tab.to === "/leave" ? "tab-leave" : undefined}
 
-                  className={
-                    active
-                      ? "flex min-h-11 shrink-0 items-center rounded-full bg-night px-4 text-sm font-bold whitespace-nowrap text-goldL"
-                      : "flex min-h-11 shrink-0 items-center rounded-full px-4 text-sm font-semibold whitespace-nowrap text-mist transition-colors hover:text-goldL"
-                  }
-                >
-                  {tab.label}
-                </Link>
+                    className={
+                      active
+                        ? "flex min-h-11 shrink-0 items-center rounded-full bg-night px-4 text-sm font-bold whitespace-nowrap text-goldL"
+                        : "flex min-h-11 shrink-0 items-center rounded-full px-4 text-sm font-semibold whitespace-nowrap text-mist transition-colors hover:text-goldL"
+                    }
+                  >
+                    {tab.label}
+                  </Link>
+                  {showAvailability &&
+                  (tab.label === "Reports" || (!hasReports && i === tabs.length - 1)) ? (
+                    <a
+                      href={SIR_AVAILABILITY_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex min-h-11 shrink-0 items-center rounded-full px-4 text-sm font-semibold whitespace-nowrap text-mist transition-colors hover:text-goldL"
+                    >
+                      PH Sir Availability
+                    </a>
+                  ) : null}
+                </Fragment>
               );
             })}
           </div>
