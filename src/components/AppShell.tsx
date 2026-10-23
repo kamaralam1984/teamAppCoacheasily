@@ -209,7 +209,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         <nav className="no-scrollbar overflow-x-auto border-t border-night2 bg-night2">
           <div ref={navRef} className="mx-auto flex max-w-6xl items-center gap-1 px-2 py-2">
-            {tabs.map((tab) => {
+            {tabs.map((tab, i) => {
               const active = pathname === tab.to;
               return (
                 <Fragment key={tab.label}>
