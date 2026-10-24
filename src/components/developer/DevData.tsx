@@ -4,9 +4,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
 import type { Json } from "@/integrations/supabase/types";
-import { devBrowse, devWriteRow } from "@/lib/developer.functions";
+import { devBrowse, devExportChunk, devWriteRow } from "@/lib/developer.functions";
 import { DEV_TABLES } from "@/lib/developerTables";
 import { errMsg } from "@/hooks/useDeveloper";
+import { downloadBytes } from "@/lib/exporters";
 import { Card, Failed, Loading } from "./shared";
 
 type Row = { [k: string]: Json };
@@ -15,6 +16,30 @@ export function DevData({ table, onTable }: { table: string; onTable: (t: string
   const qc = useQueryClient();
   const browse = useServerFn(devBrowse);
   const write = useServerFn(devWriteRow);
+  const exportChunk = useServerFn(devExportChunk);
+  const [exporting, setExporting] = useState<string | null>(null);
+
+  async function exportAll() {
+    const out: Record<string, Row[]> = {};
+    try {
+      for (const t of [...DEV_TABLES, "auth.users"]) {
+        setExporting(t);
+        out[t] = [];
+        for (let offset = 0; ; offset += 1000) {
+          const r = await exportChunk({ data: { table: t, offset } });
+          out[t].push(...r.rows);
+          if (r.done) break;
+        }
+      }
+      const stamp = new Date().toISOString().slice(0, 10);
+      downloadBytes(`coach-easily-export-${stamp}.json`, JSON.stringify({ exported_at: new Date().toISOString(), tables: out }), "application/json");
+      toast.success("Export downloaded");
+    } catch (e) {
+      toast.error(`Export failed${exporting ? ` at ${exporting}` : ""}: ${errMsg(e)}`);
+    } finally {
+      setExporting(null);
+    }
+  }
   const [page, setPage] = useState(0);
   const [editing, setEditing] = useState<{ row: Row | null; text: string } | null>(null);
   const q = useQuery({ queryKey: ["dev-browse", table, page], queryFn: () => browse({ data: { table, page } }) });
@@ -60,6 +85,7 @@ export function DevData({ table, onTable }: { table: string; onTable: (t: string
           {DEV_TABLES.map((t) => <option key={t}>{t}</option>)}
         </select>
         <button className="btn3d" onClick={() => setEditing({ row: null, text: "{\n  \n}" })}>Add row</button>
+        <button className="btn3d btn3d-ghost" disabled={!!exporting} onClick={() => void exportAll()}>{exporting ? `Exporting ${exporting}…` : "Export all (JSON)"}</button>
       </div>
       {editing && (
         <Card>

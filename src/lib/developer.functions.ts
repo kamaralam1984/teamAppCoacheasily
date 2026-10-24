@@ -252,6 +252,38 @@ export const devBrowse = createServerFn({ method: "POST" })
     return { rows: (res.data ?? []) as Row[], total: res.count ?? 0, pageSize: PAGE, keys: keyColumns(data.table) };
   });
 
+const EXPORT_CHUNK = 1000;
+
+/** One slice of a table for the full-database export; the client loops until `done`. */
+export const devExportChunk = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { table: string; offset: number }) => ({
+    table: i?.table === "auth.users" ? "auth.users" : assertDevTable(i?.table),
+    offset: Math.max(0, Math.floor(Number(i?.offset) || 0)),
+  }))
+  .handler(async ({ data, context }) => {
+    const { db, email } = await gate(context.userId);
+    if (data.offset === 0) await log(db, email, "export", data.table, {});
+    if (data.table === "auth.users") {
+      const page = Math.floor(data.offset / EXPORT_CHUNK) + 1;
+      const res = await db.auth.admin.listUsers({ page, perPage: EXPORT_CHUNK });
+      if (res.error) throw new Error(res.error.message);
+      const rows = res.data.users.map((u) => ({
+        id: u.id, email: u.email ?? null, phone: u.phone ?? null, created_at: u.created_at,
+        email_confirmed_at: u.email_confirmed_at ?? null, last_sign_in_at: u.last_sign_in_at ?? null,
+        user_metadata: u.user_metadata, app_metadata: u.app_metadata,
+      })) as Row[];
+      return { rows, done: rows.length < EXPORT_CHUNK };
+    }
+    const keys = keyColumns(assertDevTable(data.table));
+    let q = db.from(data.table).select("*");
+    for (const k of keys) q = q.order(k, { ascending: true });
+    const res = await q.range(data.offset, data.offset + EXPORT_CHUNK - 1);
+    if (res.error) throw new Error(res.error.message);
+    const rows = (res.data ?? []) as Row[];
+    return { rows, done: rows.length < EXPORT_CHUNK };
+  });
+
 interface WriteInput {
   table: string;
   op: "insert" | "update" | "delete";
