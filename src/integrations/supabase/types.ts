@@ -1006,6 +1006,7 @@ export type Database = {
           id: string
           location: string | null
           name: string
+          ops_sid: string | null
           org_id: string
           sequence: number
           series_id: string | null
@@ -1028,6 +1029,7 @@ export type Database = {
           id?: string
           location?: string | null
           name: string
+          ops_sid?: string | null
           org_id: string
           sequence?: number
           series_id?: string | null
@@ -1050,6 +1052,7 @@ export type Database = {
           id?: string
           location?: string | null
           name?: string
+          ops_sid?: string | null
           org_id?: string
           sequence?: number
           series_id?: string | null
@@ -1786,6 +1789,131 @@ export type Database = {
           },
         ]
       }
+      ops_events: {
+        Row: {
+          at: string
+          detail: Json
+          id: number
+          kind: string
+          person_id: string | null
+          person_name: string | null
+          ref: string | null
+          source: string
+        }
+        Insert: {
+          at?: string
+          detail?: Json
+          id?: number
+          kind: string
+          person_id?: string | null
+          person_name?: string | null
+          ref?: string | null
+          source?: string
+        }
+        Update: {
+          at?: string
+          detail?: Json
+          id?: number
+          kind?: string
+          person_id?: string | null
+          person_name?: string | null
+          ref?: string | null
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ops_events_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ops_integration: {
+        Row: {
+          created_at: string | null
+          key: string
+          value: string
+        }
+        Insert: {
+          created_at?: string | null
+          key: string
+          value: string
+        }
+        Update: {
+          created_at?: string | null
+          key?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      ops_sessions: {
+        Row: {
+          active: boolean
+          day_check: boolean
+          end_time: string | null
+          owner_name: string | null
+          prep: boolean
+          program: string | null
+          session_date: string
+          sid: string
+          source: string | null
+          start_time: string | null
+          team: string[]
+          title: string
+          updated_at: string
+          with_sir: boolean
+        }
+        Insert: {
+          active?: boolean
+          day_check?: boolean
+          end_time?: string | null
+          owner_name?: string | null
+          prep?: boolean
+          program?: string | null
+          session_date: string
+          sid: string
+          source?: string | null
+          start_time?: string | null
+          team?: string[]
+          title: string
+          updated_at?: string
+          with_sir?: boolean
+        }
+        Update: {
+          active?: boolean
+          day_check?: boolean
+          end_time?: string | null
+          owner_name?: string | null
+          prep?: boolean
+          program?: string | null
+          session_date?: string
+          sid?: string
+          source?: string | null
+          start_time?: string | null
+          team?: string[]
+          title?: string
+          updated_at?: string
+          with_sir?: boolean
+        }
+        Relationships: []
+      }
+      ops_task_givers: {
+        Row: {
+          giver_name: string
+          target_name: string
+        }
+        Insert: {
+          giver_name: string
+          target_name: string
+        }
+        Update: {
+          giver_name?: string
+          target_name?: string
+        }
+        Relationships: []
+      }
       organisations: {
         Row: {
           created_at: string
@@ -2332,6 +2460,7 @@ export type Database = {
           language: string | null
           location: string | null
           name: string
+          ops_sid: string | null
           org_id: string
           sequence: number
           series_id: string | null
@@ -2354,6 +2483,7 @@ export type Database = {
           language?: string | null
           location?: string | null
           name: string
+          ops_sid?: string | null
           org_id: string
           sequence?: number
           series_id?: string | null
@@ -2376,6 +2506,7 @@ export type Database = {
           language?: string | null
           location?: string | null
           name?: string
+          ops_sid?: string | null
           org_id?: string
           sequence?: number
           series_id?: string | null
@@ -3581,6 +3712,32 @@ export type Database = {
       my_role: { Args: never; Returns: string }
       open_cycle: {
         Args: { p_end_date: string; p_name?: string }
+        Returns: Json
+      }
+      ops_log: { Args: { p_events: Json; p_secret: string }; Returns: number }
+      ops_report: {
+        Args: { p_from: string; p_secret: string; p_to: string }
+        Returns: Json
+      }
+      ops_sessions_publish: { Args: never; Returns: Json }
+      ops_sessions_upsert: {
+        Args: { p_rows: Json; p_secret: string }
+        Returns: Json
+      }
+      ops_task_action: {
+        Args: {
+          p_action: string
+          p_due?: string
+          p_name: string
+          p_note?: string
+          p_secret: string
+          p_task_id?: string
+          p_title?: string
+        }
+        Returns: Json
+      }
+      ops_team_snapshot: {
+        Args: { p_days?: number; p_from?: string; p_secret: string }
         Returns: Json
       }
       org_settings: { Args: never; Returns: Json }
