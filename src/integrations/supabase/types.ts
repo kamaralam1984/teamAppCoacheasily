@@ -3642,6 +3642,10 @@ export type Database = {
       has_fixed_weekly_off: { Args: { p_off: string }; Returns: boolean }
       ideas_board: { Args: never; Returns: Json }
       is_ordinary_event_type: { Args: { p_type: string }; Returns: boolean }
+      is_weekly_off: {
+        Args: { p_date: string; p_off: string }
+        Returns: boolean
+      }
       latest_unseen_release: { Args: never; Returns: Json }
       leave_approver_for: { Args: { p_profile_id: string }; Returns: string }
       leave_balances: { Args: { p_profile_id?: string }; Returns: Json }
