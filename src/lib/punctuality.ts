@@ -52,6 +52,8 @@ export interface OrgSettings {
   /** Birthday notices to HR: on or off, and how many days before. */
   birthday_reminders_enabled?: boolean;
   birthday_reminder_days?: number[];
+  /** Letters in front of a new person's employee id, e.g. CE gives CE-014. */
+  employee_code_prefix?: string;
 }
 
 export const DEFAULT_MEETING_TIME = "11:00";
