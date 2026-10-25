@@ -134,6 +134,13 @@
       "when": 1792503865257,
       "tag": "0018_team_order",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792916871277,
+      "tag": "0019_two_day_weekly_off",
+      "breakpoints": true
     }
   ]
 }
