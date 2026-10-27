@@ -338,8 +338,9 @@ export function HolidaysCard({ orgId, canManage }: { orgId: string | null; canMa
       <h2 className="font-display text-2xl text-ink">Holidays</h2>
       <p className="mt-1 text-[13px] text-soft">
         National, regional and company holidays are days off for everyone: they drive the sandwich
-        rule, comp-offs, attendance and earned leave. Optional and restricted holidays are listed
-        here without making anyone take the day off.
+        rule, comp-offs, attendance and earned leave. Flexi holidays are a list each person picks a
+        few from (applied for as leave); restricted holidays are listed without making anyone take
+        the day off.
       </p>
       {canManage && proposed > 0 ? (
         <p className="mt-2 rounded-lg bg-goldL/25 px-3 py-2 text-[13px] font-bold text-goldD">

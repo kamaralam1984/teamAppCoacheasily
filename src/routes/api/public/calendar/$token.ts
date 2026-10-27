@@ -56,6 +56,7 @@ const LEAVE_LABEL: Record<string, string> = {
   sick: "Sick leave",
   earned: "Earned leave",
   comp_off: "Comp-off",
+  flexi: "Flexi holiday",
   lwp: "Leave without pay",
 };
 

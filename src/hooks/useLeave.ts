@@ -6,13 +6,14 @@ import type { Tables } from "@/integrations/supabase/types";
 
 export type LeaveRequest = Tables<"leave_requests">;
 
-export type LeaveType = "casual" | "sick" | "earned" | "comp_off" | "maternity" | "lwp";
+export type LeaveType = "casual" | "sick" | "earned" | "comp_off" | "flexi" | "maternity" | "lwp";
 
 export const LEAVE_TYPES: { value: LeaveType; label: string; note?: string }[] = [
   { value: "casual", label: "Casual leave" },
   { value: "sick", label: "Sick leave" },
   { value: "earned", label: "Earned leave" },
   { value: "comp_off", label: "Comp-off" },
+  { value: "flexi", label: "Flexi holiday", note: "pick from the flexi list" },
   { value: "maternity", label: "Maternity leave", note: "26 weeks · first two children" },
   { value: "lwp", label: "Leave without pay" },
 ];
@@ -77,6 +78,28 @@ export function useLeaveCheck(args: {
       });
       if (error) throw error;
       return (data as unknown as LeaveCheck) ?? { errors: [], warnings: [], days: 0 };
+    },
+  });
+}
+
+export interface FlexiHolidays {
+  year: number;
+  starts_from: number;
+  per_year: number;
+  options: { id: string; date: string; name: string }[];
+  /** my pending and approved flexi requests in the year */
+  requests: { id: string; date: string; status: "pending" | "approved" }[];
+}
+
+/** The flexi list for a year and what I have already asked for. */
+export function useFlexiHolidays(year: number, enabled: boolean) {
+  return useQuery({
+    queryKey: ["flexi-holidays", year],
+    enabled,
+    queryFn: async (): Promise<FlexiHolidays | null> => {
+      const { data, error } = await supabase.rpc("flexi_holidays", { p_year: year });
+      if (error) throw error;
+      return (data as unknown as FlexiHolidays | null) ?? null;
     },
   });
 }
@@ -157,7 +180,7 @@ export function useApplyLeave(profileId?: string | null, orgId?: string | null) 
           kind: "leave_raised",
           profileIds: [me.manager_id],
           title: `${me.full_name} has asked for leave`,
-          body: `${input.type} leave from ${input.from_date} to ${input.to_date}. It's waiting for your decision.`,
+          body: `${TYPE_LABEL[input.type] ?? input.type} from ${input.from_date} to ${input.to_date}. It's waiting for your decision.`,
           link: "/approvals",
         });
       })();
@@ -167,6 +190,7 @@ export function useApplyLeave(profileId?: string | null, orgId?: string | null) 
       void qc.invalidateQueries({ queryKey: ["leave-balances"] });
       void qc.invalidateQueries({ queryKey: ["leave-history"] });
       void qc.invalidateQueries({ queryKey: ["leave-pending"] });
+      void qc.invalidateQueries({ queryKey: ["flexi-holidays"] });
     },
   });
 }
@@ -184,7 +208,9 @@ export function usePendingApprovals(enabled: boolean) {
       await closeStaleRequests();
       const { data, error } = await supabase
         .from("leave_requests")
-        .select("*, applicant:profiles!leave_requests_profile_id_fkey(id, full_name, title, department)")
+        .select(
+          "*, applicant:profiles!leave_requests_profile_id_fkey(id, full_name, title, department)",
+        )
         .eq("status", "pending")
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -213,7 +239,7 @@ export function useDecideLeave(deciderId?: string | null) {
           kind: "leave_decided",
           profileIds: [row.profile_id],
           title: `Your leave was ${args.status}`,
-          body: `${row.type} leave from ${row.from_date} to ${row.to_date} was ${args.status}.`,
+          body: `${TYPE_LABEL[row.type] ?? row.type} from ${row.from_date} to ${row.to_date} was ${args.status}.`,
           link: "/leave",
         });
       }
@@ -238,6 +264,7 @@ export function useDecideLeave(deciderId?: string | null) {
       void qc.invalidateQueries({ queryKey: ["leave-pending"] });
       void qc.invalidateQueries({ queryKey: ["leave-balances"] });
       void qc.invalidateQueries({ queryKey: ["leave-history"] });
+      void qc.invalidateQueries({ queryKey: ["flexi-holidays"] });
     },
   });
 }

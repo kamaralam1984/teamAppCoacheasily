@@ -40,6 +40,7 @@ export function assertDevTable(name: string): DevTable {
 export const ORG_SETTING_KEYS = [
   "digests_enabled", "comp_off_enabled", "testing_until", "daily_meeting_time", "daily_meeting_url",
   "casual_quota", "sick_quota", "casual_quarter_cap", "daily_priority_cap", "team_birthdays", "timezone",
+  "flexi_holidays_per_year", "flexi_holidays_from",
 ];
 
 export function istToday(): string {

@@ -14,7 +14,7 @@ export const KIND_LABEL: Record<HolidayKind, string> = {
   national: "National",
   regional: "Regional",
   company: "Company",
-  optional: "Optional",
+  optional: "Flexi",
   restricted: "Restricted",
 };
 

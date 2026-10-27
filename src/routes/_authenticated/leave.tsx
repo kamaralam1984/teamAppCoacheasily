@@ -10,6 +10,7 @@ import {
   LEAVE_TYPES,
   TYPE_LABEL,
   useApplyLeave,
+  useFlexiHolidays,
   useLeaveBalances,
   useLeaveCheck,
   useMyLeave,
@@ -86,7 +87,20 @@ function LeavePage() {
   const [handoverTasks, setHandoverTasks] = useState<string[]>([]);
   const [celebration, setCelebration] = useState<string | null>(null);
 
-  const effectiveTo = halfDay ? from : to;
+  const isFlexi = type === "flexi";
+  const thisYear = Number(today.slice(0, 4));
+  const flexiFirst = useFlexiHolidays(thisYear, Boolean(profile) && isFlexi);
+  // Flexi holidays only exist from their starting year, so open the list there.
+  const flexiBaseYear = Math.max(thisYear, flexiFirst.data?.starts_from ?? thisYear);
+  const [flexiYear, setFlexiYear] = useState<number | null>(null);
+  const shownFlexiYear = flexiYear ?? flexiBaseYear;
+  const { data: flexi } = useFlexiHolidays(
+    shownFlexiYear,
+    Boolean(profile) && isFlexi && Boolean(flexiFirst.data),
+  );
+  const flexiTaken = flexi?.requests.length ?? 0;
+
+  const effectiveTo = halfDay || isFlexi ? from : to;
   const { data: windowTasks } = useTasksInWindow(profile?.id ?? null, from, effectiveTo);
   const check = useLeaveCheck({
     type,
@@ -99,7 +113,7 @@ function LeavePage() {
   const errors = check.data?.errors ?? [];
   const warnings = type === "sick" ? [] : (check.data?.warnings ?? []);
   const days = check.data?.days ?? 0;
-  const blocked = errors.length > 0 || check.isFetching || apply.isPending;
+  const blocked = errors.length > 0 || check.isFetching || apply.isPending || (isFlexi && !from);
 
   const colleagues = useMemo(
     () =>
@@ -216,7 +230,19 @@ function LeavePage() {
                 id="lv-type"
                 className="ce-input"
                 value={type}
-                onChange={(e) => setType(e.target.value as LeaveType)}
+                onChange={(e) => {
+                  const next = e.target.value as LeaveType;
+                  setType(next);
+                  if (next === "flexi") {
+                    // the day is picked from the flexi list
+                    setHalfDay(false);
+                    setFrom("");
+                    setTo("");
+                  } else if (isFlexi) {
+                    setFrom(today);
+                    setTo(today);
+                  }
+                }}
               >
                 {leaveTypes.map((t) => (
                   <option key={t.value} value={t.value}>
@@ -227,46 +253,115 @@ function LeavePage() {
               </select>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label htmlFor="lv-from" className="ce-label">
-                  First day
-                </label>
-                <input
-                  id="lv-from"
-                  type="date"
-                  className="ce-input"
-                  value={from}
-                  onChange={(e) => {
-                    setFrom(e.target.value);
-                    if (e.target.value > to) setTo(e.target.value);
-                  }}
-                />
+            {isFlexi ? (
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-[8rem_1fr]">
+                  <div>
+                    <label htmlFor="lv-flexi-year" className="ce-label">
+                      Year
+                    </label>
+                    <select
+                      id="lv-flexi-year"
+                      className="ce-input"
+                      value={shownFlexiYear}
+                      onChange={(e) => {
+                        setFlexiYear(Number(e.target.value));
+                        setFrom("");
+                        setTo("");
+                      }}
+                    >
+                      {[flexiBaseYear, flexiBaseYear + 1].map((y) => (
+                        <option key={y} value={y}>
+                          {y}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="lv-flexi" className="ce-label">
+                      Flexi holiday
+                    </label>
+                    <select
+                      id="lv-flexi"
+                      className="ce-input"
+                      value={from}
+                      onChange={(e) => {
+                        setFrom(e.target.value);
+                        setTo(e.target.value);
+                      }}
+                    >
+                      <option value="">Pick a day</option>
+                      {(flexi?.options ?? []).map((o) => {
+                        const asked = flexi?.requests.find((r) => r.date === o.date);
+                        return (
+                          <option
+                            key={o.id}
+                            value={o.date}
+                            disabled={o.date <= today || Boolean(asked)}
+                          >
+                            {o.name} · {shortDate(o.date)}
+                            {asked ? ` — ${asked.status}` : o.date <= today ? " — passed" : ""}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                </div>
+                {flexi ? (
+                  <p className="text-[12px] leading-relaxed text-soft">
+                    {flexi.options.length === 0
+                      ? `No flexi holidays are listed for ${shownFlexiYear} yet.`
+                      : `You can take ${flexi.per_year} of these in ${shownFlexiYear} — you have asked for ${flexiTaken}. Plan ahead: your manager approves it like any leave.`}
+                    {shownFlexiYear < flexi.starts_from
+                      ? ` Flexi holidays start in ${flexi.starts_from}.`
+                      : ""}
+                  </p>
+                ) : null}
               </div>
-              <div>
-                <label htmlFor="lv-to" className="ce-label">
-                  Last day
-                </label>
-                <input
-                  id="lv-to"
-                  type="date"
-                  className="ce-input"
-                  value={effectiveTo}
-                  disabled={halfDay}
-                  onChange={(e) => setTo(e.target.value)}
-                />
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="lv-from" className="ce-label">
+                    First day
+                  </label>
+                  <input
+                    id="lv-from"
+                    type="date"
+                    className="ce-input"
+                    value={from}
+                    onChange={(e) => {
+                      setFrom(e.target.value);
+                      if (e.target.value > to) setTo(e.target.value);
+                    }}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="lv-to" className="ce-label">
+                    Last day
+                  </label>
+                  <input
+                    id="lv-to"
+                    type="date"
+                    className="ce-input"
+                    value={effectiveTo}
+                    disabled={halfDay}
+                    onChange={(e) => setTo(e.target.value)}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
-            <label className="flex min-h-11 items-center gap-3 text-sm font-semibold text-ink">
-              <input
-                type="checkbox"
-                className="h-5 w-5 rounded border-line accent-[var(--ce-saffBtn)]"
-                checked={halfDay}
-                onChange={(e) => setHalfDay(e.target.checked)}
-              />
-              Half day (counts as 0.5)
-            </label>
+            {isFlexi ? null : (
+              <label className="flex min-h-11 items-center gap-3 text-sm font-semibold text-ink">
+                <input
+                  type="checkbox"
+                  className="h-5 w-5 rounded border-line accent-[var(--ce-saffBtn)]"
+                  checked={halfDay}
+                  onChange={(e) => setHalfDay(e.target.checked)}
+                />
+                Half day (counts as 0.5)
+              </label>
+            )}
 
             <div>
               <label htmlFor="lv-handover" className="ce-label">
@@ -424,8 +519,8 @@ function LeavePage() {
                     ) : null}
                     {r.status === "pending" && r.created_at.slice(0, 10) < r.from_date ? (
                       <p className="mt-0.5 text-[12px] text-soft">
-                        Waiting for a decision. If nobody decides before {shortDate(r.from_date)}, it is
-                        rejected automatically that day.
+                        Waiting for a decision. If nobody decides before {shortDate(r.from_date)},
+                        it is rejected automatically that day.
                       </p>
                     ) : null}
                   </div>

@@ -3623,6 +3623,17 @@ export type Database = {
         Returns: number
       }
       el_run_lapses: { Args: { p_profile_id: string }; Returns: number }
+      flexi_holiday_problem: {
+        Args: {
+          p_exclude?: string
+          p_from: string
+          p_half: boolean
+          p_profile_id: string
+          p_to: string
+        }
+        Returns: string
+      }
+      flexi_holidays: { Args: { p_year: number }; Returns: Json }
       goal_nudge_me: { Args: never; Returns: boolean }
       goal_owner: { Args: { p_goal_id: string }; Returns: string }
       goal_pct: { Args: { p_goal_id: string }; Returns: number }
