@@ -148,6 +148,13 @@
       "when": 1793099042099,
       "tag": "0020_flexi_holidays",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793177973851,
+      "tag": "0021_my_profile_self_edit",
+      "breakpoints": true
     }
   ]
 }

@@ -13,6 +13,8 @@ import {
   useHrPrivate,
   useRemoveHrRow,
   useSaveHrPrivate,
+  signedHrDocumentUrl,
+  uploadHrDocument,
   type PrivateRecord,
 } from "@/hooks/useHrRecord";
 import { useLeaveBalances, TYPE_LABEL } from "@/hooks/useLeave";
@@ -43,7 +45,7 @@ export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
 });
 
-const GENDERS = ["Woman", "Man", "Non-binary", "Prefer not to say"];
+const GENDERS = ["Male", "Female", "Non-binary", "Prefer not to say"];
 const MARITAL = [
   { value: "", label: "—" },
   { value: "single", label: "Single" },
@@ -89,6 +91,133 @@ function Read({ label, value }: { label: string; value: string }) {
     <div>
       <Label>{label}</Label>
       <p className="text-[15px] text-ink">{value || "—"}</p>
+    </div>
+  );
+}
+
+const ID_DOC = {
+  pan: {
+    title: "PAN",
+    numberLabel: "PAN number",
+    pickLabel: "Upload PAN card",
+    pattern: /^[A-Z]{5}[0-9]{4}[A-Z]$/,
+    badNumber: "PAN looks like ABCDE1234F.",
+    clean: (v: string) =>
+      v
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "")
+        .slice(0, 10),
+    numberKey: "pan_number",
+    docKey: "pan_doc_path",
+  },
+  aadhaar: {
+    title: "Aadhaar",
+    numberLabel: "Aadhaar — last 4 digits",
+    pickLabel: "Upload Aadhaar",
+    pattern: /^\d{4}$/,
+    badNumber: "Type the last four digits of your Aadhaar.",
+    clean: (v: string) => v.replace(/\D/g, "").slice(0, 4),
+    numberKey: "aadhaar_last4",
+    docKey: "aadhaar_doc_path",
+  },
+} as const;
+
+/** Filled in once by the person; after that only HR can change it (enforced in the database). */
+function IdDocument({
+  kind,
+  profileId,
+  number,
+  docPath,
+  save,
+}: {
+  kind: "pan" | "aadhaar";
+  profileId: string;
+  number: string | null;
+  docPath: string | null;
+  save: (patch: Partial<PrivateRecord>) => Promise<unknown>;
+}) {
+  const cfg = ID_DOC[kind];
+  const [typed, setTyped] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
+  const locked = Boolean(number) && Boolean(docPath);
+
+  async function submit() {
+    if (!number && !cfg.pattern.test(typed)) {
+      toast.error(cfg.badNumber);
+      return;
+    }
+    if (!docPath && !file) {
+      toast.error(`Choose your ${cfg.title} document first.`);
+      return;
+    }
+    setBusy(true);
+    try {
+      const patch: Partial<PrivateRecord> = {};
+      if (!number) patch[cfg.numberKey] = typed;
+      if (!docPath && file) patch[cfg.docKey] = await uploadHrDocument(profileId, kind, file);
+      await save(patch);
+      setTyped("");
+      setFile(null);
+      toast.success(`${cfg.title} submitted.`);
+    } catch (e) {
+      toast.error(message(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function openDoc() {
+    try {
+      window.open(await signedHrDocumentUrl(docPath!), "_blank", "noopener");
+    } catch {
+      toast.error("Couldn't open that document.");
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <Label>{cfg.numberLabel}</Label>
+        {number ? (
+          <p className="text-[15px] text-ink">{number}</p>
+        ) : (
+          <input
+            className={inputCls}
+            inputMode={kind === "aadhaar" ? "numeric" : undefined}
+            value={typed}
+            onChange={(e) => setTyped(cfg.clean(e.target.value))}
+          />
+        )}
+      </div>
+      <div>
+        <Label>{cfg.title} document</Label>
+        {docPath ? (
+          <button
+            type="button"
+            className="text-[13px] font-bold text-goldD underline"
+            onClick={() => void openDoc()}
+          >
+            View uploaded {cfg.title}
+          </button>
+        ) : (
+          <FilePicker
+            label={cfg.pickLabel}
+            accept="image/*,application/pdf"
+            maxBytes={10 * 1024 * 1024}
+            uploading={busy}
+            hint="An image or a PDF, up to 10MB."
+            onSelect={(f) => setFile(f)}
+          />
+        )}
+      </div>
+      {locked ? (
+        <p className="text-[13px] text-soft">Submitted. To change it, ask HR.</p>
+      ) : (
+        <button type="button" className="btn3d" disabled={busy} onClick={() => void submit()}>
+          {busy ? "Submitting…" : `Submit ${cfg.title}`}
+        </button>
+      )}
     </div>
   );
 }
@@ -467,6 +596,28 @@ function ProfilePage() {
                 {savingPersonal ? "Saving…" : "Save"}
               </button>
             </div>
+          </div>
+        </Section>
+
+        <Section
+          title="PAN and Aadhaar"
+          note="Only you and HR can open these. Check before you submit — once submitted, only HR can change them."
+        >
+          <div className="grid gap-6 sm:grid-cols-2">
+            <IdDocument
+              kind="pan"
+              profileId={profile.id}
+              number={priv.data?.pan_number ?? null}
+              docPath={priv.data?.pan_doc_path ?? null}
+              save={(patch) => savePriv.mutateAsync(patch)}
+            />
+            <IdDocument
+              kind="aadhaar"
+              profileId={profile.id}
+              number={priv.data?.aadhaar_last4 ?? null}
+              docPath={priv.data?.aadhaar_doc_path ?? null}
+              save={(patch) => savePriv.mutateAsync(patch)}
+            />
           </div>
         </Section>
 

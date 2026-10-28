@@ -28,7 +28,7 @@ const TABS = [
 ] as const;
 type Tab = (typeof TABS)[number];
 
-const GENDERS = ["Woman", "Man", "Non-binary", "Prefer not to say"];
+const GENDERS = ["Male", "Female", "Non-binary", "Prefer not to say"];
 const MARITAL = [
   { value: "", label: "—" },
   { value: "single", label: "Single" },
@@ -306,7 +306,8 @@ export function HrRecord({ profile }: { profile: Profile }) {
         {tab === "Documents" ? (
           <div className="space-y-4">
             <p className="rounded-[12px] bg-cream p-3 text-[13px] text-soft">
-              Only HR and Admin can open these. Links expire in a couple of minutes.
+              Only the person, HR and Admin can open these. The person submits each one once; after
+              that only HR can change it. Links expire in a couple of minutes.
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
