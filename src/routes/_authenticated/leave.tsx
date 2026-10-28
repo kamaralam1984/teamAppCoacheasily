@@ -19,6 +19,7 @@ import {
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useWarriors } from "@/hooks/useWarriors";
 import { EarnedLeaveLedger } from "@/components/leave/EarnedLeaveLedger";
+import { WeeklyOffShiftCard } from "@/components/leave/WeeklyOffShiftCard";
 import { useOrgSettings } from "@/hooks/useOrg";
 import { useTasksInWindow } from "@/hooks/useTasks";
 import { isTestingActive } from "@/lib/testing";
@@ -217,6 +218,9 @@ function LeavePage() {
             below — they are not yearly balances.
           </p>
         </section>
+
+        {/* the weekly off, and moving it for one week */}
+        <WeeklyOffShiftCard weeklyOff={profile?.weekly_off ?? null} />
 
         {/* c) apply */}
         <section className="ce-rise ce-card p-6" style={{ animationDelay: "160ms" }}>

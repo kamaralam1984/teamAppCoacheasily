@@ -39,6 +39,7 @@ import { useMyProfile } from "@/hooks/useMyProfile";
 import { useOrgSettings, usePunctualityMe } from "@/hooks/useOrg";
 import { useTasks, useUpdateTask } from "@/hooks/useTasks";
 import { useWarriors } from "@/hooks/useWarriors";
+import { useMyShifts } from "@/hooks/useWeeklyOffShift";
 import { useNextDays } from "@/hooks/useCalendar";
 import { useAnnouncements } from "@/hooks/useReports";
 import { useIdeas } from "@/hooks/useIdeas";
@@ -145,6 +146,8 @@ function Dashboard() {
 
   const { data: org } = useOrgSettings(Boolean(profile));
   const { data: punc } = usePunctualityMe(Boolean(profile));
+  // a shifted weekly off moves the "why are you working today?" question with it
+  const { data: myShifts } = useMyShifts(Boolean(profile?.weekly_off));
   const meetingTime = org?.daily_meeting_time || DEFAULT_MEETING_TIME;
   const meetingUrl = org?.daily_meeting_url ?? "";
   const mondayKey = `ce-monday-review-${summary?.today ?? "today"}`;
@@ -539,6 +542,7 @@ function Dashboard() {
           onClose={() => setCodeOpen(false)}
           onPledge={onMark}
           weeklyOff={profile?.weekly_off ?? null}
+          offToday={myShifts?.off_today}
         />
       ) : null}
 

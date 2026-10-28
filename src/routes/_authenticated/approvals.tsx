@@ -14,8 +14,9 @@ import { useHostConflicts } from "@/hooks/useCalendar";
 import { useTasksByIds } from "@/hooks/useTasks";
 import { useWarriors } from "@/hooks/useWarriors";
 import { useMyProfile } from "@/hooks/useMyProfile";
+import { useDecideShift, usePendingShifts, type PendingShift } from "@/hooks/useWeeklyOffShift";
 import { rangeLabel } from "@/lib/calendar";
-import { roleLabel, shortDate } from "@/lib/warriors";
+import { roleLabel, shortDate, weeklyOffLabel } from "@/lib/warriors";
 
 export const Route = createFileRoute("/_authenticated/approvals")({
   head: () => ({
@@ -225,6 +226,103 @@ function RequestCard({
   );
 }
 
+const WEEKDAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function dayLabel(iso: string) {
+  return `${WEEKDAY_SHORT[new Date(`${iso}T00:00:00Z`).getUTCDay()]} ${shortDate(iso)}`;
+}
+
+/** A weekly off shift beyond the free ones in a quarter. Only HR decides these. */
+function ShiftCard({
+  shift,
+  index,
+  deciderId,
+}: {
+  shift: PendingShift;
+  index: number;
+  deciderId: string | null;
+}) {
+  const decide = useDecideShift();
+  const isMine = Boolean(deciderId) && shift.profile_id === deciderId;
+  const u = shift.usage;
+  const onDecide = (approve: boolean) =>
+    decide.mutate(
+      { id: shift.id, approve },
+      {
+        onSuccess: () => toast.success(approve ? "Approved. They have been told." : "Declined. They have been told."),
+        onError: (err) =>
+          toast.error((err as { message?: string } | null)?.message ?? "That decision wasn't allowed."),
+      },
+    );
+
+  return (
+    <li className="ce-rise ce-card p-5" style={{ animationDelay: `${index * 60}ms` }}>
+      <div className="flex items-start gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-night text-[13px] font-bold text-goldL">
+          {initials(shift.full_name)}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-ink">{shift.full_name}</p>
+          <p className="text-[12px] text-soft">
+            {shift.title ?? "Warrior"}
+            {shift.department ? ` · ${shift.department}` : ""}
+          </p>
+        </div>
+        <span className="rounded-full border border-gold/40 bg-cream px-3 py-1 text-[11px] font-bold tracking-[0.08em] text-goldD uppercase">
+          Weekly off shift
+        </span>
+      </div>
+
+      <p className="mt-4 text-sm font-semibold text-ink">
+        {dayLabel(shift.off_date)} → {dayLabel(shift.new_date)}
+      </p>
+      <p className="text-[12px] text-soft">
+        Usual weekly off: {weeklyOffLabel(shift.weekly_off)}
+      </p>
+      {shift.reason ? (
+        <p className="mt-1 text-[13px] leading-relaxed text-soft">“{shift.reason}”</p>
+      ) : null}
+
+      <div className="mt-3 border-t border-line pt-3">
+        <p className="text-[12px] text-soft">
+          This quarter ({shortDate(u.quarter_from)} → {shortDate(u.quarter_to)}):{" "}
+          <strong className="text-ink">{u.quarter_used}</strong> shifts already, {u.free_per_quarter} are
+          free · this year: <strong className="text-ink">{u.year_used}</strong> of {u.per_year}
+        </p>
+        <p className="mt-1 text-[12px] font-semibold text-goldD">
+          Decide before {shortDate(shift.off_date < shift.new_date ? shift.off_date : shift.new_date)}.
+          If nobody does, it is rejected automatically that day.
+        </p>
+      </div>
+
+      {isMine ? (
+        <p className="mt-4 rounded-lg border border-line bg-pearl p-3 text-[13px] font-semibold text-soft">
+          This is your own request, so somebody else in HR decides it.
+        </p>
+      ) : (
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+          <button
+            type="button"
+            className="btn3d w-full sm:w-auto"
+            disabled={decide.isPending}
+            onClick={() => onDecide(true)}
+          >
+            Approve
+          </button>
+          <button
+            type="button"
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-line bg-white px-5 text-[15px] font-bold text-ink sm:w-auto"
+            disabled={decide.isPending}
+            onClick={() => onDecide(false)}
+          >
+            Reject
+          </button>
+        </div>
+      )}
+    </li>
+  );
+}
+
 
 function Approvals() {
   const { data } = useMyProfile();
@@ -233,6 +331,8 @@ function Approvals() {
     profile?.role === "manager" || profile?.role === "hr" || profile?.role === "admin";
 
   const { data: pending, isLoading } = usePendingApprovals(Boolean(profile) && canReview);
+  const isHr = profile?.role === "hr" || profile?.role === "admin";
+  const { data: shifts } = usePendingShifts(Boolean(profile) && isHr);
 
   return (
     <AppShell>
@@ -262,6 +362,20 @@ function Approvals() {
             All clear — no leave is waiting on you.
           </div>
         )}
+
+        {isHr && shifts && shifts.length > 0 ? (
+          <div className="space-y-3">
+            <h2 className="ce-rise font-display text-2xl text-ink">Weekly off shifts</h2>
+            <p className="text-sm text-soft">
+              Two shifts a quarter go through on their own. These are beyond that, so HR decides.
+            </p>
+            <ul className="space-y-4">
+              {shifts.map((s, i) => (
+                <ShiftCard key={s.id} shift={s} index={i} deciderId={profile?.id ?? null} />
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </div>
     </AppShell>
   );

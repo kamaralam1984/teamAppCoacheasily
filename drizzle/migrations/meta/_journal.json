@@ -155,6 +155,13 @@
       "when": 1793177973851,
       "tag": "0021_my_profile_self_edit",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1793203241780,
+      "tag": "0022_weekly_off_shift",
+      "breakpoints": true
     }
   ]
 }

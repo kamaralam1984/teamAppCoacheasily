@@ -14,6 +14,8 @@ export interface DailyCodeModalProps {
   onPledge: (focus: string, status: WorkMode, offReason: string) => void;
   /** the signed-in person's weekly off, e.g. "Monday" or "Saturday,Sunday" */
   weeklyOff?: string | null;
+  /** today is a weekly off once shifts are counted; without it the usual weekly off decides */
+  offToday?: boolean | undefined;
 }
 
 const FALLBACK_PLEDGE = "I'm here, and I'll work honestly today";
@@ -30,6 +32,7 @@ export function DailyCodeModal({
   onClose,
   onPledge,
   weeklyOff = null,
+  offToday,
 }: DailyCodeModalProps) {
   const [focus, setFocus] = useState("");
   const [mode, setMode] = useState<WorkMode>("present");
@@ -39,7 +42,7 @@ export function DailyCodeModal({
     timeZone: "Asia/Kolkata",
   });
   /** Everybody has their own weekly off, one day or more, and it differs from person to person. */
-  const onWeeklyOff = isOffOn(weeklyOff, todayName);
+  const onWeeklyOff = offToday ?? isOffOn(weeklyOff, todayName);
   const needsReason = onWeeklyOff && offReason.trim().length < 3;
 
   useEffect(() => {
@@ -115,7 +118,8 @@ export function DailyCodeModal({
         {onWeeklyOff ? (
           <div className="mt-5 rounded-[12px] border border-gold/50 bg-goldL/15 p-4">
             <label htmlFor="dc-off" className="ce-label">
-              Today is your weekly off ({weeklyOffLabel(weeklyOff)}). Why are you working today?
+              Today is your weekly off (
+              {isOffOn(weeklyOff, todayName) ? weeklyOffLabel(weeklyOff) : "shifted to today"}). Why are you working today?
             </label>
             <input
               id="dc-off"

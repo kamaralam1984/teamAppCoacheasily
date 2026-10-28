@@ -3652,6 +3652,10 @@ export type Database = {
       goals_status_tick: { Args: never; Returns: number }
       has_fixed_weekly_off: { Args: { p_off: string }; Returns: boolean }
       ideas_board: { Args: never; Returns: Json }
+      is_off_day: {
+        Args: { p_date: string; p_off: string; p_profile_id: string }
+        Returns: boolean
+      }
       is_ordinary_event_type: { Args: { p_type: string }; Returns: boolean }
       is_weekly_off: {
         Args: { p_date: string; p_off: string }
@@ -3856,6 +3860,22 @@ export type Database = {
       update_org_settings: { Args: { p_patch: Json }; Returns: Json }
       vote_idea: { Args: { p_idea_id: string }; Returns: number }
       week_start_ist: { Args: never; Returns: string }
+      weekly_off_shift_cancel: { Args: { p_id: string }; Returns: undefined }
+      weekly_off_shift_check: {
+        Args: { p_new: string; p_off: string }
+        Returns: Json
+      }
+      weekly_off_shift_decide: {
+        Args: { p_approve: boolean; p_id: string; p_note?: string }
+        Returns: undefined
+      }
+      weekly_off_shift_request: {
+        Args: { p_new: string; p_off: string; p_reason?: string }
+        Returns: Json
+      }
+      weekly_off_shifts_expire: { Args: never; Returns: number }
+      weekly_off_shifts_mine: { Args: never; Returns: Json }
+      weekly_off_shifts_pending: { Args: never; Returns: Json }
     }
     Enums: {
       [_ in never]: never
