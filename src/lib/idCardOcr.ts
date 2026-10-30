@@ -106,11 +106,18 @@ export async function readCardOnDevice(
   image: Blob,
   kind: "pan" | "aadhaar",
 ): Promise<string | null> {
-  const { createWorker } = await import("tesseract.js");
+  const { createWorker, PSM } = await import("tesseract.js");
   const worker = await createWorker("eng");
   try {
-    const { data } = await worker.recognize(image);
-    return kind === "pan" ? panFromText(data.text) : aadhaarLast4FromText(data.text);
+    // Sparse text first: a card is scattered words, and the default single-block mode
+    // often drops the big Aadhaar number. The other layouts catch what it misses.
+    for (const mode of [PSM.SPARSE_TEXT, PSM.AUTO, PSM.SINGLE_BLOCK]) {
+      await worker.setParameters({ tessedit_pageseg_mode: mode });
+      const { data } = await worker.recognize(image);
+      const found = kind === "pan" ? panFromText(data.text) : aadhaarLast4FromText(data.text);
+      if (found) return found;
+    }
+    return null;
   } finally {
     await worker.terminate();
   }
