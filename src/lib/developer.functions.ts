@@ -480,3 +480,91 @@ export const devSaveTeamOrder = createServerFn({ method: "POST" })
     await log(db, email, "team_order.save", null, changes);
     return { changed: Object.keys(changes).length };
   });
+
+// ───────── PAN and Aadhaar: HR, admin and developers may change them at any time ─────────
+
+const ID_MIME: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "application/pdf": "pdf" };
+// ~7MB of file once base64 is unwrapped — photos are shrunk on the device first.
+const ID_MAX_BASE64 = 9_500_000;
+
+interface IdDocFile { mime: string; data: string }
+interface IdDocsInput {
+  profileId: string;
+  pan_number?: string | null;
+  aadhaar_last4?: string | null;
+  pan_doc?: IdDocFile;
+  aadhaar_doc?: IdDocFile;
+}
+
+/** The person's PAN and Aadhaar as stored, with short-lived links to the uploaded cards. */
+export const devIdDocs = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { profileId: string }) => {
+    if (!i?.profileId) throw new Error("profileId is required");
+    return i;
+  })
+  .handler(async ({ data, context }) => {
+    const { db } = await gate(context.userId);
+    const { data: row, error } = await db
+      .from("profile_private")
+      .select("pan_number, pan_doc_path, aadhaar_last4, aadhaar_doc_path")
+      .eq("profile_id", data.profileId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    const r = (row ?? {}) as { pan_number?: string | null; pan_doc_path?: string | null; aadhaar_last4?: string | null; aadhaar_doc_path?: string | null };
+    const link = async (path: string | null | undefined) => {
+      if (!path) return null;
+      const { data: s } = await db.storage.from("hr-documents").createSignedUrl(path, 120);
+      return s?.signedUrl ?? null;
+    };
+    return {
+      pan_number: r.pan_number ?? null,
+      aadhaar_last4: r.aadhaar_last4 ?? null,
+      panUrl: await link(r.pan_doc_path),
+      aadhaarUrl: await link(r.aadhaar_doc_path),
+    };
+  });
+
+export const devSaveIdDocs = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: IdDocsInput) => {
+    if (!i?.profileId) throw new Error("profileId is required");
+    if (i.pan_number != null && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(i.pan_number)) throw new Error("PAN looks like ABCDE1234F.");
+    if (i.aadhaar_last4 != null && !/^\d{4}$/.test(i.aadhaar_last4)) throw new Error("Aadhaar must be exactly four digits.");
+    for (const f of [i.pan_doc, i.aadhaar_doc]) {
+      if (!f) continue;
+      if (!ID_MIME[f.mime]) throw new Error("Upload an image or a PDF.");
+      if (!f.data || f.data.length > ID_MAX_BASE64) throw new Error("That file is too large.");
+    }
+    return i;
+  })
+  .handler(async ({ data, context }) => {
+    const { db, email } = await gate(context.userId);
+    const { data: person, error: pe } = await db.from("profiles").select("org_id").eq("id", data.profileId).maybeSingle();
+    if (pe) throw new Error(pe.message);
+    if (!person) throw new Error("Row not found");
+
+    const patch: Record<string, string | null> = {};
+    if (data.pan_number !== undefined) patch["pan_number"] = data.pan_number;
+    if (data.aadhaar_last4 !== undefined) patch["aadhaar_last4"] = data.aadhaar_last4;
+    for (const kind of ["pan", "aadhaar"] as const) {
+      const f = data[`${kind}_doc`];
+      if (!f) continue;
+      // Same folder and naming as the person's own upload, so HR finds it where they expect.
+      const path = `${data.profileId}/${kind}-${Date.now()}.${ID_MIME[f.mime]}`;
+      const { error } = await db.storage
+        .from("hr-documents")
+        .upload(path, Buffer.from(f.data, "base64"), { contentType: f.mime, upsert: false });
+      if (error) throw new Error(error.message);
+      patch[`${kind}_doc_path`] = path;
+    }
+    if (!Object.keys(patch).length) throw new Error("Nothing changed");
+
+    const { error } = await db
+      .from("profile_private")
+      .upsert({ profile_id: data.profileId, org_id: (person as { org_id: string }).org_id, ...patch }, { onConflict: "profile_id" });
+    if (error) throw new Error(error.message);
+    // Which fields changed, never the numbers themselves.
+    await log(db, email, "id_docs.update", `profile_private:${data.profileId}`, { fields: Object.keys(patch) });
+    return { ok: true };
+  });

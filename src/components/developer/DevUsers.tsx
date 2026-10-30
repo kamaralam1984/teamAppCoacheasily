@@ -3,7 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
-import { devImpersonateLink, devListUsers, devUpdateProfile, devUserAction } from "@/lib/developer.functions";
+import { devIdDocs, devImpersonateLink, devListUsers, devSaveIdDocs, devUpdateProfile, devUserAction } from "@/lib/developer.functions";
+import { resizeImage } from "@/lib/avatar";
+import { FilePicker } from "@/components/FilePicker";
 import { impersonationBlockedReason } from "@/lib/developerImpersonation";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
@@ -131,7 +133,76 @@ function UserEditor({ row, all }: { row: UserRow; all: UserRow[] }) {
       ) : (
         <p className="text-soft">No login linked.</p>
       )}
+      <IdDocs row={row} />
       <ImpersonatePerson row={row} />
+    </div>
+  );
+}
+
+/** The card as base64: photos shrunk on the device, PDFs as they are. */
+async function cardData(file: File): Promise<{ mime: string; data: string }> {
+  const blob: Blob = file.type.startsWith("image/") ? await resizeImage(file, 2000) : file;
+  const url = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+  return { mime: blob.type || file.type, data: url.slice(url.indexOf(",") + 1) };
+}
+
+/** PAN and Aadhaar are locked for the person after they submit; developers, like HR, can still change them. */
+function IdDocs({ row }: { row: UserRow }) {
+  const qc = useQueryClient();
+  const load = useServerFn(devIdDocs);
+  const saveFn = useServerFn(devSaveIdDocs);
+  const q = useQuery({ queryKey: ["dev-id-docs", row.id], queryFn: () => load({ data: { profileId: row.id } }) });
+  const [pan, setPan] = useState<string | null>(null);
+  const [last4, setLast4] = useState<string | null>(null);
+  const [panFile, setPanFile] = useState<File | null>(null);
+  const [aadhaarFile, setAadhaarFile] = useState<File | null>(null);
+  const panValue = pan ?? q.data?.pan_number ?? "";
+  const last4Value = last4 ?? q.data?.aadhaar_last4 ?? "";
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const input: Parameters<typeof saveFn>[0]["data"] = { profileId: row.id };
+      if (pan !== null && pan !== (q.data?.pan_number ?? "")) input.pan_number = pan || null;
+      if (last4 !== null && last4 !== (q.data?.aadhaar_last4 ?? "")) input.aadhaar_last4 = last4 || null;
+      if (panFile) input.pan_doc = await cardData(panFile);
+      if (aadhaarFile) input.aadhaar_doc = await cardData(aadhaarFile);
+      if (Object.keys(input).length === 1) throw new Error("Nothing changed");
+      return saveFn({ data: input });
+    },
+    onSuccess: () => {
+      toast.success("PAN and Aadhaar saved");
+      setPan(null); setLast4(null); setPanFile(null); setAadhaarFile(null);
+      void qc.invalidateQueries({ queryKey: ["dev-id-docs", row.id] });
+      void qc.invalidateQueries({ queryKey: ["dev-audit"] });
+    },
+    onError: (e) => toast.error(errMsg(e)),
+  });
+
+  if (q.isLoading) return <p className="border-t border-border pt-3 text-soft">Loading PAN and Aadhaar…</p>;
+  if (q.error) return <p className="border-t border-border pt-3 text-soft">Couldn't load PAN and Aadhaar: {errMsg(q.error)}</p>;
+  return (
+    <div className="space-y-2 border-t border-border pt-3">
+      <h4 className="font-semibold text-ink">PAN and Aadhaar</h4>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <input className="ce-input" placeholder="PAN number" value={panValue}
+          onChange={(e) => setPan(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10))} />
+        <input className="ce-input" inputMode="numeric" placeholder="Aadhaar — last 4 digits" value={last4Value}
+          onChange={(e) => setLast4(e.target.value.replace(/\D/g, "").slice(0, 4))} />
+        <div>
+          <FilePicker label="Upload new PAN card" accept="image/*,application/pdf" maxBytes={7 * 1024 * 1024} onSelect={setPanFile} />
+          {q.data?.panUrl && <a className="text-xs font-bold text-goldD underline" href={q.data.panUrl} target="_blank" rel="noopener noreferrer">View current PAN</a>}
+        </div>
+        <div>
+          <FilePicker label="Upload new Aadhaar" accept="image/*,application/pdf" maxBytes={7 * 1024 * 1024} onSelect={setAadhaarFile} />
+          {q.data?.aadhaarUrl && <a className="text-xs font-bold text-goldD underline" href={q.data.aadhaarUrl} target="_blank" rel="noopener noreferrer">View current Aadhaar</a>}
+        </div>
+      </div>
+      <button className="btn3d w-full sm:w-auto" disabled={save.isPending} onClick={() => save.mutate()}>{save.isPending ? "Saving…" : "Save PAN and Aadhaar"}</button>
     </div>
   );
 }
