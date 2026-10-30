@@ -23,6 +23,7 @@ import { useMyProfile } from "@/hooks/useMyProfile";
 import { useUpdateMyProfile } from "@/hooks/useMyDetails";
 import { useWarriors } from "@/hooks/useWarriors";
 import { removeAvatarFile, resizeImage, uploadAvatar } from "@/lib/avatar";
+import { readCardOnDevice } from "@/lib/idCardOcr";
 import { readIdNumber } from "@/lib/idDocument.functions";
 import { signAvatar } from "@/hooks/useAvatars";
 import { roleLabel, weeklyOffLabel } from "@/lib/warriors";
@@ -173,9 +174,19 @@ function IdDocument({
     }
     setReading(true);
     try {
-      const card = await cardForReading(f);
-      if (!card) return;
-      const { number: found } = await readNumber({ data: { kind, ...card } });
+      let found: string | null = null;
+      if (f.type.startsWith("image/")) {
+        // On the device first: a photo never has to leave the browser to be read.
+        found = await readCardOnDevice(await resizeImage(f, 2000), kind).catch(() => null);
+      }
+      if (!found) {
+        const card = await cardForReading(f);
+        if (card) {
+          found = await readNumber({ data: { kind, ...card } })
+            .then((r) => r.number)
+            .catch(() => null);
+        }
+      }
       if (seq !== pickSeq.current || typedByHand.current) return;
       if (found) {
         setTyped(cfg.clean(found));
