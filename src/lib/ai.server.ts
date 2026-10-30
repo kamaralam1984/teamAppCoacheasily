@@ -36,7 +36,12 @@ export async function askAi(messages: AiMessage[], json = true): Promise<string>
 
   if (res.status === 429) throw new AiUnavailable("The AI helper is busy. Try again in a moment.");
   if (res.status === 402) throw new AiUnavailable("The AI workspace is out of credits.");
-  if (!res.ok) throw new AiUnavailable("The AI helper could not be reached. Carry on without it.");
+  if (!res.ok) {
+    // Status and the provider's error text only — never the request, which can hold documents.
+    const detail = await res.text().catch(() => "");
+    console.error("[ai] request failed", res.status, detail.slice(0, 300));
+    throw new AiUnavailable("The AI helper could not be reached. Carry on without it.");
+  }
 
   const payload = (await res.json()) as { choices?: { message?: { content?: string } }[] };
   return payload.choices?.[0]?.message?.content ?? "";

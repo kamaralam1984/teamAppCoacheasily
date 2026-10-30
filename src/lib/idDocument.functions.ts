@@ -43,11 +43,29 @@ export const readIdNumber = createServerFn({ method: "POST" })
         },
       ]);
     } catch (e) {
-      if (e instanceof AiUnavailable) return { number: null };
+      if (e instanceof AiUnavailable) {
+        console.error("[id read] AI unavailable:", e.message);
+        return { number: null };
+      }
       throw e;
     }
 
-    const parsed = parseJson<{ pan?: unknown; last4?: unknown }>(raw, {});
+    // Some answers come wrapped in a ```json fence despite JSON mode.
+    const parsed = parseJson<{ pan?: unknown; last4?: unknown }>(
+      raw.trim().replace(/^```(?:json)?\s*|\s*```$/g, ""),
+      {},
+    );
+    // Never log the answer itself: it can hold a PAN.
+    if (!("pan" in parsed) && !("last4" in parsed)) {
+      console.error(
+        "[id read] unreadable AI answer, length",
+        raw.length,
+        "starts",
+        JSON.stringify(raw.slice(0, 8)),
+      );
+    } else if (parsed.pan == null && parsed.last4 == null) {
+      console.error("[id read] AI found no number on the", data.kind, "card");
+    }
     if (data.kind === "pan") {
       const pan = String(parsed.pan ?? "")
         .toUpperCase()
