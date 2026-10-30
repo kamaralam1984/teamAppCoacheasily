@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
@@ -21,7 +22,8 @@ import { useLeaveBalances, TYPE_LABEL } from "@/hooks/useLeave";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useUpdateMyProfile } from "@/hooks/useMyDetails";
 import { useWarriors } from "@/hooks/useWarriors";
-import { removeAvatarFile, uploadAvatar } from "@/lib/avatar";
+import { removeAvatarFile, resizeImage, uploadAvatar } from "@/lib/avatar";
+import { readIdNumber } from "@/lib/idDocument.functions";
 import { signAvatar } from "@/hooks/useAvatars";
 import { roleLabel, weeklyOffLabel } from "@/lib/warriors";
 
@@ -122,6 +124,21 @@ const ID_DOC = {
   },
 } as const;
 
+/** The card as base64 for the number reader: photos shrunk on the device, small PDFs as they are. */
+async function cardForReading(file: File): Promise<{ mime: string; data: string } | null> {
+  let blob: Blob = file;
+  if (file.type.startsWith("image/")) blob = await resizeImage(file, 1600);
+  else if (file.type !== "application/pdf" || file.size > 4 * 1024 * 1024) return null;
+  const mime = blob.type || file.type;
+  const url = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+  return { mime, data: url.slice(url.indexOf(",") + 1) };
+}
+
 /** Filled in once by the person; after that only HR can change it (enforced in the database). */
 function IdDocument({
   kind,
@@ -140,7 +157,38 @@ function IdDocument({
   const [typed, setTyped] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [reading, setReading] = useState(false);
+  const readNumber = useServerFn(readIdNumber);
+  // A newer pick wins; a number the person typed themselves is never overwritten.
+  const pickSeq = useRef(0);
+  const typedByHand = useRef(false);
   const locked = Boolean(number) && Boolean(docPath);
+
+  async function onPick(f: File | null) {
+    setFile(f);
+    const seq = ++pickSeq.current;
+    if (!f || number) {
+      setReading(false);
+      return;
+    }
+    setReading(true);
+    try {
+      const card = await cardForReading(f);
+      if (!card) return;
+      const { number: found } = await readNumber({ data: { kind, ...card } });
+      if (seq !== pickSeq.current || typedByHand.current) return;
+      if (found) {
+        setTyped(cfg.clean(found));
+        toast.success(`${cfg.title} number filled in from your card — check it before you submit.`);
+      } else {
+        toast.message(`Couldn't read the ${cfg.title} number. Please type it in.`);
+      }
+    } catch {
+      // Reading is only a convenience; the person can always type the number.
+    } finally {
+      if (seq === pickSeq.current) setReading(false);
+    }
+  }
 
   async function submit() {
     if (!number && !cfg.pattern.test(typed)) {
@@ -159,6 +207,7 @@ function IdDocument({
       await save(patch);
       setTyped("");
       setFile(null);
+      typedByHand.current = false;
       toast.success(`${cfg.title} submitted.`);
     } catch (e) {
       toast.error(message(e));
@@ -186,7 +235,11 @@ function IdDocument({
             className={inputCls}
             inputMode={kind === "aadhaar" ? "numeric" : undefined}
             value={typed}
-            onChange={(e) => setTyped(cfg.clean(e.target.value))}
+            placeholder={reading ? "Reading your card…" : undefined}
+            onChange={(e) => {
+              typedByHand.current = e.target.value !== "";
+              setTyped(cfg.clean(e.target.value));
+            }}
           />
         )}
       </div>
@@ -206,8 +259,8 @@ function IdDocument({
             accept="image/*,application/pdf"
             maxBytes={10 * 1024 * 1024}
             uploading={busy}
-            hint="An image or a PDF, up to 10MB."
-            onSelect={(f) => setFile(f)}
+            hint="An image or a PDF, up to 10MB. We fill in the number from it — you can edit it."
+            onSelect={(f) => onPick(f)}
           />
         )}
       </div>
@@ -562,7 +615,7 @@ function ProfilePage() {
               />
             </div>
             <div>
-              <Label>Emergency contact</Label>
+              <Label>Emergency contact name</Label>
               <input
                 className={inputCls}
                 value={form.emergency_name ?? ""}

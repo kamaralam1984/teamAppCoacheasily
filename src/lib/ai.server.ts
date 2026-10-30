@@ -1,8 +1,11 @@
 /** Shared Lovable AI gateway call. Server-only. */
 
+export type AiPart =
+  { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } };
+
 export interface AiMessage {
   role: "system" | "user";
-  content: string;
+  content: string | AiPart[];
 }
 
 export class AiUnavailable extends Error {}
