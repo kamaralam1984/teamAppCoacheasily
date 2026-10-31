@@ -17,6 +17,7 @@ import {
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useOrgSettings } from "@/hooks/useOrg";
 import { BirthdayTakeover } from "@/components/birthday/BirthdayTakeover";
+import { ProbationAlert } from "@/components/probation/ProbationAlert";
 import { useLatestUnseenRelease } from "@/hooks/useReleases";
 import { PeopleSearch } from "@/components/PeopleSearch";
 import { useDeveloperAccess } from "@/hooks/useDeveloper";
@@ -56,7 +57,6 @@ const SIR_AVAILABILITY_URL =
 // People (by first name) who see the PH Sir Availability link besides HR and Admin.
 const SIR_AVAILABILITY_PEOPLE = ["shubhangi", "supriya", "prachi", "saurabh", "pranjal", "sapana"];
 
-
 export function AppShell({ children }: { children: ReactNode }) {
   const { data, isLoading } = useMyProfile();
   const navigate = useNavigate();
@@ -67,7 +67,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { data: orgSettings } = useOrgSettings(Boolean(data?.profile));
   const { data: unseenRelease } = useLatestUnseenRelease(Boolean(data?.profile));
   const { data: dev } = useDeveloperAccess(Boolean(data?.user));
-
 
   const profile = data?.profile ?? null;
   const role = profile?.role ?? "member";
@@ -80,9 +79,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   ];
   const firstName = (profile?.full_name ?? "").trim().split(/\s+/)[0]?.toLowerCase() ?? "";
   const showAvailability =
-    role === "hr" ||
-    role === "admin" ||
-    SIR_AVAILABILITY_PEOPLE.includes(firstName);
+    role === "hr" || role === "admin" || SIR_AVAILABILITY_PEOPLE.includes(firstName);
   const hasReports = tabs.some((t) => t.label === "Reports");
 
   useEffect(() => {
@@ -102,11 +99,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   const testingActive = isTestingActive(orgSettings?.testing_until);
   const testingLabel = prettyTestingDate(orgSettings?.testing_until);
 
-
   return (
     <div className="relative z-10 min-h-screen">
       <OfflineGate />
       <BirthdayTakeover me={profile} showTeam={orgSettings?.team_birthdays !== false} />
+      {profile && (role === "hr" || role === "admin") ? (
+        <ProbationAlert viewerId={profile.id} />
+      ) : null}
       <header className="sticky top-0 z-40 bg-night">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
           <Link to="/dashboard" className="flex items-center gap-2.5">
@@ -246,8 +245,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         {testingActive ? (
           <div className="border-t border-gold/40 bg-gold/15">
             <p className="mx-auto max-w-6xl px-4 py-1.5 text-[12px] leading-snug font-semibold text-goldL sm:text-[13px]">
-              Testing week — until {testingLabel} we are checking every number. If something
-              looks wrong, especially your leave balance, please{" "}
+              Testing week — until {testingLabel} we are checking every number. If something looks
+              wrong, especially your leave balance, please{" "}
               <Link to="/ideas" className="underline underline-offset-2">
                 tell us
               </Link>
@@ -256,7 +255,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         ) : null}
       </header>
-
 
       <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))]">
         {isLoading && !data ? (

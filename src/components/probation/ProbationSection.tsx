@@ -8,7 +8,7 @@ import {
   type ProbationDecision,
 } from "@/hooks/useProbation";
 import { niceDate } from "@/lib/calendar";
-import { PROBATION_LABEL, probationLeftText } from "@/lib/probation";
+import { PROBATION_LABEL, probationLeftText, probationLengthText } from "@/lib/probation";
 
 const DECISION_LABEL: Record<ProbationDecision, string> = {
   confirm: "Confirmed",
@@ -62,7 +62,8 @@ export function ProbationSection({
         {open ? ` · ${probationLeftText(row.days_left)}` : ""}
       </p>
       <p className="mt-1 text-[13px] text-soft">
-        {niceDate(row.start_date)} → {niceDate(row.end_date)} · {row.duration_months} months
+        {niceDate(row.start_date)} → {niceDate(row.end_date)} ·{" "}
+        {probationLengthText(row.start_date, row.end_date)}
       </p>
 
       {open && canDecide ? (

@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
 import { HelpLink } from "@/components/help/HelpLink";
@@ -43,6 +43,9 @@ export const Route = createFileRoute("/_authenticated/warriors")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  // ?probation=<profile id> opens that warrior straight away (from the probation popup).
+  validateSearch: (search: Record<string, unknown>): { probation?: string } =>
+    typeof search["probation"] === "string" ? { probation: search["probation"] } : {},
   component: WarriorsPage,
 });
 
@@ -66,6 +69,15 @@ function WarriorsPage() {
   const viewer = mine?.profile ?? null;
   const canManage = isPrivileged(viewer?.role);
   const all = useMemo(() => warriors ?? [], [warriors]);
+  const { probation } = Route.useSearch();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!probation) return;
+    const p = all.find((w) => w.id === probation);
+    if (!p) return;
+    setSelected(p);
+    void navigate({ to: "/warriors", search: {}, replace: true });
+  }, [probation, all, navigate]);
   const active = useMemo(() => all.filter((p) => p.status === "active"), [all]);
   const visible = useMemo(
     () => (canManage && showPast ? all : active),

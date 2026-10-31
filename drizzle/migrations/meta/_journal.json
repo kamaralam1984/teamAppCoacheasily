@@ -162,6 +162,20 @@
       "when": 1793203241780,
       "tag": "0022_weekly_off_shift",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1793417308136,
+      "tag": "0023_pan_aadhaar_first_submit",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793417308138,
+      "tag": "0024_probation_90_days_reminders",
+      "breakpoints": true
     }
   ]
 }
