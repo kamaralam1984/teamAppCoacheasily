@@ -6,6 +6,29 @@ import { useProbationOverview, type ProbationRow } from "@/hooks/useProbation";
 import { niceDate } from "@/lib/calendar";
 import { probationLeftText, probationReminderPoint } from "@/lib/probation";
 
+/** Shown by ?probation=preview: what the popup looks like, with no real person and nothing saved. */
+const PREVIEW: { row: ProbationRow; point: string }[] = [
+  { days: 0, name: "Sample Warrior" },
+  { days: 2, name: "Sample Colleague" },
+  { days: 15, name: "Sample Newcomer" },
+].map(({ days, name }, i) => {
+  const end = new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);
+  return {
+    row: {
+      profile_id: `preview-${i}`,
+      full_name: name,
+      department: "Preview only",
+      manager_id: null,
+      start_date: end,
+      end_date: end,
+      duration_months: 3,
+      status: "on_probation",
+      days_left: days,
+    },
+    point: probationReminderPoint(days) ?? "15d",
+  };
+});
+
 function seenKey(viewerId: string, r: ProbationRow, point: string) {
   return `ce-probation-alert:${viewerId}:${r.profile_id}:${r.end_date}:${point}`;
 }
@@ -29,15 +52,23 @@ function markSeen(key: string) {
 /**
  * HR and Admin: on opening the app, a popup for every probation that has reached a reminder
  * point (15, 10, 5 and 2 days left, the last day, ended with no decision). Each point shows once
- * per person per browser; the same points also arrive as notifications.
+ * per person per browser; the same points also arrive as notifications. Adding ?probation=preview
+ * to any address shows it with sample people, without touching anybody's data.
  */
 export function ProbationAlert({ viewerId }: { viewerId: string }) {
   const { data } = useProbationOverview();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const decided = useRef(false);
+  const [preview, setPreview] = useState(false);
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("probation") === "preview") {
+      setPreview(true);
+      setOpen(true);
+    }
+  }, []);
 
-  const due = useMemo(
+  const real = useMemo(
     () =>
       (data ?? [])
         .filter((r) => r.status === "on_probation" && r.profile_id !== viewerId)
@@ -48,16 +79,19 @@ export function ProbationAlert({ viewerId }: { viewerId: string }) {
     [data, viewerId],
   );
 
+  const due = preview ? PREVIEW : real;
+
   useEffect(() => {
-    if (decided.current || !data) return;
+    if (preview || decided.current || !data) return;
     decided.current = true;
-    if (due.length === 0) return;
-    for (const x of due) markSeen(seenKey(viewerId, x.row, x.point));
+    if (real.length === 0) return;
+    for (const x of real) markSeen(seenKey(viewerId, x.row, x.point));
     setOpen(true);
-  }, [data, due, viewerId]);
+  }, [data, real, viewerId, preview]);
 
   function openPerson(profileId: string) {
     setOpen(false);
+    if (preview) return;
     void navigate({ to: "/warriors", search: { probation: profileId } });
   }
 
