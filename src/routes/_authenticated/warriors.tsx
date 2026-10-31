@@ -45,9 +45,7 @@ export const Route = createFileRoute("/_authenticated/warriors")({
   }),
   // ?probation=<profile id> opens that warrior straight away (from the probation popup).
   validateSearch: (search: Record<string, unknown>): { probation?: string } =>
-    typeof search["probation"] === "string" && search["probation"] !== "preview"
-      ? { probation: search["probation"] }
-      : {},
+    typeof search["probation"] === "string" ? { probation: search["probation"] } : {},
   component: WarriorsPage,
 });
 
