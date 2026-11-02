@@ -197,7 +197,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
           ) : null}
           <Link to="/dashboard" className="flex items-center gap-2.5">
-            <Mark size={34} color="var(--ce-goldL)" className="ce-float" />
+            <span className="ce-logo-ring ce-float">
+              <span className="flex h-10 w-10 items-center justify-center">
+                <Mark size={30} color="var(--ce-goldL)" />
+              </span>
+            </span>
             <span className="leading-none">
               <span className="font-display text-xl text-white">Coach</span>
               <span className="font-display text-xl text-goldL">Easily</span>
@@ -340,6 +344,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </nav>
         ) : null}
+        <div aria-hidden className="ce-nav-line" />
 
         {testingActive ? (
           <div className="border-t border-gold/40 bg-gold/15">

@@ -20,6 +20,7 @@
   --ce-gold: #c9a227;
   --ce-goldL: #f0c75e;
   --ce-goldD: #8f6307;
+  --ce-blue: #4f8cff;
   --ce-saff: #f26b1d;
   --ce-saffBtn: #c74e0c;
   --ce-violet: #6d28d9;
@@ -227,8 +228,6 @@
     box-shadow: 0 1px 0 0 color-mix(in oklab, var(--ce-red) 72%, black);
   }
 
-
-
   .ce-card {
     background: var(--ce-ivory);
     border: 1px solid var(--ce-line);
@@ -269,7 +268,6 @@
     padding-bottom: 0.6rem;
     line-height: 1.5;
   }
-
 
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -571,7 +569,76 @@
     animation: ce-float 3.2s ease-in-out infinite;
   }
 
+  /* A gold ring that sweeps round the logo in the top bar. */
+  @keyframes ce-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .ce-logo-ring {
+    position: relative;
+    display: inline-flex;
+    border-radius: 9999px;
+    padding: 2px;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .ce-logo-ring::before {
+    content: "";
+    position: absolute;
+    inset: -50%;
+    z-index: -1;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      var(--ce-goldD) 60deg,
+      var(--ce-goldL) 140deg,
+      var(--ce-gold) 200deg,
+      transparent 280deg
+    );
+    animation: ce-spin 3s linear infinite;
+  }
+
+  .ce-logo-ring > * {
+    border-radius: 9999px;
+    background: var(--ce-night);
+  }
+
+  /* A blue and gold line that runs along the bottom of the top bar. */
+  @keyframes ce-line-run {
+    to {
+      background-position: 240px 0;
+    }
+  }
+
+  .ce-nav-line {
+    position: relative;
+    z-index: 1;
+    height: 4px;
+    box-shadow:
+      0 0 10px color-mix(in oklab, var(--ce-blue) 80%, transparent),
+      0 0 6px color-mix(in oklab, var(--ce-goldL) 70%, transparent);
+    background: linear-gradient(
+      90deg,
+      var(--ce-blue) 0,
+      var(--ce-blue) 35%,
+      var(--ce-goldL) 50%,
+      var(--ce-gold) 65%,
+      var(--ce-blue) 100%
+    );
+    background-size: 240px 100%;
+    background-repeat: repeat-x;
+    animation: ce-line-run 1.6s linear infinite;
+  }
+
   @media (prefers-reduced-motion: reduce) {
+    .ce-logo-ring::before,
+    .ce-nav-line {
+      animation: none;
+    }
+
     .ce-ambient {
       display: none;
     }
