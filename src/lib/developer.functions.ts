@@ -183,6 +183,14 @@ export const devImpersonateLink = createServerFn({ method: "POST" })
     });
     if (error || !generated.properties?.action_link) throw new Error("Couldn't create the sign-in link. Please try again.");
     await log(db, actor, "user.impersonate", `${profile.full_name} (${profile.id})`, { role: profile.role });
+    // The auth server only redirects to allow-listed sites, so a link asked for from a local dev
+    // server would land on the live site. Locally, hand back a link to /dev-signin, which verifies
+    // the same one-time token in the browser. The token rides in the hash so it never hits a server log.
+    const target = new URL(data.redirectTo);
+    const isLocal = ["localhost", "127.0.0.1"].includes(target.hostname);
+    if (isLocal && generated.properties.hashed_token) {
+      return `${target.origin}/dev-signin#token_hash=${encodeURIComponent(generated.properties.hashed_token)}`;
+    }
     return generated.properties.action_link;
   });
 

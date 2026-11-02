@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DevSigninRouteImport } from './routes/dev-signin'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as AuthenticatedApprovalsRouteImport } from './routes/_authenticated/approvals'
 import { Route as AuthenticatedAttendanceRouteImport } from './routes/_authenticated/attendance'
@@ -52,6 +53,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevSigninRoute = DevSigninRouteImport.update({
+  id: '/dev-signin',
+  path: '/dev-signin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JoinRoute = JoinRouteImport.update({
@@ -196,6 +202,7 @@ const ApiPublicHooksDigestRoute = ApiPublicHooksDigestRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/dev-signin': typeof DevSigninRoute
   '/join': typeof JoinRoute
   '/approvals': typeof AuthenticatedApprovalsRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
@@ -227,6 +234,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/dev-signin': typeof DevSigninRoute
   '/join': typeof JoinRoute
   '/approvals': typeof AuthenticatedApprovalsRoute
   '/attendance': typeof AuthenticatedAttendanceRoute
@@ -260,6 +268,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/dev-signin': typeof DevSigninRoute
   '/join': typeof JoinRoute
   '/_authenticated/approvals': typeof AuthenticatedApprovalsRoute
   '/_authenticated/attendance': typeof AuthenticatedAttendanceRoute
@@ -293,6 +302,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/dev-signin'
     | '/join'
     | '/approvals'
     | '/attendance'
@@ -324,6 +334,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/dev-signin'
     | '/join'
     | '/approvals'
     | '/attendance'
@@ -356,6 +367,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/dev-signin'
     | '/join'
     | '/_authenticated/approvals'
     | '/_authenticated/attendance'
@@ -389,6 +401,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  DevSigninRoute: typeof DevSigninRoute
   JoinRoute: typeof JoinRoute
   ApiPublicCalendarTokenRoute: typeof ApiPublicCalendarTokenRoute
   ApiPublicHooksDigestRoute: typeof ApiPublicHooksDigestRoute
@@ -415,6 +428,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev-signin': {
+      id: '/dev-signin'
+      path: '/dev-signin'
+      fullPath: '/dev-signin'
+      preLoaderRoute: typeof DevSigninRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/join': {
@@ -670,6 +690,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  DevSigninRoute: DevSigninRoute,
   JoinRoute: JoinRoute,
   ApiPublicCalendarTokenRoute: ApiPublicCalendarTokenRoute,
   ApiPublicHooksDigestRoute: ApiPublicHooksDigestRoute,
