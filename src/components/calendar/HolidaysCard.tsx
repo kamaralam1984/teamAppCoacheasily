@@ -18,13 +18,21 @@ import { useOrgSettings, useSaveOrgSettings } from "@/hooks/useOrg";
 import type { HolidaySuggestion } from "@/lib/holidaySuggestions";
 import { longDate, todayIso, weekdayName } from "@/lib/calendar";
 
+/** Fixed public holidays (national, regional, company) share red; flexi is blue — same as the grid. */
 const KIND_TONE: Record<string, string> = {
   national: "bg-red/12 text-red",
-  regional: "bg-saff/15 text-saffBtn",
-  company: "bg-violet/12 text-violet",
-  optional: "bg-goldL/30 text-goldD",
+  regional: "bg-red/12 text-red",
+  company: "bg-red/12 text-red",
+  optional: "bg-flexi/12 text-flexi",
   restricted: "bg-mist/50 text-ink",
 };
+
+function kindDot(kind: string, proposed: boolean): string {
+  if (proposed) return "bg-soft/40";
+  if (isDayOff(kind)) return "bg-red";
+  if (kind === "optional") return "bg-flexi";
+  return "bg-soft/40";
+}
 
 function HolidayRow({ h, canManage }: { h: CalendarHoliday; canManage: boolean }) {
   const update = useUpdateCalendarHoliday();
@@ -88,9 +96,7 @@ function HolidayRow({ h, canManage }: { h: CalendarHoliday; canManage: boolean }
         </div>
       ) : (
         <div className="flex flex-wrap items-center gap-3">
-          <span
-            className={`h-2 w-2 shrink-0 rounded-full ${isDayOff(h.kind) && !proposed ? "bg-red" : "bg-soft/40"}`}
-          />
+          <span className={`h-2 w-2 shrink-0 rounded-full ${kindDot(h.kind, proposed)}`} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-bold text-ink">{h.name}</p>
             <p className="text-[12px] text-soft">
