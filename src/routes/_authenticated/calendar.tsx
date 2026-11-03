@@ -131,6 +131,10 @@ function CalendarPage() {
       if (!inMonthDates.includes(h.date)) continue;
       counts["Holiday"] = (counts["Holiday"] ?? 0) + 1;
     }
+    for (const h of monthData?.flexi ?? []) {
+      if (!inMonthDates.includes(h.date)) continue;
+      counts["Flexi"] = (counts["Flexi"] ?? 0) + 1;
+    }
     return SUMMARY_ORDER.filter((t) => counts[t]).map((t) => ({ type: t, n: counts[t]! }));
   }, [monthData, inMonthDates]);
 
@@ -352,7 +356,7 @@ function CalendarPage() {
             <input
               id="cal-search"
               className="ce-input"
-              placeholder="MCA, Kirti, Summit…"
+              placeholder="MCA, Summit, Webinar…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
@@ -393,6 +397,21 @@ function CalendarPage() {
             ) : (
               <span className="text-[13px] text-soft">Nothing scheduled this month yet.</span>
             )}
+          </div>
+
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-soft">
+            <span className="flex items-center gap-1.5">
+              <span className={`h-2.5 w-2.5 rounded-sm ${MARKER_COLOUR["Holiday"]}`} />
+              Public holiday
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className={`h-2.5 w-2.5 rounded-sm ${MARKER_COLOUR["Flexi"]}`} />
+              Flexi holiday
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className={`h-2.5 w-2.5 rounded-sm ${MARKER_COLOUR["Weekly off"]}`} />
+              Your weekly off
+            </span>
           </div>
 
           {conflicts.map((c) => (
@@ -436,6 +455,7 @@ function CalendarPage() {
               data={yearData}
               byId={byId}
               today={today}
+              viewerWeeklyOff={profile?.weekly_off ?? null}
               selected={selected}
               onSelectDay={setSelected}
               onOpen={setEditing}

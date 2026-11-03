@@ -2,13 +2,15 @@ import type { EditTarget } from "@/components/calendar/EventEditor";
 import type { CalendarData } from "@/hooks/useCalendar";
 import { MARKER_COLOUR, addDays, niceDate, timeLabel, weekdayName } from "@/lib/calendar";
 import { buildDayView } from "@/lib/calendarDerive";
-import type { Profile } from "@/lib/warriors";
+import { isOffOn, type Profile } from "@/lib/warriors";
 
 interface Props {
   start: string;
   data: CalendarData | undefined;
   byId: Map<string, Profile>;
   today: string;
+  /** The viewer's own weekly off, tinted grey. */
+  viewerWeeklyOff?: string | null;
   selected: string;
   onSelectDay: (date: string) => void;
   onOpen: (target: EditTarget) => void;
@@ -20,6 +22,7 @@ export function WeekView({
   data,
   byId,
   today,
+  viewerWeeklyOff = null,
   selected,
   onSelectDay,
   onOpen,
@@ -42,7 +45,13 @@ export function WeekView({
               type="button"
               onClick={() => onSelectDay(date)}
               className={`w-full border-b border-line px-3 py-2 text-left ${
-                date === today ? "bg-gold/15" : "bg-cream"
+                date === today
+                  ? "bg-gold/15"
+                  : view.holiday
+                    ? "bg-red/10"
+                    : isOffOn(viewerWeeklyOff, weekdayName(date))
+                      ? "bg-grey/20"
+                      : "bg-cream"
               }`}
             >
               <span className="block text-[10px] font-bold tracking-[0.08em] text-soft uppercase">
@@ -57,6 +66,15 @@ export function WeekView({
                   {view.holiday.name}
                 </p>
               ) : null}
+
+              {view.flexi.map((f) => (
+                <p
+                  key={f.id}
+                  className="rounded border border-flexi/30 bg-flexi/10 px-2 py-1 text-[11px] font-bold text-flexi"
+                >
+                  {f.name} · Flexi
+                </p>
+              ))}
 
               {view.birthdays.map((b) => (
                 <p
@@ -105,7 +123,10 @@ export function WeekView({
                 <p className="text-[10px] text-soft">👤 {view.leave.length} away</p>
               ) : null}
 
-              {!view.holiday && view.programs.length === 0 && view.events.length === 0 ? (
+              {!view.holiday &&
+              view.flexi.length === 0 &&
+              view.programs.length === 0 &&
+              view.events.length === 0 ? (
                 <p className="text-[11px] text-soft">Clear</p>
               ) : null}
             </div>

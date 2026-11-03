@@ -7,6 +7,8 @@ import { addDays, daysBetween, iso, daysInMonth, todayIso } from "@/lib/calendar
 export type Program = Tables<"programs">;
 export type CalEvent = Tables<"events">;
 export type Holiday = Tables<"holidays">;
+/** An approved flexi holiday: listed for everyone, but nobody is forced off. */
+export type FlexiHoliday = Pick<Tables<"holiday_calendar">, "id" | "date" | "name">;
 
 export interface LeaveDay {
   id: string;
@@ -22,11 +24,12 @@ export interface CalendarData {
   programs: Program[];
   events: CalEvent[];
   holidays: Holiday[];
+  flexi: FlexiHoliday[];
   leave: LeaveDay[];
 }
 
 async function fetchWindow(from: string, to: string): Promise<CalendarData> {
-  const [programs, events, holidays, leave] = await Promise.all([
+  const [programs, events, holidays, flexi, leave] = await Promise.all([
     supabase
       .from("programs")
       .select("*")
@@ -40,16 +43,25 @@ async function fetchWindow(from: string, to: string): Promise<CalendarData> {
       .lte("date", to)
       .or(`end_date.gte.${from},and(end_date.is.null,date.gte.${from})`),
     supabase.from("holidays").select("*").gte("date", from).lte("date", to),
+    supabase
+      .from("holiday_calendar")
+      .select("id, date, name")
+      .eq("kind", "optional")
+      .eq("status", "approved")
+      .gte("date", from)
+      .lte("date", to),
     supabase.rpc("calendar_leave", { p_from: from, p_to: to }),
   ]);
   if (programs.error) throw programs.error;
   if (events.error) throw events.error;
   if (holidays.error) throw holidays.error;
+  if (flexi.error) throw flexi.error;
   if (leave.error) throw leave.error;
   return {
     programs: programs.data ?? [],
     events: events.data ?? [],
     holidays: holidays.data ?? [],
+    flexi: flexi.data ?? [],
     leave: (leave.data as unknown as LeaveDay[] | null) ?? [],
   };
 }

@@ -29,6 +29,8 @@
   --ce-white: #ffffff;
   --ce-cream: #fbf7ec;
   --ce-mist: #d6cce8;
+  --ce-flexi: #2563eb;
+  --ce-grey: #8a8f98;
 
   /* shadcn semantic tokens mapped onto the brand palette */
   --radius: 0.875rem; /* 14px cards */
@@ -86,6 +88,8 @@
   --color-white: var(--ce-white);
   --color-cream: var(--ce-cream);
   --color-mist: var(--ce-mist);
+  --color-flexi: var(--ce-flexi);
+  --color-grey: var(--ce-grey);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);

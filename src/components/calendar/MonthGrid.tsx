@@ -84,11 +84,19 @@ export function MonthGrid({
                 const target = pick(kind, id ?? "");
                 if (target) onMove(target, cell.date);
               }}
-              aria-label={`${cell.date}${view.holiday ? ` · ${view.holiday.name}` : ""}`}
+              aria-label={`${cell.date}${view.holiday ? ` · ${view.holiday.name}` : ""}${view.flexi
+                .map((f) => ` · ${f.name} (flexi)`)
+                .join("")}${isOff ? " · weekly off" : ""}`}
               aria-pressed={isSelected}
               className={[
                 "min-h-[72px] border-r border-b border-line p-1.5 text-left align-top transition-colors last:border-r-0",
-                isToday ? "bg-gold/15" : isOff ? "bg-cream" : "bg-ivory",
+                isToday
+                  ? "bg-gold/15"
+                  : view.holiday
+                    ? "bg-red/5"
+                    : isOff
+                      ? "bg-grey/15"
+                      : "bg-ivory",
                 cell.inMonth ? "" : "opacity-40",
                 isSelected ? "ring-2 ring-gold ring-inset" : "",
               ].join(" ")}
@@ -107,6 +115,15 @@ export function MonthGrid({
                   {view.holiday.name}
                 </span>
               ) : null}
+
+              {view.flexi.map((f) => (
+                <span
+                  key={f.id}
+                  className="mt-0.5 block truncate text-[10px] leading-tight font-bold text-flexi"
+                >
+                  {f.name}
+                </span>
+              ))}
 
               <span className="mt-0.5 block space-y-0.5">
                 {items.slice(0, 2).map((it) => (

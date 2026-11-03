@@ -34,6 +34,7 @@ export function AgendaView({
     .filter(
       ({ view }) =>
         view.holiday ||
+        view.flexi.length > 0 ||
         view.programs.length > 0 ||
         view.events.length > 0 ||
         view.leave.length > 0 ||
@@ -83,6 +84,18 @@ export function AgendaView({
                 </span>
               </li>
             ) : null}
+
+            {view.flexi.map((f) => (
+              <li key={f.id} className="flex items-center gap-2 px-4 py-3">
+                <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${MARKER_COLOUR["Flexi"]}`} />
+                <span className="text-sm font-bold text-ink">{f.name}</span>
+                <span
+                  className={`ml-auto rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${CHIP_STYLE["Flexi"]}`}
+                >
+                  Flexi
+                </span>
+              </li>
+            ))}
 
             {view.programs.map((p) => (
               <li key={p.id}>

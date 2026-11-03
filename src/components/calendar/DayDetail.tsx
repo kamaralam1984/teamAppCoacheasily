@@ -31,6 +31,7 @@ export function DayDetail({ date, data, byId, canSchedule, onOpen, birthdayIds =
 
   const nothing =
     !view.holiday &&
+    view.flexi.length === 0 &&
     view.programs.length === 0 &&
     view.events.length === 0 &&
     view.leave.length === 0 &&
@@ -76,6 +77,16 @@ export function DayDetail({ date, data, byId, canSchedule, onOpen, birthdayIds =
           <span className="text-sm font-bold text-ink">{view.holiday.name}</span>
         </div>
       ) : null}
+
+      {view.flexi.map((f) => (
+        <div key={f.id} className="mt-4 flex flex-wrap items-center gap-2">
+          <Chip type="Flexi" />
+          <span className="text-sm font-bold text-ink">{f.name}</span>
+          <span className="text-[12px] text-soft">
+            Pick it as a flexi day off — apply from Leave.
+          </span>
+        </div>
+      ))}
 
       {view.programs.length > 0 ? (
         <ul className="mt-4 space-y-2">

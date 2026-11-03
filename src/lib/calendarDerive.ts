@@ -1,4 +1,11 @@
-import type { CalEvent, CalendarData, Holiday, LeaveDay, Program } from "@/hooks/useCalendar";
+import type {
+  CalEvent,
+  CalendarData,
+  FlexiHoliday,
+  Holiday,
+  LeaveDay,
+  Program,
+} from "@/hooks/useCalendar";
 import { daysBetween, niceDate, rangeLabel, weekdayName } from "@/lib/calendar";
 import { isOffOn, type Profile } from "@/lib/warriors";
 import { isBirthdayOn } from "@/lib/birthdays";
@@ -6,6 +13,8 @@ import { isBirthdayOn } from "@/lib/birthdays";
 export interface DayView {
   date: string;
   holiday: Holiday | null;
+  /** Flexi holidays on this day — people may pick them, nobody is forced off. */
+  flexi: FlexiHoliday[];
   programs: Program[];
   events: CalEvent[];
   leave: LeaveDay[];
@@ -45,6 +54,7 @@ export function buildDayView(
   const view: DayView = {
     date,
     holiday: null,
+    flexi: [],
     programs: [],
     events: [],
     leave: [],
@@ -60,6 +70,7 @@ export function buildDayView(
   if (!data) return view;
 
   view.holiday = data.holidays.find((h) => h.date === date) ?? null;
+  view.flexi = (data.flexi ?? []).filter((h) => h.date === date);
   view.programs = data.programs.filter((p) => covers(p.from_date, p.to_date, date)).sort(sortPrograms);
   view.events = data.events
     .filter((e) => covers(e.date, e.end_date ?? e.date, date))

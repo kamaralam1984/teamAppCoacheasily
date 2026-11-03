@@ -120,7 +120,7 @@ export type ProgramType = "CBA" | "MCA" | "Kickstart" | "Summit" | "Webinar";
 
 export const PROGRAM_TYPES: ProgramType[] = ["CBA", "MCA", "Kickstart", "Summit", "Webinar"];
 
-/** CBA = goldD · MCA = emer · Kickstart = saff · Summit = violet · Holiday = red. */
+/** CBA = goldD · MCA = emer · Kickstart = saff · Summit = violet · Holiday = red · Flexi = blue. */
 export const MARKER_COLOUR: Record<string, string> = {
   CBA: "bg-goldD",
   MCA: "bg-emer",
@@ -128,6 +128,8 @@ export const MARKER_COLOUR: Record<string, string> = {
   Summit: "bg-violet",
   Webinar: "bg-night",
   Holiday: "bg-red",
+  Flexi: "bg-flexi",
+  "Weekly off": "bg-grey",
   Event: "bg-soft",
 };
 
@@ -138,11 +140,12 @@ export const CHIP_STYLE: Record<string, string> = {
   Summit: "bg-violet/10 text-violet border-violet/30",
   Webinar: "bg-night/10 text-night border-night/30",
   Holiday: "bg-red/10 text-red border-red/30",
+  Flexi: "bg-flexi/10 text-flexi border-flexi/30",
   Event: "bg-cream text-soft border-line",
 };
 
 /** Month summary always reads in this order. */
-export const SUMMARY_ORDER = ["CBA", "MCA", "Kickstart", "Summit", "Holiday"] as const;
+export const SUMMARY_ORDER = ["CBA", "MCA", "Kickstart", "Summit", "Holiday", "Flexi"] as const;
 
 export const EVENT_TYPES = [
   "Meeting",
