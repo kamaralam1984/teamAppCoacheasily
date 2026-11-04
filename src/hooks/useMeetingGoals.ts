@@ -21,7 +21,8 @@ export function meetingPeriod(meeting: StrategicMeeting, all: StrategicMeeting[]
   const prev = all
     .filter((m) => m.meeting_date < meeting.meeting_date)
     .sort((a, b) => b.meeting_date.localeCompare(a.meeting_date))[0];
-  const from = prev ? addDays(prev.meeting_date, 1) : addDays(meeting.meeting_date, -DEFAULT_RUN);
+  // 45 days counting the meeting day itself, e.g. 7 Oct to 20 Nov
+  const from = prev ? addDays(prev.meeting_date, 1) : addDays(meeting.meeting_date, -(DEFAULT_RUN - 1));
   const to = meeting.meeting_date;
   const dow = new Date(`${from}T00:00:00Z`).getUTCDay(); // 0 Sun … 6 Sat
   let monday = addDays(from, dow === 0 ? -6 : 1 - dow);
