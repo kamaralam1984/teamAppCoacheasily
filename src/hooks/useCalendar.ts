@@ -26,10 +26,12 @@ export interface CalendarData {
   holidays: Holiday[];
   flexi: FlexiHoliday[];
   leave: LeaveDay[];
+  /** Strategic meetings in the window. */
+  meetings: Tables<"strategic_meetings">[];
 }
 
 async function fetchWindow(from: string, to: string): Promise<CalendarData> {
-  const [programs, events, holidays, flexi, leave] = await Promise.all([
+  const [programs, events, holidays, flexi, leave, meetings] = await Promise.all([
     supabase
       .from("programs")
       .select("*")
@@ -51,6 +53,11 @@ async function fetchWindow(from: string, to: string): Promise<CalendarData> {
       .gte("date", from)
       .lte("date", to),
     supabase.rpc("calendar_leave", { p_from: from, p_to: to }),
+    supabase
+      .from("strategic_meetings")
+      .select("*")
+      .gte("meeting_date", from)
+      .lte("meeting_date", to),
   ]);
   if (programs.error) throw programs.error;
   if (events.error) throw events.error;
@@ -63,6 +70,8 @@ async function fetchWindow(from: string, to: string): Promise<CalendarData> {
     holidays: holidays.data ?? [],
     flexi: flexi.data ?? [],
     leave: (leave.data as unknown as LeaveDay[] | null) ?? [],
+    // never let the meetings list take the whole calendar down
+    meetings: meetings.error ? [] : (meetings.data ?? []),
   };
 }
 

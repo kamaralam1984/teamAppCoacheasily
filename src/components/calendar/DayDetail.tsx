@@ -2,6 +2,7 @@ import type { EditTarget } from "@/components/calendar/EventEditor";
 import { CHIP_STYLE, dayTone, longDate, timeLabel, weekdayName } from "@/lib/calendar";
 import { buildDayView, offLabel, viewerOffOn, type ShiftDays } from "@/lib/calendarDerive";
 import type { CalendarData } from "@/hooks/useCalendar";
+import { meetingLabel } from "@/hooks/useStrategicMeetings";
 import { TYPE_LABEL } from "@/hooks/useLeave";
 import type { Profile } from "@/lib/warriors";
 
@@ -62,6 +63,7 @@ export function DayDetail({
     view.flexi.length === 0 &&
     view.programs.length === 0 &&
     view.events.length === 0 &&
+    view.meetings.length === 0 &&
     view.leave.length === 0 &&
     view.birthdays.length === 0;
 
@@ -111,6 +113,27 @@ export function DayDetail({
         >
           🎂 It's {b.full_name}'s birthday{b.title ? ` — ${b.title}` : ""}. Say something warm.
         </p>
+      ))}
+
+      {view.meetings.map((m) => (
+        <div key={`m-${m.id}`} className="mt-4 rounded-lg border border-violet/30 bg-violet/10 p-3">
+          <p className="text-[10px] font-bold tracking-[0.06em] text-violet uppercase">Strategic meeting</p>
+          <p className="text-sm font-bold text-ink">🎯 {meetingLabel(m)}</p>
+          {m.tagline ? <p className="text-[13px] text-ink/80 italic">{m.tagline}</p> : null}
+          <p className="mt-0.5 text-[12px] text-soft">
+            {[
+              m.from_time
+                ? `${timeLabel(m.from_time)}${m.to_time ? ` – ${timeLabel(m.to_time)}` : ""}`
+                : "Time to be announced",
+              m.location,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+          {m.agenda ? (
+            <p className="mt-1.5 text-[12px] leading-relaxed whitespace-pre-line text-ink/80">{m.agenda}</p>
+          ) : null}
+        </div>
       ))}
 
       {view.holiday ? (

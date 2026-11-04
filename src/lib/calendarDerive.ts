@@ -17,6 +17,8 @@ export interface DayView {
   flexi: FlexiHoliday[];
   programs: Program[];
   events: CalEvent[];
+  /** Strategic meetings on this day. */
+  meetings: CalendarData["meetings"];
   leave: LeaveDay[];
   /** Whose birthday falls on this day — only those the viewer may see. */
   birthdays: Profile[];
@@ -57,6 +59,7 @@ export function buildDayView(
     flexi: [],
     programs: [],
     events: [],
+    meetings: [],
     leave: [],
     birthdays: [],
     conflicts: [],
@@ -75,6 +78,9 @@ export function buildDayView(
   view.events = data.events
     .filter((e) => covers(e.date, e.end_date ?? e.date, date))
     .sort(sortEvents);
+  view.meetings = (data.meetings ?? [])
+    .filter((m) => m.meeting_date === date)
+    .sort((a, b) => (a.from_time ?? "99:99").localeCompare(b.from_time ?? "99:99"));
   view.leave = data.leave
     .filter((l) => covers(l.from_date, l.to_date, date))
     .sort((a, b) => a.full_name.localeCompare(b.full_name));

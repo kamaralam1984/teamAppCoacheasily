@@ -1,4 +1,5 @@
 import type { CalendarData } from "@/hooks/useCalendar";
+import { meetingLabel } from "@/hooks/useStrategicMeetings";
 import type { EditTarget } from "@/components/calendar/EventEditor";
 import {
   CHIP_STYLE,
@@ -66,7 +67,8 @@ export function AgendaView({
         view.programs.length > 0 ||
         view.events.length > 0 ||
         view.leave.length > 0 ||
-        view.birthdays.length > 0,
+        view.birthdays.length > 0 ||
+        view.meetings.length > 0,
     );
 
   if (rows.length === 0) {
@@ -127,6 +129,21 @@ export function AgendaView({
                   className={`ml-auto rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${CHIP_STYLE["Flexi"]}`}
                 >
                   Flexi
+                </span>
+              </li>
+            ))}
+
+            {view.meetings.map((m) => (
+              <li key={`m-${m.id}`} className="flex items-start gap-2 px-4 py-3">
+                <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-violet" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-bold text-ink">🎯 {meetingLabel(m)}</span>
+                  <span className="block text-[12px] text-soft">
+                    {[m.tagline, timeLabel(m.from_time), m.location].filter(Boolean).join(" · ")}
+                  </span>
+                </span>
+                <span className="shrink-0 rounded-full border border-violet/30 bg-violet/10 px-2 py-0.5 text-[10px] font-bold text-violet uppercase">
+                  Strategic meeting
                 </span>
               </li>
             ))}

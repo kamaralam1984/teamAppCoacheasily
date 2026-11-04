@@ -3,10 +3,10 @@ export const DEV_TABLES = [
   "attendance", "calendar_attendees", "calendar_tokens", "checkin_requests", "comp_off_credits",
   "cycles", "daily_codes", "daily_reflections", "day_plans", "departments", "energy_logs", "events",
   "goal_advice", "goal_entries", "goals", "holidays", "idea_votes", "ideas", "leave_requests",
-  "notifications", "organisations", "profile_education", "profile_employment", "profile_milestones",
+  "notifications", "open_positions", "organisations", "profile_education", "profile_employment", "profile_milestones",
   "profile_private", "profiles", "programs", "pulse_done", "pulse_responses", "pulse_rounds",
   "recognitions", "release_announced", "release_items", "release_seen", "releases", "ritual_logs",
-  "rituals", "sop_items", "sop_logs", "task_days", "tasks", "themes", "tour_seen", "weekly_reviews",
+  "rituals", "sop_items", "sop_logs", "strategic_meetings", "task_days", "tasks", "themes", "tour_seen", "weekly_reviews",
 ] as const;
 
 export type DevTable = (typeof DEV_TABLES)[number];

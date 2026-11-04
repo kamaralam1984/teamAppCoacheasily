@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouterState } from "@tanstack/react-router";
 
 import { AppShell } from "@/components/AppShell";
 import { Celebrate } from "@/components/Celebrate";
@@ -55,6 +55,8 @@ import { useTheme } from "@/hooks/useTheme";
 import { HelpLink } from "@/components/help/HelpLink";
 import { Tour } from "@/components/help/Tour";
 import { useMarkTourSeen, useTourSeen } from "@/hooks/useTour";
+import { meetingLabel, nextMeeting, useStrategicMeetings } from "@/hooks/useStrategicMeetings";
+import { daysBetween, timeLabel } from "@/lib/calendar";
 
 
 
@@ -148,6 +150,9 @@ function Dashboard() {
   const { data: punc } = usePunctualityMe(Boolean(profile));
   // a shifted weekly off moves the "why are you working today?" question with it
   const { data: myShifts } = useMyShifts(Boolean(profile?.weekly_off));
+  const { data: strategicMeetings } = useStrategicMeetings(Boolean(profile));
+  const upcomingMeeting = nextMeeting(strategicMeetings, istToday());
+  const meetingDays = upcomingMeeting ? daysBetween(istToday(), upcomingMeeting.meeting_date) : 0;
   const meetingTime = org?.daily_meeting_time || DEFAULT_MEETING_TIME;
   const meetingUrl = org?.daily_meeting_url ?? "";
   const mondayKey = `ce-monday-review-${summary?.today ?? "today"}`;
@@ -390,6 +395,37 @@ function Dashboard() {
               <p className="font-display text-xl leading-snug text-ink">{theme.greeting}</p>
             </div>
           </section>
+        ) : null}
+
+        {/* ── Next strategic meeting ─────────────────────────── */}
+        {upcomingMeeting ? (
+          <Link
+            to="/calendar"
+            className="ce-rise ce-card flex items-center gap-4 border-violet/30 p-5 hover:shadow-lg"
+          >
+            <span className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-violet text-white">
+              <span className="font-display text-2xl leading-none">{meetingDays}</span>
+              <span className="text-[9px] font-bold uppercase">{meetingDays === 1 ? "day" : "days"}</span>
+            </span>
+            <span className="min-w-0">
+              <span className="block text-[11px] font-bold tracking-[0.12em] text-violet uppercase">
+                {meetingDays === 0 ? "Today" : "Next strategic meeting"}
+              </span>
+              <span className="block font-display text-lg leading-snug text-ink">
+                {meetingLabel(upcomingMeeting)}
+              </span>
+              <span className="block text-[12px] text-soft">
+                {[
+                  upcomingMeeting.tagline,
+                  shortDate(upcomingMeeting.meeting_date),
+                  timeLabel(upcomingMeeting.from_time),
+                  upcomingMeeting.location,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </span>
+            </span>
+          </Link>
         ) : null}
 
         {/* ── The code, readable all day ─────────────────────── */}

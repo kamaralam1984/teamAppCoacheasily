@@ -1,5 +1,6 @@
 import type { EditTarget } from "@/components/calendar/EventEditor";
 import type { CalendarData } from "@/hooks/useCalendar";
+import { meetingLabel } from "@/hooks/useStrategicMeetings";
 import { MARKER_COLOUR, WEEKDAYS, dayTone, monthGrid, parseIso, weekdayName } from "@/lib/calendar";
 import { buildDayView, offLabel, viewerOffOn, type ShiftDays } from "@/lib/calendarDerive";
 import type { Profile } from "@/lib/warriors";
@@ -130,6 +131,16 @@ export function MonthGrid({
                 >
                   {f.name}
                   <span className="block font-semibold">(Flexi Holiday)</span>
+                </span>
+              ))}
+
+              {view.meetings.map((m) => (
+                <span
+                  key={m.id}
+                  title={meetingLabel(m)}
+                  className={`mt-0.5 block truncate text-[10px] leading-tight font-bold ${ink("text-violet")}`}
+                >
+                  🎯 {m.title}
                 </span>
               ))}
 

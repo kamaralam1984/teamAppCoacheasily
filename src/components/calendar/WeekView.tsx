@@ -1,5 +1,6 @@
 import type { EditTarget } from "@/components/calendar/EventEditor";
 import type { CalendarData } from "@/hooks/useCalendar";
+import { meetingLabel } from "@/hooks/useStrategicMeetings";
 import { MARKER_COLOUR, addDays, dayTone, niceDate, timeLabel, weekdayName } from "@/lib/calendar";
 import { buildDayView, offLabel, viewerOffOn, type ShiftDays } from "@/lib/calendarDerive";
 import type { Profile } from "@/lib/warriors";
@@ -97,6 +98,15 @@ export function WeekView({
                 </p>
               ) : null}
 
+              {view.meetings.map((m) => (
+                <p key={`m-${m.id}`} className={chip("border-violet/30 bg-violet/10 text-violet")}>
+                  🎯 {meetingLabel(m)}
+                  {m.from_time ? (
+                    <span className="block text-[10px] font-semibold">{timeLabel(m.from_time)}</span>
+                  ) : null}
+                </p>
+              ))}
+
               {view.birthdays.map((b) => (
                 <p
                   key={`b-${b.id}`}
@@ -146,6 +156,7 @@ export function WeekView({
 
               {!view.holiday &&
               !isOff &&
+              view.meetings.length === 0 &&
               view.flexi.length === 0 &&
               view.programs.length === 0 &&
               view.events.length === 0 ? (

@@ -3099,6 +3099,69 @@ export type Database = {
           },
         ]
       }
+      strategic_meetings: {
+        Row: {
+          agenda: string | null
+          created_at: string
+          created_by: string | null
+          edition: string | null
+          from_time: string | null
+          id: string
+          location: string | null
+          meeting_date: string
+          org_id: string
+          tagline: string | null
+          title: string
+          to_time: string | null
+          updated_at: string
+        }
+        Insert: {
+          agenda?: string | null
+          created_at?: string
+          created_by?: string | null
+          edition?: string | null
+          from_time?: string | null
+          id?: string
+          location?: string | null
+          meeting_date: string
+          org_id: string
+          tagline?: string | null
+          title: string
+          to_time?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agenda?: string | null
+          created_at?: string
+          created_by?: string | null
+          edition?: string | null
+          from_time?: string | null
+          id?: string
+          location?: string | null
+          meeting_date?: string
+          org_id?: string
+          tagline?: string | null
+          title?: string
+          to_time?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategic_meetings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "strategic_meetings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_comments: {
         Row: {
           author_id: string

@@ -9,6 +9,7 @@ import { DevAttendance } from "@/components/developer/DevAttendance";
 import { DevOrganisation } from "@/components/developer/DevOrganisation";
 import { DevAudit } from "@/components/developer/DevAudit";
 import { DevTeamOrder } from "@/components/developer/DevTeamOrder";
+import { DevStrategicMeetings } from "@/components/developer/DevStrategicMeetings";
 import { errMsg, useDeveloperAccess } from "@/hooks/useDeveloper";
 
 export const Route = createFileRoute("/_authenticated/developer")({
@@ -25,7 +26,16 @@ export const Route = createFileRoute("/_authenticated/developer")({
   component: Page,
 });
 
-const SECTIONS = ["Overview", "Users", "Data", "Attendance", "Organisation", "Team order", "Audit log"] as const;
+const SECTIONS = [
+  "Overview",
+  "Users",
+  "Data",
+  "Attendance",
+  "Organisation",
+  "Team order",
+  "Strategic meetings",
+  "Audit log",
+] as const;
 type Section = (typeof SECTIONS)[number];
 
 function Page() {
@@ -68,6 +78,7 @@ function Page() {
             {section === "Attendance" && <DevAttendance />}
             {section === "Organisation" && <DevOrganisation />}
             {section === "Team order" && <DevTeamOrder />}
+            {section === "Strategic meetings" && <DevStrategicMeetings />}
             {section === "Audit log" && <DevAudit />}
           </div>
         </>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useOpenCycle } from "@/hooks/useGoals";
+import { meetingLabel, useStrategicMeetings } from "@/hooks/useStrategicMeetings";
 import {
   daysBetween,
   istToday,
@@ -24,6 +25,7 @@ export function CyclePanel({
   const [end, setEnd] = useState(suggestedCycleEnd());
   const [name, setName] = useState("");
   const openCycle = useOpenCycle();
+  const { data: meetings } = useStrategicMeetings(canOpen);
 
   const today = istToday();
   const isWed = weekdayName(end) === "Wednesday";
@@ -78,6 +80,31 @@ export function CyclePanel({
             {cycle ? cycle.name : "the current cycle"} — it stays readable forever — and asks
             everyone to write fresh goals.
           </p>
+
+          {(meetings ?? []).some((m) => m.meeting_date > today) ? (
+            <label className="mt-4 block max-w-md">
+              <span className="ce-label">Pick a strategic meeting</span>
+              <select
+                className="ce-input mt-1 h-12 w-full"
+                value=""
+                onChange={(e) => {
+                  const m = (meetings ?? []).find((x) => x.id === e.target.value);
+                  if (!m) return;
+                  setEnd(m.meeting_date);
+                  setName(meetingLabel(m));
+                }}
+              >
+                <option value="">Choose one to fill the date and name…</option>
+                {(meetings ?? [])
+                  .filter((m) => m.meeting_date > today)
+                  .map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {meetingLabel(m)} · {shortDate(m.meeting_date)}
+                    </option>
+                  ))}
+              </select>
+            </label>
+          ) : null}
 
           <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
             <label className="block">

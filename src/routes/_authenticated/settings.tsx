@@ -11,6 +11,7 @@ import { EarnedLeavePolicyCard } from "@/components/settings/EarnedLeavePolicyCa
 import { EmployeeIdPrefixCard } from "@/components/settings/EmployeeIdPrefixCard";
 import { LeaveQuotasCard } from "@/components/settings/LeaveQuotasCard";
 import { PlaybookEditor } from "@/components/settings/PlaybookEditor";
+import { StrategicMeetingsCard } from "@/components/settings/StrategicMeetingsCard";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useOrgSettings, useSaveOrgSettings } from "@/hooks/useOrg";
 
@@ -72,6 +73,7 @@ function SettingsPage() {
         <HolidaysCard orgId={profile?.org_id ?? null} canManage />
         <BirthdayRemindersCard />
         <EmployeeIdPrefixCard />
+        <StrategicMeetingsCard />
         <CyclesCard />
         <PlaybookEditor orgId={profile?.org_id ?? null} />
 

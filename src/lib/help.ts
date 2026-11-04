@@ -241,6 +241,18 @@ export const HELP_TOPICS: HelpTopic[] = [
     ],
   },
   {
+    key: "strategic-meetings",
+    title: "Strategic meetings",
+    group: "The calendar",
+    screen: "settings",
+    body: [
+      "HR and Admin set strategic meetings in Admin settings, as many ahead as needed: a number (5.0), a name, an optional tagline, the date, time, place and agenda. Developers can do the same from the Developer panel.",
+      "Every meeting shows on the calendar in violet, and the next one sits on everyone's dashboard with a countdown.",
+      "The whole team gets a reminder 7 days before and again 1 day before. Moving a meeting to a new date sends the reminders again.",
+      "When opening a new goal cycle, pick the meeting from the list and its date and name are filled in.",
+    ],
+  },
+  {
     key: "leave-rules",
     title: "The rules that trip people up",
     group: "Leave",
