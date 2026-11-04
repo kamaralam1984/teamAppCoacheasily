@@ -21,6 +21,7 @@ import {
 } from "@/hooks/useCalendar";
 import { TYPE_LABEL } from "@/hooks/useLeave";
 import { useMyProfile } from "@/hooks/useMyProfile";
+import { useMyShifts } from "@/hooks/useWeeklyOffShift";
 import { useOrgSettings } from "@/hooks/useOrg";
 import { useWarriors } from "@/hooks/useWarriors";
 import {
@@ -38,7 +39,7 @@ import {
   timeLabel,
   todayIso,
 } from "@/lib/calendar";
-import { monthConflicts } from "@/lib/calendarDerive";
+import { monthConflicts, type ShiftDays } from "@/lib/calendarDerive";
 import { weeklyOffLabel } from "@/lib/warriors";
 import { canAddEvents, canEditEvent, canEditProgram, whoToAsk } from "@/lib/calendarPerms";
 
@@ -112,6 +113,17 @@ function CalendarPage() {
         .map((p) => p.id),
     );
   }, [warriors, org]);
+
+  /** My approved weekly off shifts, so the grey weekly off follows the day it was moved to. */
+  const { data: myShifts } = useMyShifts(Boolean(profile?.weekly_off));
+  const shiftDays = useMemo((): ShiftDays | null => {
+    const approved = (myShifts?.shifts ?? []).filter((s) => s.status === "approved");
+    if (approved.length === 0) return null;
+    return {
+      moved: new Set(approved.map((s) => s.off_date)),
+      added: new Set(approved.map((s) => s.new_date)),
+    };
+  }, [myShifts]);
 
   const inMonthDates = useMemo(
     () => monthGrid(cursor.y, cursor.m).filter((c) => c.inMonth).map((c) => c.date),
@@ -443,6 +455,7 @@ function CalendarPage() {
               byId={byId}
               today={today}
               viewerWeeklyOff={profile?.weekly_off ?? null}
+              shiftDays={shiftDays}
               selected={selected}
               onSelect={setSelected}
               onOpen={setEditing}
@@ -456,6 +469,7 @@ function CalendarPage() {
               byId={byId}
               today={today}
               viewerWeeklyOff={profile?.weekly_off ?? null}
+              shiftDays={shiftDays}
               selected={selected}
               onSelectDay={setSelected}
               onOpen={setEditing}
@@ -472,6 +486,7 @@ function CalendarPage() {
               onSelectDay={setSelected}
               birthdayIds={birthdayIds}
               viewerWeeklyOff={profile?.weekly_off ?? null}
+              shiftDays={shiftDays}
             />
           )}
         </div>
@@ -485,6 +500,7 @@ function CalendarPage() {
             onOpen={setEditing}
             birthdayIds={birthdayIds}
             viewerWeeklyOff={profile?.weekly_off ?? null}
+              shiftDays={shiftDays}
           />
         </div>
 

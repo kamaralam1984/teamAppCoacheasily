@@ -11,8 +11,8 @@ import {
   timeLabel,
   weekdayName,
 } from "@/lib/calendar";
-import { buildDayView } from "@/lib/calendarDerive";
-import { isOffOn, type Profile } from "@/lib/warriors";
+import { buildDayView, offLabel, viewerOffOn, type ShiftDays } from "@/lib/calendarDerive";
+import type { Profile } from "@/lib/warriors";
 
 interface Props {
   data: CalendarData | undefined;
@@ -25,6 +25,8 @@ interface Props {
   birthdayIds?: Set<string> | null;
   /** The viewer's own weekly off, listed and tinted grey. */
   viewerWeeklyOff?: string | null;
+  /** The viewer's approved weekly off shifts. */
+  shiftDays?: ShiftDays | null;
 }
 
 /** A phone-first list: every day that has something, in date order. */
@@ -38,6 +40,7 @@ export function AgendaView({
   onSelectDay,
   birthdayIds = null,
   viewerWeeklyOff = null,
+  shiftDays = null,
 }: Props) {
   const days: string[] = [];
   for (let d = from; daysBetween(d, to) >= 0; d = addDays(d, 1)) days.push(d);
@@ -45,14 +48,15 @@ export function AgendaView({
   const rows = days
     .map((date) => {
       const view = buildDayView(data, date, byId, birthdayIds);
-      const off = isOffOn(viewerWeeklyOff, weekdayName(date));
+      const offKind = viewerOffOn(viewerWeeklyOff, shiftDays, date);
+      const off = offKind !== null;
       const tone = dayTone({
         holiday: Boolean(view.holiday),
         flexi: view.flexi.length > 0,
         birthday: view.birthdays.length > 0,
         off,
       });
-      return { date, view, off, tone };
+      return { date, view, off, offKind, tone };
     })
     .filter(
       ({ view, off }) =>
@@ -78,7 +82,7 @@ export function AgendaView({
 
   return (
     <div className="space-y-3">
-      {rows.map(({ date, view, off, tone }) => (
+      {rows.map(({ date, view, off, offKind, tone }) => (
         <div key={date} className="ce-card overflow-hidden">
           <button
             type="button"
@@ -138,7 +142,7 @@ export function AgendaView({
             {off ? (
               <li className="flex items-center gap-2 px-4 py-3">
                 <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${MARKER_COLOUR["Weekly off"]}`} />
-                <span className="text-sm font-bold text-ink/70">(Weekly Off)</span>
+                <span className="text-sm font-bold text-ink/70">{offLabel(offKind)}</span>
               </li>
             ) : null}
 

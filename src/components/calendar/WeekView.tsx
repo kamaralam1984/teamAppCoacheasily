@@ -1,8 +1,8 @@
 import type { EditTarget } from "@/components/calendar/EventEditor";
 import type { CalendarData } from "@/hooks/useCalendar";
 import { MARKER_COLOUR, addDays, dayTone, niceDate, timeLabel, weekdayName } from "@/lib/calendar";
-import { buildDayView } from "@/lib/calendarDerive";
-import { isOffOn, type Profile } from "@/lib/warriors";
+import { buildDayView, offLabel, viewerOffOn, type ShiftDays } from "@/lib/calendarDerive";
+import type { Profile } from "@/lib/warriors";
 
 interface Props {
   start: string;
@@ -11,6 +11,8 @@ interface Props {
   today: string;
   /** The viewer's own weekly off, tinted grey. */
   viewerWeeklyOff?: string | null;
+  /** The viewer's approved weekly off shifts. */
+  shiftDays?: ShiftDays | null;
   selected: string;
   onSelectDay: (date: string) => void;
   onOpen: (target: EditTarget) => void;
@@ -23,6 +25,7 @@ export function WeekView({
   byId,
   today,
   viewerWeeklyOff = null,
+  shiftDays = null,
   selected,
   onSelectDay,
   onOpen,
@@ -34,7 +37,8 @@ export function WeekView({
     <div className="grid gap-2 sm:grid-cols-7">
       {days.map((date) => {
         const view = buildDayView(data, date, byId, birthdayIds);
-        const isOff = isOffOn(viewerWeeklyOff, weekdayName(date));
+        const offKind = viewerOffOn(viewerWeeklyOff, shiftDays, date);
+        const isOff = offKind !== null;
         const tone = dayTone({
           holiday: Boolean(view.holiday),
           flexi: view.flexi.length > 0,
@@ -89,7 +93,7 @@ export function WeekView({
 
               {isOff ? (
                 <p className={chip("border-grey/40 bg-grey/15 text-ink/70")}>
-                  (Weekly Off)
+                  {offLabel(offKind)}
                 </p>
               ) : null}
 

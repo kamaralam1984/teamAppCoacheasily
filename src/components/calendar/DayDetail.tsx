@@ -1,9 +1,9 @@
 import type { EditTarget } from "@/components/calendar/EventEditor";
 import { CHIP_STYLE, dayTone, longDate, timeLabel, weekdayName } from "@/lib/calendar";
-import { buildDayView } from "@/lib/calendarDerive";
+import { buildDayView, offLabel, viewerOffOn, type ShiftDays } from "@/lib/calendarDerive";
 import type { CalendarData } from "@/hooks/useCalendar";
 import { TYPE_LABEL } from "@/hooks/useLeave";
-import { isOffOn, type Profile } from "@/lib/warriors";
+import type { Profile } from "@/lib/warriors";
 
 interface Props {
   date: string;
@@ -14,6 +14,8 @@ interface Props {
   birthdayIds?: Set<string> | null;
   /** The viewer's own weekly off. */
   viewerWeeklyOff?: string | null;
+  /** The viewer's approved weekly off shifts. */
+  shiftDays?: ShiftDays | null;
 }
 
 function Chip({ type }: { type: string }) {
@@ -36,9 +38,11 @@ export function DayDetail({
   onOpen,
   birthdayIds = null,
   viewerWeeklyOff = null,
+  shiftDays = null,
 }: Props) {
   const view = buildDayView(data, date, byId, birthdayIds);
-  const off = isOffOn(viewerWeeklyOff, weekdayName(date));
+  const offKind = viewerOffOn(viewerWeeklyOff, shiftDays, date);
+  const off = offKind !== null;
   const tone = dayTone({
     holiday: Boolean(view.holiday),
     flexi: view.flexi.length > 0,
@@ -50,7 +54,7 @@ export function DayDetail({
     ...(view.holiday ? [`${view.holiday.name} (Fixed Holiday)`] : []),
     ...view.flexi.map((f) => `${f.name} (Flexi Holiday)`),
     ...view.birthdays.map((b) => `🎂 ${b.full_name} (Happy Birthday)`),
-    ...(off ? ["(Weekly Off)"] : []),
+    ...(off ? [offLabel(offKind)] : []),
   ];
 
   const nothing =

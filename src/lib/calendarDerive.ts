@@ -124,3 +124,26 @@ export function monthConflicts(
   }
   return Array.from(new Set(all));
 }
+
+/** The viewer's approved weekly off shifts: weekly offs that became working days, and the days taken instead. */
+export interface ShiftDays {
+  moved: Set<string>;
+  added: Set<string>;
+}
+
+export type OffKind = "off" | "shifted" | null;
+
+/** Is this the viewer's weekly off once approved shifts are counted, and was it moved here? */
+export function viewerOffOn(
+  weeklyOff: string | null | undefined,
+  shifts: ShiftDays | null | undefined,
+  date: string,
+): OffKind {
+  if (shifts?.added.has(date)) return "shifted";
+  if (shifts?.moved.has(date)) return null;
+  return isOffOn(weeklyOff, weekdayName(date)) ? "off" : null;
+}
+
+export function offLabel(kind: OffKind): string {
+  return kind === "shifted" ? "(Weekly Off – Shifted)" : "(Weekly Off)";
+}

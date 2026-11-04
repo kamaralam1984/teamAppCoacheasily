@@ -1,8 +1,8 @@
 import type { EditTarget } from "@/components/calendar/EventEditor";
 import type { CalendarData } from "@/hooks/useCalendar";
 import { MARKER_COLOUR, WEEKDAYS, dayTone, monthGrid, parseIso, weekdayName } from "@/lib/calendar";
-import { buildDayView } from "@/lib/calendarDerive";
-import { isOffOn, type Profile } from "@/lib/warriors";
+import { buildDayView, offLabel, viewerOffOn, type ShiftDays } from "@/lib/calendarDerive";
+import type { Profile } from "@/lib/warriors";
 
 interface Props {
   year: number;
@@ -11,6 +11,8 @@ interface Props {
   byId: Map<string, Profile>;
   today: string;
   viewerWeeklyOff: string | null;
+  /** The viewer's approved weekly off shifts. */
+  shiftDays?: ShiftDays | null;
   selected: string;
   onSelect: (date: string) => void;
   onOpen?: ((target: EditTarget) => void) | undefined;
@@ -26,6 +28,7 @@ export function MonthGrid({
   byId,
   today,
   viewerWeeklyOff,
+  shiftDays = null,
   selected,
   onSelect,
   onOpen,
@@ -64,7 +67,8 @@ export function MonthGrid({
             ...view.events.map((e) => ({ key: e.id, kind: "event" as const, type: e.type, label: e.name })),
           ];
           const isToday = cell.date === today;
-          const isOff = isOffOn(viewerWeeklyOff, weekdayName(cell.date));
+          const offKind = viewerOffOn(viewerWeeklyOff, shiftDays, cell.date);
+          const isOff = offKind !== null;
           const isSelected = cell.date === selected;
           const tone = dayTone({
             holiday: Boolean(view.holiday),
@@ -131,7 +135,7 @@ export function MonthGrid({
 
               {isOff ? (
                 <span className={`mt-0.5 block truncate text-[10px] leading-tight font-bold ${ink("text-ink/70")}`}>
-                  (Weekly Off)
+                  {offLabel(offKind)}
                 </span>
               ) : null}
 
