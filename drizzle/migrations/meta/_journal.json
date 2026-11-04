@@ -183,6 +183,13 @@
       "when": 1793758344736,
       "tag": "0025_weekly_off_shift_calendar_quarters",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793761751335,
+      "tag": "0026_org_open_positions",
+      "breakpoints": true
     }
   ]
 }

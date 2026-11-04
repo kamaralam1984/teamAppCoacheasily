@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useOpenPositions } from "@/hooks/useOpenPositions";
 import { supabase } from "@/integrations/supabase/client";
 import { inviteWarrior } from "@/lib/invite.functions";
 import {
@@ -47,6 +48,7 @@ export function WarriorForm({
   const invite = useServerFn(inviteWarrior);
   const [saving, setSaving] = useState(false);
   const departments = useDepartmentNames();
+  const { data: openPositions } = useOpenPositions();
 
   const [form, setForm] = useState({
     full_name: editing?.full_name ?? "",
@@ -64,6 +66,8 @@ export function WarriorForm({
     date_of_birth: editing?.date_of_birth ?? "",
     wedding_anniversary: editing?.wedding_anniversary ?? "",
     new_badge: editing?.new_badge ?? "auto",
+    new_role: Boolean(editing?.new_role),
+    chart_position_id: editing?.chart_position_id ?? "",
     responsibilities: editing?.responsibilities ?? "",
     fun_fact: editing?.fun_fact ?? "",
     email: editing?.email ?? "",
@@ -108,6 +112,8 @@ export function WarriorForm({
         date_of_birth: form.date_of_birth || null,
         wedding_anniversary: form.wedding_anniversary || null,
         new_badge: form.new_badge,
+        new_role: form.new_role,
+        chart_position_id: form.chart_position_id || null,
         opening_earned_leave:
           Number.isFinite(Number(form.opening_earned_leave)) &&
           form.opening_earned_leave.trim() !== ""
@@ -389,6 +395,32 @@ export function WarriorForm({
                 </option>
               ))}
             </select>
+          </label>
+
+          <label>
+            <Label>Show in the chart under</Label>
+            <select
+              className="ce-input"
+              value={form.chart_position_id}
+              onChange={(e) => set("chart_position_id", e.target.value)}
+            >
+              <option value="">Their manager (usual)</option>
+              {(openPositions ?? []).map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.title} (to be hired)
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex items-center gap-2 self-end pb-2.5 text-[13px] text-ink">
+            <input
+              type="checkbox"
+              className="h-5 w-5"
+              checked={form.new_role}
+              onChange={(e) => set("new_role", e.target.checked)}
+            />
+            Show a “New role” tag on the chart
           </label>
 
           <label className="sm:col-span-2">

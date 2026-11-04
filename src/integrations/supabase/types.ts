@@ -1914,6 +1914,51 @@ export type Database = {
         }
         Relationships: []
       }
+      open_positions: {
+        Row: {
+          created_at: string
+          department: string | null
+          id: string
+          org_id: string
+          reports_to: string | null
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string | null
+          id?: string
+          org_id: string
+          reports_to?: string | null
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          department?: string | null
+          id?: string
+          org_id?: string
+          reports_to?: string | null
+          sort_order?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "open_positions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "open_positions_reports_to_fkey"
+            columns: ["reports_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organisations: {
         Row: {
           created_at: string
@@ -2340,6 +2385,7 @@ export type Database = {
           bio: string | null
           birthday: string | null
           can_manage_calendar: boolean
+          chart_position_id: string | null
           created_at: string
           date_of_birth: string | null
           department: string | null
@@ -2354,6 +2400,7 @@ export type Database = {
           last_working_day: string | null
           manager_id: string | null
           new_badge: string
+          new_role: boolean
           opening_earned_leave: number
           org_id: string
           phone: string | null
@@ -2372,6 +2419,7 @@ export type Database = {
           bio?: string | null
           birthday?: string | null
           can_manage_calendar?: boolean
+          chart_position_id?: string | null
           created_at?: string
           date_of_birth?: string | null
           department?: string | null
@@ -2386,6 +2434,7 @@ export type Database = {
           last_working_day?: string | null
           manager_id?: string | null
           new_badge?: string
+          new_role?: boolean
           opening_earned_leave?: number
           org_id: string
           phone?: string | null
@@ -2404,6 +2453,7 @@ export type Database = {
           bio?: string | null
           birthday?: string | null
           can_manage_calendar?: boolean
+          chart_position_id?: string | null
           created_at?: string
           date_of_birth?: string | null
           department?: string | null
@@ -2418,6 +2468,7 @@ export type Database = {
           last_working_day?: string | null
           manager_id?: string | null
           new_badge?: string
+          new_role?: boolean
           opening_earned_leave?: number
           org_id?: string
           phone?: string | null
@@ -2431,6 +2482,13 @@ export type Database = {
           weekly_off?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_chart_position_id_fkey"
+            columns: ["chart_position_id"]
+            isOneToOne: false
+            referencedRelation: "open_positions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_manager_id_fkey"
             columns: ["manager_id"]

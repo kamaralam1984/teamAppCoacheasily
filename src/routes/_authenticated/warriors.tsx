@@ -8,12 +8,14 @@ import { ExitDialog } from "@/components/warriors/ExitDialog";
 import { InvitePanel, useLoginStatus } from "@/components/warriors/InvitePanel";
 import { ProbationPanel } from "@/components/probation/ProbationPanel";
 import { OrgChart } from "@/components/warriors/OrgChart";
+import { OpenPositionsPanel } from "@/components/warriors/OpenPositionsPanel";
 import { OrgTree } from "@/components/warriors/OrgTree";
 import { ProfileModal } from "@/components/warriors/ProfileModal";
 import { WarriorForm } from "@/components/warriors/WarriorForm";
 import { usePresenceToday } from "@/hooks/useDailyCode";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useMissingDetails } from "@/hooks/useMyDetails";
+import { useOpenPositions } from "@/hooks/useOpenPositions";
 
 import { useWarriors } from "@/hooks/useWarriors";
 import {
@@ -69,6 +71,7 @@ function WarriorsPage() {
   const viewer = mine?.profile ?? null;
   const canManage = isPrivileged(viewer?.role);
   const all = useMemo(() => warriors ?? [], [warriors]);
+  const { data: openPositions } = useOpenPositions(Boolean(viewer));
   const { probation } = Route.useSearch();
   const navigate = useNavigate();
   useEffect(() => {
@@ -264,7 +267,12 @@ function WarriorsPage() {
             ) : error ? (
               <p className="text-sm text-red">The team couldn't be loaded. Please refresh.</p>
             ) : layout === "chart" ? (
-              <OrgChart profiles={visible} viewerId={viewer?.id ?? null} onOpen={setSelected} />
+              <OrgChart
+                profiles={visible}
+                positions={openPositions ?? []}
+                viewerId={viewer?.id ?? null}
+                onOpen={setSelected}
+              />
             ) : (
               <OrgTree
                 tree={tree}
@@ -283,6 +291,13 @@ function WarriorsPage() {
                 gaps={gaps}
               />
             )}
+            {canManage && viewer ? (
+              <OpenPositionsPanel
+                positions={openPositions ?? []}
+                profiles={all}
+                orgId={viewer.org_id}
+              />
+            ) : null}
           </div>
         </section>
       </div>
