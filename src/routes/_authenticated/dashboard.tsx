@@ -236,7 +236,7 @@ function Dashboard() {
         {/* ── Hero ───────────────────────────────────────────── */}
         <section
           className={`ce-rise relative overflow-hidden rounded-[14px] bg-night p-6 text-white shadow-[0_10px_30px_rgba(23,17,38,0.18)] sm:p-8 ${
-            diwali ? "dw-hero pt-10 pb-10 sm:pt-12 sm:pb-12" : ""
+            diwali ? "dw-hero pt-10 pb-[310px] sm:pt-12 sm:pb-12" : ""
           }`}
         >
           {diwali ? <DiwaliHeroDecor /> : null}

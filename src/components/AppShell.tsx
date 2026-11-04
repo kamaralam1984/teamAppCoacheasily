@@ -356,6 +356,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
         ) : null}
         <div aria-hidden className="ce-nav-line" />
+        {/* room under the line for the Diwali diyas, so they never sit on the page */}
+        {diwali ? <div aria-hidden className="h-[26px] bg-night" /> : null}
 
         {testingActive ? (
           <div className="border-t border-gold/40 bg-gold/15">

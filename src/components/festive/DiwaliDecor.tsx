@@ -266,9 +266,9 @@ export function DiwaliHeaderDecor() {
     <div aria-hidden className="pointer-events-none absolute inset-0 z-20">
       <Garland className="absolute inset-x-0 top-0" />
       <BulbString className="absolute inset-x-6 top-[14px]" count={32} />
-      <Lantern className="absolute top-3 left-1 hidden md:block" string={16} size={22} />
-      <Lantern className="absolute top-3 right-1 hidden md:block" string={16} size={22} delay={0.7} />
-      <div className="absolute inset-x-[8%] -bottom-[14px] hidden justify-between md:flex">
+      <Lantern className="absolute top-3 left-1 hidden xl:block" string={16} size={22} />
+      <Lantern className="absolute top-3 right-1 hidden xl:block" string={16} size={22} delay={0.7} />
+      <div className="absolute inset-x-[8%] bottom-0 flex justify-between">
         {Array.from({ length: 7 }, (_, i) => (
           <Diya key={i} size={30} delay={i * 0.2} />
         ))}
@@ -280,7 +280,7 @@ export function DiwaliHeaderDecor() {
 /** Around the page: lanterns hanging on both sides and rangoli in the bottom corners. */
 export function DiwaliPageDecor() {
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 z-0 hidden overflow-hidden lg:block">
+    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
       <BulbString className="absolute top-[118px] left-0 w-[16%] -rotate-3" count={7} />
       <BulbString className="absolute top-[118px] right-0 w-[16%] rotate-3" count={7} />
       <Lantern className="absolute top-[118px] left-[4%]" string={40} size={30} />
@@ -303,7 +303,7 @@ export function DiwaliHeroDecor() {
     <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[14px]">
       <Garland className="absolute inset-x-0 top-0 opacity-95" />
       <BulbString className="absolute inset-x-8 top-[14px]" count={22} />
-      <div className="absolute right-[3%] bottom-[40%] hidden w-[38%] flex-col items-center sm:flex">
+      <div className="absolute inset-x-0 bottom-[96px] flex w-full flex-col items-center sm:inset-x-auto sm:right-[3%] sm:bottom-[40%] sm:w-[38%]">
         <Burst className="absolute -top-3 -left-2" size={78} />
         <Burst className="absolute top-8 -right-1" size={56} color="#f9a8d4" delay={1.2} />
         <Burst className="absolute top-24 left-2" size={40} color="#fde68a" delay={0.6} />
@@ -314,7 +314,7 @@ export function DiwaliHeroDecor() {
         </p>
       </div>
       {/* rockets, crackers and anars round the greeting */}
-      <div className="absolute inset-y-0 right-0 hidden w-[42%] sm:block">
+      <div className="absolute inset-x-0 bottom-0 h-[300px] sm:inset-x-auto sm:inset-y-0 sm:right-0 sm:h-auto sm:w-[42%]">
         <Rocket className="bottom-6 left-[4%]" height={190} delay={0} />
         <Rocket className="bottom-6 right-[2%]" height={210} delay={1.4} color="#f9a8d4" />
         <Rocket className="bottom-6 left-[38%]" height={240} delay={2.6} color="#a5f3fc" />
@@ -325,12 +325,12 @@ export function DiwaliHeroDecor() {
         <Anar className="bottom-3 left-[6%]" />
         <Anar className="right-[1%] bottom-3" />
       </div>
-      <div className="absolute right-[5%] bottom-3 hidden items-end gap-1.5 sm:flex">
+      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-end gap-1.5 sm:right-[5%] sm:bottom-3 sm:left-auto sm:translate-x-0">
         <Diya size={44} delay={0.3} />
         <Diya size={70} delay={0.1} />
         <Diya size={44} delay={0.5} />
       </div>
-      <div className="absolute inset-x-[6%] bottom-1 flex justify-between sm:right-[42%]">
+      <div className="absolute inset-x-[6%] bottom-1 hidden justify-between sm:right-[42%] sm:flex">
         {Array.from({ length: 8 }, (_, i) => (
           <Diya key={i} size={18} delay={i * 0.15} />
         ))}
