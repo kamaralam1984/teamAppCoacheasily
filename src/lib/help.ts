@@ -235,7 +235,8 @@ export const HELP_TOPICS: HelpTopic[] = [
     screen: "leave",
     body: [
       "On the leave page, the Weekly off card has a Forgot button. Pick the weekly off you want to move and the day of that same week you want off instead. Your usual weekly off stays as it is for every other week.",
-      "Quarters and years are counted from your joining date. The first 2 shifts in a quarter go through straight away; a 3rd, 4th or more in that quarter waits for HR to approve, so say why. Unused shifts do not carry over.",
+      "Quarters follow the calendar: January–March, April–June, July–September and October–December; the year is January to December. The first 2 shifts in a quarter go through straight away; a 3rd, 4th or more in that quarter waits for HR to approve, so say why. Unused shifts do not carry over.",
+      "If you joined in the last month of a quarter (March, June, September or December), you get 1 free shift in that quarter instead of 2. The full 2 start the next quarter.",
       "You can shift at most 8 times a year, counting the ones still waiting for HR. A shift that is still ahead can be cancelled, and that gives the slot back.",
     ],
   },

@@ -17,15 +17,41 @@ CREATE FUNCTION pg_temp.as_user(p uuid) RETURNS void LANGUAGE sql AS $$
   SELECT set_config('request.jwt.claim.sub', (SELECT auth_user_id::text FROM public.profiles WHERE id = p), true)
 $$;
 
--- ═══════════ 1. QUARTERS AND YEARS FROM JOINING ═══════════
-SELECT pg_temp.eq('window: joined 1 Jan, 28 Oct is in the Oct quarter',
-  weekly_off_shift_window(DATE '2025-01-01', DATE '2026-10-28', 3), daterange('2026-10-01', '2027-01-01'));
-SELECT pg_temp.eq('window: and in the 2026 joining year',
-  weekly_off_shift_window(DATE '2025-01-01', DATE '2026-10-28', 12), daterange('2026-01-01', '2027-01-01'));
-SELECT pg_temp.eq('window: joined on the 31st, the quarter ends on the 30th',
-  weekly_off_shift_window(DATE '2026-01-31', DATE '2026-04-29', 3), daterange('2026-01-31', '2026-04-30'));
-SELECT pg_temp.eq('window: and the next one starts there',
-  lower(weekly_off_shift_window(DATE '2026-01-31', DATE '2026-04-30', 3)), DATE '2026-04-30');
+-- ═══════════ 1. CALENDAR QUARTERS AND YEARS ═══════════
+SELECT pg_temp.eq('period: 28 Oct is in the Oct–Dec quarter',
+  weekly_off_shift_period(DATE '2026-10-28', 3), daterange('2026-10-01', '2027-01-01'));
+SELECT pg_temp.eq('period: 31 Mar is in the Jan–Mar quarter',
+  weekly_off_shift_period(DATE '2026-03-31', 3), daterange('2026-01-01', '2026-04-01'));
+SELECT pg_temp.eq('period: 1 Apr starts the Apr–Jun quarter',
+  weekly_off_shift_period(DATE '2026-04-01', 3), daterange('2026-04-01', '2026-07-01'));
+SELECT pg_temp.eq('period: the year is January to December',
+  weekly_off_shift_period(DATE '2026-10-28', 12), daterange('2026-01-01', '2027-01-01'));
+
+-- joined in the last month of a quarter: half the free shifts (rounded up) in that quarter only
+DO $$
+DECLARE
+  o uuid; a uuid; b uuid; c uuid;
+BEGIN
+  INSERT INTO organisations (name, settings) VALUES ('T-late', '{}') RETURNING id INTO o;
+  INSERT INTO profiles (org_id, full_name, role, department, joined_on, weekly_off)
+  VALUES (o, 'Late March', 'member', 'Sales', DATE '2026-03-20', 'Sunday') RETURNING id INTO a;
+  INSERT INTO profiles (org_id, full_name, role, department, joined_on, weekly_off)
+  VALUES (o, 'Early Feb', 'member', 'Sales', DATE '2026-02-15', 'Sunday') RETURNING id INTO b;
+  INSERT INTO profiles (org_id, full_name, role, department, joined_on, weekly_off)
+  VALUES (o, 'No date', 'member', 'Sales', NULL, 'Sunday') RETURNING id INTO c;
+
+  PERFORM pg_temp.eq('late: joined 20 Mar, 1 free in Jan–Mar',
+    (weekly_off_shift_usage(a, DATE '2026-03-29')->>'free_per_quarter')::int, 1);
+  PERFORM pg_temp.eq('late: and flagged', (weekly_off_shift_usage(a, DATE '2026-03-29')->>'late_join')::boolean, true);
+  PERFORM pg_temp.eq('late: 2 free from April',
+    (weekly_off_shift_usage(a, DATE '2026-04-05')->>'free_per_quarter')::int, 2);
+  PERFORM pg_temp.eq('late: the year limit stays 8',
+    (weekly_off_shift_usage(a, DATE '2026-03-29')->>'per_year')::int, 8);
+  PERFORM pg_temp.eq('early: joined 15 Feb, 2 free in Jan–Mar',
+    (weekly_off_shift_usage(b, DATE '2026-03-01')->>'free_per_quarter')::int, 2);
+  PERFORM pg_temp.eq('no joining date: 2 free',
+    (weekly_off_shift_usage(c, DATE '2026-03-29')->>'free_per_quarter')::int, 2);
+END $$;
 
 -- ═══════════ 2. FREE, THEN HR, THEN THE YEAR LIMIT ═══════════
 DO $$
@@ -42,10 +68,11 @@ BEGIN
   INSERT INTO auth.users (id, email) SELECT x, x::text || '@t.test' FROM unnest(uids) AS x;
   INSERT INTO el_policy (org_id) VALUES (o) ON CONFLICT DO NOTHING;
   INSERT INTO profiles (org_id, full_name, role, department, auth_user_id, joined_on, weekly_off)
-  VALUES (o, 'Hema HR', 'hr', 'People & Culture', uids[1], mon - 14, 'Saturday,Sunday') RETURNING id INTO hr;
-  -- joined two weeks before next Monday, so the next few Sundays share one quarter
+  VALUES (o, 'Hema HR', 'hr', 'People & Culture', uids[1], DATE '2020-01-06', 'Saturday,Sunday') RETURNING id INTO hr;
+  -- the next four Sundays must share one calendar quarter, so don't run this in the last weeks of
+  -- March, June, September or December
   INSERT INTO profiles (org_id, full_name, role, department, auth_user_id, joined_on, weekly_off, manager_id)
-  VALUES (o, 'Wes Worker', 'member', 'Sales', uids[2], mon - 14, 'Sunday', hr) RETURNING id INTO w;
+  VALUES (o, 'Wes Worker', 'member', 'Sales', uids[2], DATE '2020-01-06', 'Sunday', hr) RETURNING id INTO w;
 
   PERFORM pg_temp.as_user(w);
 

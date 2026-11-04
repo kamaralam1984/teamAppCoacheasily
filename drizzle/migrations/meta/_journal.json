@@ -176,6 +176,13 @@
       "when": 1793417308138,
       "tag": "0024_probation_90_days_reminders",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793758344736,
+      "tag": "0025_weekly_off_shift_calendar_quarters",
+      "breakpoints": true
     }
   ]
 }

@@ -173,6 +173,12 @@ export function WeeklyOffShiftCard({ weeklyOff }: { weeklyOff: string | null }) 
               {shortDate(usage.quarter_from)} → {shortDate(usage.quarter_to)} · used{" "}
               {usage.quarter_used}. More than {usage.free_per_quarter} needs HR's approval.
             </p>
+            {usage.late_join ? (
+              <p className="mt-1 text-[12px] text-soft">
+                You joined in the last month of this quarter, so {usage.free_per_quarter} free this
+                time. The full number starts next quarter.
+              </p>
+            ) : null}
           </div>
           <div className="rounded-[14px] border border-line bg-cream/60 p-4">
             <p className="text-[11px] font-bold tracking-[0.12em] text-soft uppercase">This year</p>
@@ -181,8 +187,7 @@ export function WeeklyOffShiftCard({ weeklyOff }: { weeklyOff: string | null }) 
               <span className="text-[13px] font-semibold text-soft">/ {usage.per_year} left</span>
             </p>
             <p className="mt-1 text-[12px] text-soft">
-              {shortDate(usage.year_from)} → {shortDate(usage.year_to)} · counted from your joining
-              date.
+              {shortDate(usage.year_from)} → {shortDate(usage.year_to)} · January to December.
             </p>
           </div>
         </div>

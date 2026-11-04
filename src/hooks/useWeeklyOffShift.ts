@@ -2,13 +2,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
 
-/** One quarter and one year, both counted from the joining date. Pending shifts count too. */
+/** One calendar quarter (Jan–Mar, Apr–Jun, …) and one calendar year. Pending shifts count too. */
 export interface ShiftUsage {
   quarter_from: string;
   quarter_to: string;
   quarter_used: number;
   free_per_quarter: number;
   free_left: number;
+  /** joined in the last month of this quarter, so fewer free shifts in it */
+  late_join?: boolean;
   year_from: string;
   year_to: string;
   year_used: number;
