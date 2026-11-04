@@ -211,6 +211,13 @@
       "when": 1793789625548,
       "tag": "0029_meeting_goals_weekly",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1793791890449,
+      "tag": "0030_diwali_2026_holiday",
+      "breakpoints": true
     }
   ]
 }
