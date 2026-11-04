@@ -57,6 +57,7 @@ import { Tour } from "@/components/help/Tour";
 import { useMarkTourSeen, useTourSeen } from "@/hooks/useTour";
 import { meetingLabel, nextMeeting, useStrategicMeetings } from "@/hooks/useStrategicMeetings";
 import { daysBetween, timeLabel } from "@/lib/calendar";
+import { DiwaliHeroDecor, useDiwaliDecor } from "@/components/festive/DiwaliDecor";
 
 
 
@@ -150,6 +151,7 @@ function Dashboard() {
   const { data: punc } = usePunctualityMe(Boolean(profile));
   // a shifted weekly off moves the "why are you working today?" question with it
   const { data: myShifts } = useMyShifts(Boolean(profile?.weekly_off));
+  const diwali = useDiwaliDecor();
   const { data: strategicMeetings } = useStrategicMeetings(Boolean(profile));
   const upcomingMeeting = nextMeeting(strategicMeetings, istToday());
   const meetingDays = upcomingMeeting ? daysBetween(istToday(), upcomingMeeting.meeting_date) : 0;
@@ -233,8 +235,11 @@ function Dashboard() {
 
         {/* ── Hero ───────────────────────────────────────────── */}
         <section
-          className="ce-rise relative overflow-hidden rounded-[14px] bg-night p-6 text-white shadow-[0_10px_30px_rgba(23,17,38,0.18)] sm:p-8"
+          className={`ce-rise relative overflow-hidden rounded-[14px] bg-night p-6 text-white shadow-[0_10px_30px_rgba(23,17,38,0.18)] sm:p-8 ${
+            diwali ? "dw-hero pt-10 pb-10 sm:pt-12 sm:pb-12" : ""
+          }`}
         >
+          {diwali ? <DiwaliHeroDecor /> : null}
           {myBirthday ? (
             <span
               aria-hidden
@@ -245,12 +250,12 @@ function Dashboard() {
               }}
             />
           ) : null}
-          <div className="relative">
+          <div className={`relative ${diwali ? "z-10 sm:pr-[40%]" : ""}`}>
           <div className="flex items-start justify-between gap-4">
             <p className="text-[11px] font-bold tracking-[0.16em] text-mist uppercase">
               {weekday} · {date}
             </p>
-            <Mark size={34} color="var(--ce-goldL)" />
+            {diwali ? null : <Mark size={34} color="var(--ce-goldL)" />}
           </div>
 
           <h1 className="mt-5 flex flex-wrap items-center gap-3 font-display text-4xl leading-tight text-white sm:text-5xl">
@@ -399,30 +404,51 @@ function Dashboard() {
 
         {/* ── Next strategic meeting ─────────────────────────── */}
         {upcomingMeeting ? (
-          <Link
-            to="/calendar"
-            className="ce-rise ce-card flex items-center gap-4 border-violet/30 p-5 hover:shadow-lg"
-          >
-            <span className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-violet text-white">
-              <span className="font-display text-2xl leading-none">{meetingDays}</span>
-              <span className="text-[9px] font-bold uppercase">{meetingDays === 1 ? "day" : "days"}</span>
-            </span>
-            <span className="min-w-0">
-              <span className="block text-[11px] font-bold tracking-[0.12em] text-violet uppercase">
-                {meetingDays === 0 ? "Today" : "Next strategic meeting"}
+          <Link to="/strategic-meetings" className="ce-rise ce-meeting-card">
+            <span className="ce-meeting-inner flex items-center gap-4 p-5 sm:gap-5 sm:pr-40">
+              {/* gold ribbons on the right, with a shine running along them */}
+              <svg
+                aria-hidden
+                viewBox="0 0 240 100"
+                preserveAspectRatio="none"
+                className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-56 sm:block"
+              >
+                <defs>
+                  <linearGradient id="ce-ribbon-gold" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0" stopColor="#f0c75e" stopOpacity="0" />
+                    <stop offset="0.4" stopColor="#d4a72c" stopOpacity="0.8" />
+                    <stop offset="1" stopColor="#ffe9a8" stopOpacity="1" />
+                  </linearGradient>
+                </defs>
+                <path d="M20 2 C 110 6, 150 30, 240 22 L240 0 L20 0 Z" fill="url(#ce-ribbon-gold)" opacity="0.9" />
+                <path d="M40 4 C 120 10, 160 34, 240 30" fill="none" stroke="url(#ce-ribbon-gold)" strokeWidth="1.6" />
+                <path d="M60 98 C 130 92, 170 70, 240 74 L240 100 L60 100 Z" fill="url(#ce-ribbon-gold)" opacity="0.9" />
+                <path d="M30 97 C 120 90, 170 66, 240 66" fill="none" stroke="url(#ce-ribbon-gold)" strokeWidth="1.6" />
+                <path className="ce-ribbon-shine" d="M40 4 C 120 10, 160 34, 240 30" fill="none" stroke="#fff8dc" strokeWidth="2" strokeLinecap="round" />
+                <path className="ce-ribbon-shine" d="M30 97 C 120 90, 170 66, 240 66" fill="none" stroke="#fff8dc" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+              <span className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl border border-[#fff3c4]/70 bg-gradient-to-b from-[#f6dc8c] via-goldL to-gold text-[#3a2400] shadow-[0_6px_14px_rgba(0,0,0,0.35)]">
+                <span className="font-display text-3xl leading-none">{meetingDays}</span>
+                <span className="text-[10px] font-bold uppercase">{meetingDays === 1 ? "day" : "days"}</span>
               </span>
-              <span className="block font-display text-lg leading-snug text-ink">
-                {meetingLabel(upcomingMeeting)}
-              </span>
-              <span className="block text-[12px] text-soft">
-                {[
-                  upcomingMeeting.tagline,
-                  shortDate(upcomingMeeting.meeting_date),
-                  timeLabel(upcomingMeeting.from_time),
-                  upcomingMeeting.location,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
+              <span aria-hidden className="w-px self-stretch bg-gradient-to-b from-transparent via-goldL/70 to-transparent" />
+              <span className="min-w-0">
+                <span className="block text-[11px] font-bold tracking-[0.16em] text-goldL uppercase">
+                  {meetingDays === 0 ? "Today" : "Next strategic meeting"}
+                </span>
+                <span className="block font-display text-xl leading-snug text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
+                  {meetingLabel(upcomingMeeting)}
+                </span>
+                <span className="block text-[13px] font-medium text-goldL">
+                  {[
+                    upcomingMeeting.tagline,
+                    shortDate(upcomingMeeting.meeting_date),
+                    timeLabel(upcomingMeeting.from_time),
+                    upcomingMeeting.location,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
               </span>
             </span>
           </Link>

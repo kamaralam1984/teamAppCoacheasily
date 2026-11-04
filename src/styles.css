@@ -35,6 +35,8 @@
   --ce-flexiD: #1e3a8a;
   --ce-bday: #be185d;
   --ce-yellow: #fde047;
+  --ce-maroon: #6d1424;
+  --ce-maroonD: #470a15;
 
   /* shadcn semantic tokens mapped onto the brand palette */
   --radius: 0.875rem; /* 14px cards */
@@ -98,6 +100,8 @@
   --color-flexiD: var(--ce-flexiD);
   --color-bday: var(--ce-bday);
   --color-yellow: var(--ce-yellow);
+  --color-maroon: var(--ce-maroon);
+  --color-maroonD: var(--ce-maroonD);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -645,8 +649,266 @@
     animation: ce-line-run 1.6s linear infinite;
   }
 
+  /* The next strategic meeting on the dashboard: a maroon banner in a gold frame, with a bright
+     streak running round the frame, glowing flares on its edges and gold ribbons on the right. */
+  @keyframes ce-flare {
+    0%,
+    100% {
+      opacity: 0.55;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes ce-ribbon-shine {
+    to {
+      stroke-dashoffset: -600;
+    }
+  }
+
+  .ce-meeting-card {
+    position: relative;
+    display: block;
+    border-radius: 18px;
+    padding: 3px;
+    overflow: hidden;
+    isolation: isolate;
+    background: linear-gradient(
+      100deg,
+      var(--ce-goldD) 0%,
+      var(--ce-goldL) 25%,
+      #b8860b 50%,
+      var(--ce-goldL) 75%,
+      var(--ce-goldD) 100%
+    );
+    box-shadow:
+      0 14px 30px color-mix(in oklab, var(--ce-maroonD) 30%, transparent),
+      0 0 22px color-mix(in oklab, var(--ce-goldL) 30%, transparent);
+  }
+
+  /* the running line: a white-gold streak sweeping round the frame */
+  .ce-meeting-card::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 160%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    z-index: -1;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      transparent 20deg,
+      var(--ce-goldL) 50deg,
+      #fffbe6 70deg,
+      var(--ce-goldL) 90deg,
+      transparent 120deg,
+      transparent 200deg,
+      var(--ce-goldL) 230deg,
+      #fffbe6 250deg,
+      var(--ce-goldL) 270deg,
+      transparent 300deg
+    );
+    mix-blend-mode: screen;
+    animation: ce-spin 4s linear infinite;
+  }
+
+  .ce-meeting-card > .ce-meeting-inner {
+    position: relative;
+    overflow: hidden;
+    border-radius: 15px;
+    background:
+      radial-gradient(60% 120% at 45% 0%, color-mix(in oklab, #c0283c 45%, transparent), transparent 70%),
+      linear-gradient(90deg, #4a0912 0%, #6e1020 40%, #5c0c19 75%, #3e0710 100%);
+    color: #fff;
+  }
+
+  /* glowing flares on the top and bottom edge */
+  .ce-meeting-card > .ce-meeting-inner::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(18% 6px at 50% 0%, #fff3c4, transparent 100%),
+      radial-gradient(30% 40% at 50% 0%, color-mix(in oklab, var(--ce-goldL) 35%, transparent), transparent 70%),
+      radial-gradient(18% 6px at 50% 100%, #fff3c4, transparent 100%),
+      radial-gradient(30% 40% at 50% 100%, color-mix(in oklab, var(--ce-goldL) 30%, transparent), transparent 70%);
+    animation: ce-flare 2.8s ease-in-out infinite;
+  }
+
+  .ce-meeting-card .ce-ribbon-shine {
+    stroke-dasharray: 120 480;
+    animation: ce-ribbon-shine 3.6s linear infinite;
+  }
+
+  .ce-meeting-card > .ce-meeting-inner > :not(svg) {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Diwali decorations (components/festive/DiwaliDecor.tsx) ── */
+  @keyframes dw-twinkle {
+    0%, 100% { opacity: 0.45; transform: scale(0.85); }
+    50% { opacity: 1; transform: scale(1.1); }
+  }
+  @keyframes dw-swing {
+    0%, 100% { transform: rotate(-7deg); }
+    50% { transform: rotate(7deg); }
+  }
+  @keyframes dw-flicker {
+    0%, 100% { transform: scale(1, 1) skewX(0deg); opacity: 1; }
+    25% { transform: scale(0.92, 1.08) skewX(2deg); opacity: 0.92; }
+    50% { transform: scale(1.04, 0.94) skewX(-2deg); opacity: 1; }
+    75% { transform: scale(0.96, 1.05) skewX(1deg); opacity: 0.95; }
+  }
+  @keyframes dw-glow-pulse {
+    0%, 100% { opacity: 0.65; }
+    50% { opacity: 1; }
+  }
+  @keyframes dw-burst {
+    0% { transform: scale(0.2); opacity: 0; }
+    15% { opacity: 1; }
+    60% { transform: scale(1); opacity: 0.9; }
+    100% { transform: scale(1.15); opacity: 0; }
+  }
+  @keyframes dw-spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes dw-sparkle {
+    0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); }
+    50% { opacity: 1; transform: scale(1) rotate(45deg); }
+  }
+
+  @keyframes dw-rocket {
+    0% { transform: translate(-50%, 0); opacity: 0; }
+    4% { opacity: 1; }
+    40% { transform: translate(-50%, calc(-1 * var(--h))); opacity: 1; }
+    44%, 100% { transform: translate(-50%, calc(-1 * var(--h))); opacity: 0; }
+  }
+  @keyframes dw-rocket-burst {
+    0%, 40% { transform: scale(0.1); opacity: 0; }
+    46% { opacity: 1; }
+    80% { transform: scale(1); opacity: 0.9; }
+    100% { transform: scale(1.2); opacity: 0; }
+  }
+  @keyframes dw-spark {
+    0% { transform: translate(0, 0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(0.3); opacity: 0; }
+  }
+  @keyframes dw-pop {
+    0%, 70%, 100% { transform: scale(0.2); opacity: 0; }
+    74% { transform: scale(1.3); opacity: 1; }
+    82% { transform: scale(1.8); opacity: 0; }
+  }
+  @keyframes dw-pop-burst {
+    0%, 72% { transform: scale(0.2); opacity: 0; }
+    76% { opacity: 1; }
+    92% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(1.1); opacity: 0; }
+  }
+
+  .dw-rocket {
+    width: 4px;
+    height: 26px;
+    border-radius: 3px;
+    background: linear-gradient(to top, transparent, #f59e0b 50%, #fffbe6);
+    box-shadow: 0 -2px 8px 2px rgba(255, 220, 140, 0.8);
+    animation: dw-rocket 3.6s ease-out infinite;
+  }
+  .dw-rocket-burst {
+    animation: dw-rocket-burst 3.6s ease-out infinite !important;
+  }
+  .dw-spark {
+    position: absolute;
+    left: -2px;
+    top: -2px;
+    width: 4px;
+    height: 4px;
+    border-radius: 9999px;
+    background: #fff3c4;
+    box-shadow: 0 0 4px 1px rgba(250, 204, 21, 0.9);
+    animation: dw-spark 1s ease-out infinite;
+  }
+  .dw-pop {
+    background: radial-gradient(circle, #ffffff, rgba(255, 243, 196, 0.8) 40%, transparent 70%);
+    animation: dw-pop 2.8s ease-out infinite;
+  }
+  .dw-pop-burst {
+    animation: dw-pop-burst 2.8s ease-out infinite !important;
+  }
+
+  .dw-bulb {
+    width: 7px;
+    height: 9px;
+    border-radius: 50% 50% 45% 45%;
+    background: radial-gradient(circle at 40% 35%, #fffbe6, #fcd34d 55%, #f59e0b);
+    box-shadow: 0 0 6px 2px rgba(252, 211, 77, 0.75), 0 0 14px 4px rgba(245, 158, 11, 0.35);
+    animation: dw-twinkle 1.6s ease-in-out infinite;
+  }
+  .dw-swing {
+    transform-origin: 50% 0;
+    animation: dw-swing 3.2s ease-in-out infinite;
+    filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.55));
+  }
+  .dw-flame {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: dw-flicker 0.9s ease-in-out infinite;
+  }
+  .dw-glow {
+    animation: dw-glow-pulse 1.4s ease-in-out infinite;
+  }
+  .dw-burst {
+    animation: dw-burst 2.6s ease-out infinite;
+  }
+  .dw-rangoli {
+    animation: dw-spin 60s linear infinite;
+  }
+  .dw-sparkle {
+    width: 10px;
+    height: 10px;
+    background: radial-gradient(circle, #fff7d1 0 20%, transparent 21%),
+      conic-gradient(from 0deg, transparent 0 40deg, #f0c75e 45deg, transparent 50deg 130deg, #f0c75e 135deg, transparent 140deg 220deg, #f0c75e 225deg, transparent 230deg 310deg, #f0c75e 315deg, transparent 320deg);
+    animation: dw-sparkle 2.4s ease-in-out infinite;
+  }
+  .dw-happy {
+    font-family: "Great Vibes", "Rozha One", cursive;
+    background: linear-gradient(180deg, #fff3c4 0%, #f0c75e 45%, #b8860b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 10px rgba(240, 199, 94, 0.55)) drop-shadow(0 2px 1px rgba(60, 20, 0, 0.6));
+  }
+  /* the dashboard greeting dressed for Diwali: deep plum, gold frame */
+  .dw-hero {
+    background:
+      radial-gradient(60% 90% at 80% 60%, rgba(245, 158, 11, 0.18), transparent 70%),
+      radial-gradient(70% 120% at 30% 0%, rgba(124, 58, 237, 0.25), transparent 70%),
+      linear-gradient(135deg, #2a0e2e 0%, #3d1036 45%, #4a0f2a 100%) !important;
+    border: 2px solid #c9a227;
+    box-shadow: 0 0 0 1px rgba(255, 243, 196, 0.35) inset, 0 12px 34px rgba(74, 15, 42, 0.35), 0 0 26px rgba(240, 199, 94, 0.3) !important;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .ce-logo-ring::before,
+    .ce-meeting-card::before,
+    .ce-meeting-card > .ce-meeting-inner::before,
+    .ce-meeting-card .ce-ribbon-shine,
+    .dw-bulb,
+    .dw-swing,
+    .dw-flame,
+    .dw-glow,
+    .dw-burst,
+    .dw-rangoli,
+    .dw-sparkle,
+    .dw-rocket,
+    .dw-rocket-burst,
+    .dw-spark,
+    .dw-pop,
+    .dw-pop-burst,
     .ce-nav-line {
       animation: none;
     }

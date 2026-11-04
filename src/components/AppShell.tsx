@@ -40,6 +40,7 @@ import {
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useOrgSettings } from "@/hooks/useOrg";
 import { BirthdayTakeover } from "@/components/birthday/BirthdayTakeover";
+import { DiwaliHeaderDecor, DiwaliPageDecor, useDiwaliDecor } from "@/components/festive/DiwaliDecor";
 import { ProbationAlert } from "@/components/probation/ProbationAlert";
 import { useLatestUnseenRelease } from "@/hooks/useReleases";
 import { PeopleSearch } from "@/components/PeopleSearch";
@@ -176,17 +177,25 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const label = roleLabel(profile?.role);
   const testingActive = isTestingActive(orgSettings?.testing_until);
+  const diwali = useDiwaliDecor();
   const testingLabel = prettyTestingDate(orgSettings?.testing_until);
 
   return (
     <div className="relative z-10 min-h-screen">
       <OfflineGate />
+      {diwali ? <DiwaliPageDecor /> : null}
       <BirthdayTakeover me={profile} showTeam={orgSettings?.team_birthdays !== false} />
       {profile && (role === "hr" || role === "admin") ? (
         <ProbationAlert viewerId={profile.id} />
       ) : null}
       <header ref={headerRef} className="sticky top-0 z-40 bg-night">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
+        {diwali ? <DiwaliHeaderDecor /> : null}
+        <div
+          className={cn(
+            "relative z-10 mx-auto flex max-w-6xl items-center gap-3 px-4 py-3",
+            diwali && "pt-7",
+          )}
+        >
           {hrLayout ? (
             <button
               type="button"
