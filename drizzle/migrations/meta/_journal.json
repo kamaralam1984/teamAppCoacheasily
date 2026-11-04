@@ -204,6 +204,13 @@
       "when": 1793766414996,
       "tag": "0028_meeting_goals",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1793789625548,
+      "tag": "0029_meeting_goals_weekly",
+      "breakpoints": true
     }
   ]
 }

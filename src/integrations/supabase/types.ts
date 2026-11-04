@@ -1784,9 +1784,11 @@ export type Database = {
           outcome: string | null
           position: number
           profile_id: string
+          scope: string
           timeline: string | null
           title: string
           updated_at: string
+          week_start: string | null
         }
         Insert: {
           created_at?: string
@@ -1798,9 +1800,11 @@ export type Database = {
           outcome?: string | null
           position?: number
           profile_id: string
+          scope?: string
           timeline?: string | null
           title?: string
           updated_at?: string
+          week_start?: string | null
         }
         Update: {
           created_at?: string
@@ -1812,9 +1816,11 @@ export type Database = {
           outcome?: string | null
           position?: number
           profile_id?: string
+          scope?: string
           timeline?: string | null
           title?: string
           updated_at?: string
+          week_start?: string | null
         }
         Relationships: [
           {

@@ -34,17 +34,27 @@ export function meetingPeriod(meeting: StrategicMeeting, all: StrategicMeeting[]
   return { from, to, weeks };
 }
 
-/** One person's goals for one meeting, with their weekly updates. */
-export function useMeetingGoals(meetingId: string | null, profileId: string | null) {
+/** Which table: the whole run-up (45 days), or one week of it (its Monday). */
+export type GoalScope = { kind: "run" } | { kind: "week"; weekStart: string };
+
+function scopeKey(scope: GoalScope) {
+  return scope.kind === "run" ? "run" : `week:${scope.weekStart}`;
+}
+
+/** One person's goals for one meeting (45-day or one week), with their weekly updates. */
+export function useMeetingGoals(meetingId: string | null, profileId: string | null, scope: GoalScope) {
   return useQuery({
-    queryKey: ["meeting-goals", meetingId, profileId],
+    queryKey: ["meeting-goals", meetingId, profileId, scopeKey(scope)],
     enabled: Boolean(meetingId && profileId),
     queryFn: async () => {
-      const { data: goals, error } = await supabase
+      let q = supabase
         .from("meeting_goals")
         .select("*")
         .eq("meeting_id", meetingId!)
         .eq("profile_id", profileId!)
+        .eq("scope", scope.kind);
+      if (scope.kind === "week") q = q.eq("week_start", scope.weekStart);
+      const { data: goals, error } = await q
         .order("position", { ascending: true })
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -66,10 +76,16 @@ type Values = { [k: string]: Json };
  * Writes for the table. People write through their own permissions; a developer who is not
  * allowed directly (`viaDev`) goes through the gated, audited Developer write instead.
  */
-export function useMeetingGoalWrites(meetingId: string | null, profileId: string | null, viaDev: boolean) {
+export function useMeetingGoalWrites(
+  meetingId: string | null,
+  profileId: string | null,
+  viaDev: boolean,
+  scope: GoalScope,
+) {
   const qc = useQueryClient();
   const dev = useServerFn(devWriteRow);
-  const refresh = () => void qc.invalidateQueries({ queryKey: ["meeting-goals", meetingId, profileId] });
+  const refresh = () =>
+    void qc.invalidateQueries({ queryKey: ["meeting-goals", meetingId, profileId, scopeKey(scope)] });
 
   const addGoal = useMutation({
     mutationFn: async (args: { orgId: string; position: number; createdBy: string | null }) => {
@@ -78,6 +94,8 @@ export function useMeetingGoalWrites(meetingId: string | null, profileId: string
         meeting_id: meetingId!,
         profile_id: profileId!,
         position: args.position,
+        scope: scope.kind,
+        week_start: scope.kind === "week" ? scope.weekStart : null,
         title: "",
         created_by: args.createdBy,
       };

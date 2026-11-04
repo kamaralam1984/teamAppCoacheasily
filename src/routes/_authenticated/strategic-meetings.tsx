@@ -8,13 +8,14 @@ import {
   meetingPeriod,
   useMeetingGoals,
   useMeetingGoalWrites,
+  type GoalScope,
   type GoalUpdate,
   type MeetingGoal,
 } from "@/hooks/useMeetingGoals";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { meetingLabel, useStrategicMeetings } from "@/hooks/useStrategicMeetings";
 import { useWarriors } from "@/hooks/useWarriors";
-import { daysBetween, timeLabel, todayIso } from "@/lib/calendar";
+import { addDays, daysBetween, timeLabel, todayIso } from "@/lib/calendar";
 import { downlineIds, shortDate } from "@/lib/warriors";
 
 export const Route = createFileRoute("/_authenticated/strategic-meetings")({
@@ -126,8 +127,18 @@ function StrategicMeetingsPage() {
     () => (meeting ? meetingPeriod(meeting, meetings ?? []) : null),
     [meeting, meetings],
   );
-  const { data, isLoading } = useMeetingGoals(meeting?.id ?? null, activePerson);
-  const writes = useMeetingGoalWrites(meeting?.id ?? null, activePerson, viaDev);
+  // the toggle: goals for the whole run-up (45 days), or for one week of it
+  const [mode, setMode] = useState<"run" | "week">("run");
+  const [pickedWeek, setPickedWeek] = useState<string | null>(null);
+  const weeks = period?.weeks ?? [];
+  const thisWeek = [...weeks].reverse().find((w) => w <= today) ?? weeks[0] ?? null;
+  const weekStart = pickedWeek && weeks.includes(pickedWeek) ? pickedWeek : thisWeek;
+  const scope: GoalScope =
+    mode === "week" && weekStart ? { kind: "week", weekStart } : { kind: "run" };
+  const weekColumns = scope.kind === "run" ? weeks : [];
+
+  const { data, isLoading } = useMeetingGoals(meeting?.id ?? null, activePerson, scope);
+  const writes = useMeetingGoalWrites(meeting?.id ?? null, activePerson, viaDev, scope);
   const goals: MeetingGoal[] = data?.goals ?? [];
   const updates = useMemo(() => {
     const map = new Map<string, GoalUpdate>();
@@ -172,6 +183,34 @@ function StrategicMeetingsPage() {
         ) : (
           <>
             <section className="ce-card grid gap-3 p-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <span className="ce-label">Goals for</span>
+                <div
+                  role="tablist"
+                  aria-label="Goals for 45 days or one week"
+                  className="mt-1 inline-flex rounded-full border border-line bg-cream p-1"
+                >
+                  {(
+                    [
+                      ["run", "45 Days"],
+                      ["week", "Weekly"],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      role="tab"
+                      aria-selected={mode === value}
+                      onClick={() => setMode(value)}
+                      className={`min-h-9 rounded-full px-5 text-[13px] font-bold transition-colors ${
+                        mode === value ? "bg-night text-goldL" : "text-soft hover:text-ink"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <label>
                 <span className="ce-label">Meeting</span>
                 <select
@@ -204,16 +243,40 @@ function StrategicMeetingsPage() {
                   ))}
                 </select>
               </label>
+              {mode === "week" && weeks.length > 0 ? (
+                <label className="sm:col-span-2">
+                  <span className="ce-label">Week</span>
+                  <select
+                    className="ce-input"
+                    value={weekStart ?? ""}
+                    onChange={(e) => setPickedWeek(e.target.value)}
+                  >
+                    {weeks.map((w) => (
+                      <option key={w} value={w}>
+                        Week of {shortDate(w)} ({shortDate(w)} – {shortDate(addDays(w, 6))})
+                        {w === thisWeek ? " · this week" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
             </section>
 
             <section className="ce-card overflow-hidden">
               <div className="bg-night px-4 py-3 text-center text-white">
                 <p className="font-display text-xl">
-                  {person ? `${person.full_name} — ` : ""}Goals for next {runDays} days
+                  {person ? `${person.full_name} — ` : ""}
+                  {scope.kind === "week"
+                    ? `Goals for the week of ${shortDate(scope.weekStart)}`
+                    : `Goals for next ${runDays} days`}
                 </p>
                 <p className="text-[12px] font-bold tracking-[0.08em] text-goldL uppercase">
-                  {period ? `${shortDate(period.from)} to ${shortDate(period.to)}` : ""} ·{" "}
-                  {meetingLabel(meeting)}
+                  {scope.kind === "week"
+                    ? `${shortDate(scope.weekStart)} to ${shortDate(addDays(scope.weekStart, 6))}`
+                    : period
+                      ? `${shortDate(period.from)} to ${shortDate(period.to)}`
+                      : ""}{" "}
+                  · {meetingLabel(meeting)}
                 </p>
                 {meeting.tagline || meeting.from_time || meeting.location ? (
                   <p className="mt-0.5 text-[12px] text-mist">
@@ -232,7 +295,9 @@ function StrategicMeetingsPage() {
               ) : null}
 
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[880px] border-collapse text-left">
+                <table
+                  className={`w-full border-collapse text-left ${weekColumns.length > 0 ? "min-w-[880px]" : "min-w-[640px]"}`}
+                >
                   <thead>
                     <tr className="bg-gold/25 text-[11px] font-bold tracking-[0.04em] text-ink uppercase">
                       <th className="w-10 border border-line px-2 py-2 text-center">No</th>
@@ -240,7 +305,7 @@ function StrategicMeetingsPage() {
                       <th className="min-w-[120px] border border-line px-2 py-2">Measure</th>
                       <th className="w-[140px] border border-line px-2 py-2">Timeline</th>
                       <th className="min-w-[110px] border border-line px-2 py-2">Outcome</th>
-                      {period?.weeks.map((w) => (
+                      {weekColumns.map((w) => (
                         <th key={w} className="min-w-[170px] border border-line bg-emer/15 px-2 py-2">
                           Week of {shortDate(w)}
                         </th>
@@ -258,7 +323,9 @@ function StrategicMeetingsPage() {
                     ) : goals.length === 0 ? (
                       <tr>
                         <td colSpan={99} className="px-4 py-6 text-sm text-soft">
-                          No goals written for this meeting yet.
+                          {scope.kind === "week"
+                            ? "No goals written for this week yet."
+                            : "No goals written for this meeting yet."}
                         </td>
                       </tr>
                     ) : (
@@ -307,7 +374,7 @@ function StrategicMeetingsPage() {
                                   }
                                 />
                               </td>
-                              {period?.weeks.map((w) => {
+                              {weekColumns.map((w) => {
                                 const u = updates.get(`${g.id}|${w}`);
                                 return (
                                   <td key={w} className="border border-line p-0.5">
@@ -351,7 +418,7 @@ function StrategicMeetingsPage() {
                               <td className="border border-line px-2 py-2 text-[13px] font-bold text-emer">
                                 {g.outcome ?? ""}
                               </td>
-                              {period?.weeks.map((w) => (
+                              {weekColumns.map((w) => (
                                 <td key={w} className="border border-line px-2 py-2 text-[12px] whitespace-pre-line text-ink">
                                   {updates.get(`${g.id}|${w}`)?.note ?? ""}
                                 </td>
