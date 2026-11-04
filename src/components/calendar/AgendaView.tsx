@@ -1,8 +1,18 @@
 import type { CalendarData } from "@/hooks/useCalendar";
 import type { EditTarget } from "@/components/calendar/EventEditor";
-import { CHIP_STYLE, MARKER_COLOUR, addDays, daysBetween, longDate, niceDate, timeLabel, weekdayName } from "@/lib/calendar";
+import {
+  CHIP_STYLE,
+  MARKER_COLOUR,
+  addDays,
+  dayTone,
+  daysBetween,
+  longDate,
+  niceDate,
+  timeLabel,
+  weekdayName,
+} from "@/lib/calendar";
 import { buildDayView } from "@/lib/calendarDerive";
-import type { Profile } from "@/lib/warriors";
+import { isOffOn, type Profile } from "@/lib/warriors";
 
 interface Props {
   data: CalendarData | undefined;
@@ -13,6 +23,8 @@ interface Props {
   onOpen: (target: EditTarget) => void;
   onSelectDay: (date: string) => void;
   birthdayIds?: Set<string> | null;
+  /** The viewer's own weekly off, listed and tinted grey. */
+  viewerWeeklyOff?: string | null;
 }
 
 /** A phone-first list: every day that has something, in date order. */
@@ -25,14 +37,26 @@ export function AgendaView({
   onOpen,
   onSelectDay,
   birthdayIds = null,
+  viewerWeeklyOff = null,
 }: Props) {
   const days: string[] = [];
   for (let d = from; daysBetween(d, to) >= 0; d = addDays(d, 1)) days.push(d);
 
   const rows = days
-    .map((date) => ({ date, view: buildDayView(data, date, byId, birthdayIds) }))
+    .map((date) => {
+      const view = buildDayView(data, date, byId, birthdayIds);
+      const off = isOffOn(viewerWeeklyOff, weekdayName(date));
+      const tone = dayTone({
+        holiday: Boolean(view.holiday),
+        flexi: view.flexi.length > 0,
+        birthday: view.birthdays.length > 0,
+        off,
+      });
+      return { date, view, off, tone };
+    })
     .filter(
-      ({ view }) =>
+      ({ view, off }) =>
+        off ||
         view.holiday ||
         view.flexi.length > 0 ||
         view.programs.length > 0 ||
@@ -54,17 +78,19 @@ export function AgendaView({
 
   return (
     <div className="space-y-3">
-      {rows.map(({ date, view }) => (
+      {rows.map(({ date, view, off, tone }) => (
         <div key={date} className="ce-card overflow-hidden">
           <button
             type="button"
             onClick={() => onSelectDay(date)}
             className={`flex w-full items-baseline gap-2 border-b border-line px-4 py-2.5 text-left ${
-              date === today ? "bg-gold/15" : "bg-cream"
+              tone.bg || (date === today ? "bg-gold/15" : "bg-cream")
             }`}
           >
-            <span className="font-display text-lg text-ink">{niceDate(date)}</span>
-            <span className="text-[11px] font-bold tracking-[0.08em] text-soft uppercase">
+            <span className={`font-display text-lg ${tone.dark ? "" : "text-ink"}`}>{niceDate(date)}</span>
+            <span
+              className={`text-[11px] font-bold tracking-[0.08em] uppercase ${tone.dark ? "" : "text-soft"}`}
+            >
               {weekdayName(date).slice(0, 3)}
             </span>
             {date === today ? (
@@ -78,7 +104,9 @@ export function AgendaView({
             {view.holiday ? (
               <li className="flex items-center gap-2 px-4 py-3">
                 <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${MARKER_COLOUR["Holiday"]}`} />
-                <span className="text-sm font-bold text-ink">{view.holiday.name}</span>
+                <span className="text-sm font-bold text-ink">
+                  {view.holiday.name} <span className="font-semibold text-red">(Fixed Holiday)</span>
+                </span>
                 <span className={`ml-auto rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${CHIP_STYLE["Holiday"]}`}>
                   Holiday
                 </span>
@@ -88,7 +116,9 @@ export function AgendaView({
             {view.flexi.map((f) => (
               <li key={f.id} className="flex items-center gap-2 px-4 py-3">
                 <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${MARKER_COLOUR["Flexi"]}`} />
-                <span className="text-sm font-bold text-ink">{f.name}</span>
+                <span className="text-sm font-bold text-ink">
+                  {f.name} <span className="font-semibold text-flexi">(Flexi Holiday)</span>
+                </span>
                 <span
                   className={`ml-auto rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${CHIP_STYLE["Flexi"]}`}
                 >
@@ -96,6 +126,21 @@ export function AgendaView({
                 </span>
               </li>
             ))}
+
+            {view.birthdays.map((b) => (
+              <li key={`b-${b.id}`} className="flex items-center gap-2 bg-bday px-4 py-3">
+                <span className="text-sm font-bold text-yellow">
+                  🎂 {b.full_name} <span className="font-semibold">(Happy Birthday)</span>
+                </span>
+              </li>
+            ))}
+
+            {off ? (
+              <li className="flex items-center gap-2 px-4 py-3">
+                <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${MARKER_COLOUR["Weekly off"]}`} />
+                <span className="text-sm font-bold text-ink/70">(Weekly Off)</span>
+              </li>
+            ) : null}
 
             {view.programs.map((p) => (
               <li key={p.id}>

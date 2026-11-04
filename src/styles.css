@@ -31,6 +31,10 @@
   --ce-mist: #d6cce8;
   --ce-flexi: #2563eb;
   --ce-grey: #8a8f98;
+  --ce-redD: #8b1a12;
+  --ce-flexiD: #1e3a8a;
+  --ce-bday: #be185d;
+  --ce-yellow: #fde047;
 
   /* shadcn semantic tokens mapped onto the brand palette */
   --radius: 0.875rem; /* 14px cards */
@@ -90,6 +94,10 @@
   --color-mist: var(--ce-mist);
   --color-flexi: var(--ce-flexi);
   --color-grey: var(--ce-grey);
+  --color-redD: var(--ce-redD);
+  --color-flexiD: var(--ce-flexiD);
+  --color-bday: var(--ce-bday);
+  --color-yellow: var(--ce-yellow);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);

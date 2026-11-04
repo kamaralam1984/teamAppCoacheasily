@@ -1,9 +1,9 @@
 import type { EditTarget } from "@/components/calendar/EventEditor";
-import { CHIP_STYLE, longDate, timeLabel, weekdayName } from "@/lib/calendar";
+import { CHIP_STYLE, dayTone, longDate, timeLabel, weekdayName } from "@/lib/calendar";
 import { buildDayView } from "@/lib/calendarDerive";
 import type { CalendarData } from "@/hooks/useCalendar";
 import { TYPE_LABEL } from "@/hooks/useLeave";
-import type { Profile } from "@/lib/warriors";
+import { isOffOn, type Profile } from "@/lib/warriors";
 
 interface Props {
   date: string;
@@ -12,6 +12,8 @@ interface Props {
   canSchedule: boolean;
   onOpen?: ((target: EditTarget) => void) | undefined;
   birthdayIds?: Set<string> | null;
+  /** The viewer's own weekly off. */
+  viewerWeeklyOff?: string | null;
 }
 
 function Chip({ type }: { type: string }) {
@@ -26,8 +28,30 @@ function Chip({ type }: { type: string }) {
   );
 }
 
-export function DayDetail({ date, data, byId, canSchedule, onOpen, birthdayIds = null }: Props) {
+export function DayDetail({
+  date,
+  data,
+  byId,
+  canSchedule,
+  onOpen,
+  birthdayIds = null,
+  viewerWeeklyOff = null,
+}: Props) {
   const view = buildDayView(data, date, byId, birthdayIds);
+  const off = isOffOn(viewerWeeklyOff, weekdayName(date));
+  const tone = dayTone({
+    holiday: Boolean(view.holiday),
+    flexi: view.flexi.length > 0,
+    birthday: view.birthdays.length > 0,
+    off,
+  });
+  /** What kind of day it is, in the same words and colours as the calendar blocks. */
+  const labels = [
+    ...(view.holiday ? [`${view.holiday.name} (Fixed Holiday)`] : []),
+    ...view.flexi.map((f) => `${f.name} (Flexi Holiday)`),
+    ...view.birthdays.map((b) => `🎂 ${b.full_name} (Happy Birthday)`),
+    ...(off ? ["(Weekly Off)"] : []),
+  ];
 
   const nothing =
     !view.holiday &&
@@ -39,10 +63,24 @@ export function DayDetail({ date, data, byId, canSchedule, onOpen, birthdayIds =
 
   return (
     <div className="ce-card p-5">
-      <p className="text-[11px] font-bold tracking-[0.1em] text-soft uppercase">
-        {weekdayName(date)}
-      </p>
-      <h2 className="font-display text-2xl text-ink">{longDate(date)}</h2>
+      <div className={tone.bg ? `-mx-2 -mt-2 rounded-[12px] px-3 py-2.5 ${tone.bg}` : ""}>
+        <p
+          className={`text-[11px] font-bold tracking-[0.1em] uppercase ${tone.dark ? "" : "text-soft"}`}
+        >
+          {weekdayName(date)}
+        </p>
+        <h2 className={`font-display text-2xl ${tone.dark ? "" : "text-ink"}`}>{longDate(date)}</h2>
+        {labels.map((l) => (
+          <p
+            key={l}
+            className={`mt-0.5 text-[13px] font-bold ${
+              l.startsWith("🎂") ? "text-yellow" : tone.dark ? "" : "text-ink/70"
+            }`}
+          >
+            {l}
+          </p>
+        ))}
+      </div>
 
       {view.conflicts.map((c) => (
         <p
@@ -65,7 +103,7 @@ export function DayDetail({ date, data, byId, canSchedule, onOpen, birthdayIds =
       {view.birthdays.map((b) => (
         <p
           key={`bday-${b.id}`}
-          className="mt-3 rounded-lg border border-gold/40 bg-gold/12 p-3 text-[13px] leading-relaxed font-bold text-goldD"
+          className="mt-3 rounded-lg bg-bday p-3 text-[13px] leading-relaxed font-bold text-yellow"
         >
           🎂 It's {b.full_name}'s birthday{b.title ? ` — ${b.title}` : ""}. Say something warm.
         </p>

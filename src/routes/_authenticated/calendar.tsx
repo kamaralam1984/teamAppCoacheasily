@@ -471,6 +471,7 @@ function CalendarPage() {
               onOpen={setEditing}
               onSelectDay={setSelected}
               birthdayIds={birthdayIds}
+              viewerWeeklyOff={profile?.weekly_off ?? null}
             />
           )}
         </div>
@@ -483,6 +484,7 @@ function CalendarPage() {
             canSchedule={mayAdd}
             onOpen={setEditing}
             birthdayIds={birthdayIds}
+            viewerWeeklyOff={profile?.weekly_off ?? null}
           />
         </div>
 

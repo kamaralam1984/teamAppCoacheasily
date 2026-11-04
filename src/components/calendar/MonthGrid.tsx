@@ -1,6 +1,6 @@
 import type { EditTarget } from "@/components/calendar/EventEditor";
 import type { CalendarData } from "@/hooks/useCalendar";
-import { MARKER_COLOUR, WEEKDAYS, monthGrid, parseIso, weekdayName } from "@/lib/calendar";
+import { MARKER_COLOUR, WEEKDAYS, dayTone, monthGrid, parseIso, weekdayName } from "@/lib/calendar";
 import { buildDayView } from "@/lib/calendarDerive";
 import { isOffOn, type Profile } from "@/lib/warriors";
 
@@ -66,6 +66,14 @@ export function MonthGrid({
           const isToday = cell.date === today;
           const isOff = isOffOn(viewerWeeklyOff, weekdayName(cell.date));
           const isSelected = cell.date === selected;
+          const tone = dayTone({
+            holiday: Boolean(view.holiday),
+            flexi: view.flexi.length > 0,
+            birthday: view.birthdays.length > 0,
+            off: isOff,
+          });
+          /** On a dark block every line takes the block's text colour instead of its own. */
+          const ink = (light: string) => (tone.dark ? "" : light);
 
           return (
             <button
@@ -90,13 +98,7 @@ export function MonthGrid({
               aria-pressed={isSelected}
               className={[
                 "min-h-[72px] border-r border-b border-line p-1.5 text-left align-top transition-colors last:border-r-0",
-                isToday
-                  ? "bg-gold/15"
-                  : view.holiday
-                    ? "bg-red/5"
-                    : isOff
-                      ? "bg-grey/15"
-                      : "bg-ivory",
+                tone.bg || (isToday ? "bg-gold/15" : "bg-ivory"),
                 cell.inMonth ? "" : "opacity-40",
                 isSelected ? "ring-2 ring-gold ring-inset" : "",
               ].join(" ")}
@@ -104,26 +106,34 @@ export function MonthGrid({
               <span
                 className={[
                   "inline-flex h-6 min-w-6 items-center justify-center rounded-full text-[12px] font-bold",
-                  isToday ? "bg-night text-goldL" : "text-ink",
+                  isToday ? "bg-night text-goldL" : ink("text-ink"),
                 ].join(" ")}
               >
                 {parseIso(cell.date).d}
               </span>
 
               {view.holiday ? (
-                <span className="mt-0.5 block truncate text-[10px] leading-tight font-bold text-red">
+                <span className={`mt-0.5 block truncate text-[10px] leading-tight font-bold ${ink("text-red")}`}>
                   {view.holiday.name}
+                  <span className="block font-semibold">(Fixed Holiday)</span>
                 </span>
               ) : null}
 
               {view.flexi.map((f) => (
                 <span
                   key={f.id}
-                  className="mt-0.5 block truncate text-[10px] leading-tight font-bold text-flexi"
+                  className={`mt-0.5 block truncate text-[10px] leading-tight font-bold ${ink("text-flexi")}`}
                 >
                   {f.name}
+                  <span className="block font-semibold">(Flexi Holiday)</span>
                 </span>
               ))}
+
+              {isOff ? (
+                <span className={`mt-0.5 block truncate text-[10px] leading-tight font-bold ${ink("text-ink/70")}`}>
+                  (Weekly Off)
+                </span>
+              ) : null}
 
               <span className="mt-0.5 block space-y-0.5">
                 {items.slice(0, 2).map((it) => (
@@ -143,26 +153,27 @@ export function MonthGrid({
                     className="flex items-center gap-1"
                   >
                     <span
-                      className={`h-1.5 w-1.5 shrink-0 rounded-full ${MARKER_COLOUR[it.type] ?? "bg-soft"}`}
+                      className={`h-1.5 w-1.5 shrink-0 rounded-full ${MARKER_COLOUR[it.type] ?? "bg-soft"} ${tone.dark ? "ring-1 ring-white/80" : ""}`}
                     />
-                    <span className="truncate text-[10px] leading-tight text-ink">{it.label}</span>
+                    <span className={`truncate text-[10px] leading-tight ${ink("text-ink")}`}>{it.label}</span>
                   </span>
                 ))}
                 {items.length > 2 ? (
-                  <span className="block text-[10px] font-bold text-soft">
+                  <span className={`block text-[10px] font-bold ${ink("text-soft")}`}>
                     +{items.length - 2} more
                   </span>
                 ) : null}
               </span>
 
               {view.birthdays.length > 0 ? (
-                <span className="mt-0.5 block truncate text-[10px] leading-tight font-bold text-goldD">
+                <span className={`mt-0.5 block truncate text-[10px] leading-tight font-bold ${tone.dark ? "text-yellow" : "text-goldD"}`}>
                   🎂 {view.birthdays.map((b) => b.full_name.split(" ")[0]).join(", ")}
+                  <span className="block font-semibold">(Happy Birthday)</span>
                 </span>
               ) : null}
 
               {view.leave.length > 0 ? (
-                <span className="mt-0.5 block text-[10px] text-soft">
+                <span className={`mt-0.5 block text-[10px] ${ink("text-soft")}`}>
                   👤 {view.leave.length} away
                 </span>
               ) : null}

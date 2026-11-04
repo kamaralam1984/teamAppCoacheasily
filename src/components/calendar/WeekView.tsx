@@ -1,6 +1,6 @@
 import type { EditTarget } from "@/components/calendar/EventEditor";
 import type { CalendarData } from "@/hooks/useCalendar";
-import { MARKER_COLOUR, addDays, niceDate, timeLabel, weekdayName } from "@/lib/calendar";
+import { MARKER_COLOUR, addDays, dayTone, niceDate, timeLabel, weekdayName } from "@/lib/calendar";
 import { buildDayView } from "@/lib/calendarDerive";
 import { isOffOn, type Profile } from "@/lib/warriors";
 
@@ -34,10 +34,22 @@ export function WeekView({
     <div className="grid gap-2 sm:grid-cols-7">
       {days.map((date) => {
         const view = buildDayView(data, date, byId, birthdayIds);
+        const isOff = isOffOn(viewerWeeklyOff, weekdayName(date));
+        const tone = dayTone({
+          holiday: Boolean(view.holiday),
+          flexi: view.flexi.length > 0,
+          birthday: view.birthdays.length > 0,
+          off: isOff,
+        });
+        const tint = tone.bg;
+        /** On a dark card every line takes the card's text colour instead of its own. */
+        const ink = (light: string) => (tone.dark ? "" : light);
+        const chip = (light: string) =>
+          `rounded border px-2 py-1 text-[11px] font-bold ${tone.dark ? "border-current/40" : light}`;
         return (
           <div
             key={date}
-            className={`ce-card overflow-hidden ${
+            className={`ce-card overflow-hidden ${tint} ${
               date === selected ? "ring-2 ring-gold ring-inset" : ""
             }`}
           >
@@ -45,43 +57,48 @@ export function WeekView({
               type="button"
               onClick={() => onSelectDay(date)}
               className={`w-full border-b border-line px-3 py-2 text-left ${
-                date === today
-                  ? "bg-gold/15"
-                  : view.holiday
-                    ? "bg-red/10"
-                    : isOffOn(viewerWeeklyOff, weekdayName(date))
-                      ? "bg-grey/20"
-                      : "bg-cream"
+                date === today && !tone.dark ? "bg-gold/15" : tint ? "" : "bg-cream"
               }`}
             >
-              <span className="block text-[10px] font-bold tracking-[0.08em] text-soft uppercase">
+              <span className={`block text-[10px] font-bold tracking-[0.08em] uppercase ${ink("text-soft")}`}>
                 {weekdayName(date).slice(0, 3)}
               </span>
-              <span className="font-display text-lg text-ink">{niceDate(date)}</span>
+              <span className={`font-display text-lg ${ink("text-ink")}`}>
+                {niceDate(date)}
+                {date === today && tone.dark ? (
+                  <span className="ml-1.5 text-[10px] uppercase">· Today</span>
+                ) : null}
+              </span>
             </button>
 
             <div className="space-y-1 p-2">
               {view.holiday ? (
-                <p className="rounded border border-red/30 bg-red/10 px-2 py-1 text-[11px] font-bold text-red">
-                  {view.holiday.name}
+                <p className={chip("border-red/30 bg-red/10 text-red")}>
+                  {view.holiday.name} <span className="font-semibold">(Fixed Holiday)</span>
                 </p>
               ) : null}
 
               {view.flexi.map((f) => (
                 <p
                   key={f.id}
-                  className="rounded border border-flexi/30 bg-flexi/10 px-2 py-1 text-[11px] font-bold text-flexi"
+                  className={chip("border-flexi/30 bg-flexi/10 text-flexi")}
                 >
-                  {f.name} · Flexi
+                  {f.name} <span className="font-semibold">(Flexi Holiday)</span>
                 </p>
               ))}
+
+              {isOff ? (
+                <p className={chip("border-grey/40 bg-grey/15 text-ink/70")}>
+                  (Weekly Off)
+                </p>
+              ) : null}
 
               {view.birthdays.map((b) => (
                 <p
                   key={`b-${b.id}`}
-                  className="rounded border border-gold/40 bg-gold/12 px-2 py-1 text-[11px] font-bold text-goldD"
+                  className={`${chip("border-gold/40 bg-gold/12 text-goldD")} ${tone.dark ? "text-yellow" : ""}`}
                 >
-                  🎂 {b.full_name}
+                  🎂 {b.full_name} <span className="font-semibold">(Happy Birthday)</span>
                 </p>
               ))}
 
@@ -120,14 +137,15 @@ export function WeekView({
               ))}
 
               {view.leave.length > 0 ? (
-                <p className="text-[10px] text-soft">👤 {view.leave.length} away</p>
+                <p className={`text-[10px] ${ink("text-soft")}`}>👤 {view.leave.length} away</p>
               ) : null}
 
               {!view.holiday &&
+              !isOff &&
               view.flexi.length === 0 &&
               view.programs.length === 0 &&
               view.events.length === 0 ? (
-                <p className="text-[11px] text-soft">Clear</p>
+                <p className={`text-[11px] ${ink("text-soft")}`}>Clear</p>
               ) : null}
             </div>
           </div>
