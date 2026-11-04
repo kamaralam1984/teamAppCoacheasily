@@ -134,10 +134,10 @@ export const MARKER_COLOUR: Record<string, string> = {
 };
 
 /**
- * How a whole day block is coloured, strongest reason first: fixed holiday (dark red, white text),
- * flexi holiday (dark blue, yellow text), birthday (dark pink, white text), then the viewer's
- * weekly off (grey tint). Dark tones set the text colour, so children should inherit it. On a
- * birthday only the birthday line is yellow (the views colour it), so a flexi day's text turns white.
+ * How a whole day block is coloured, strongest reason first: fixed holiday (dark red), flexi holiday
+ * (dark blue), birthday (dark pink), all with white bold text, then the viewer's weekly off (grey
+ * tint). Dark tones set the text colour, so children should inherit it. Only the birthday line is
+ * yellow (the views colour it).
  */
 export function dayTone(opts: {
   holiday: boolean;
@@ -146,9 +146,7 @@ export function dayTone(opts: {
   off: boolean;
 }): { bg: string; dark: boolean } {
   if (opts.holiday) return { bg: "bg-redD text-white font-bold", dark: true };
-  if (opts.flexi) {
-    return { bg: `bg-flexiD font-bold ${opts.birthday ? "text-white" : "text-yellow"}`, dark: true };
-  }
+  if (opts.flexi) return { bg: "bg-flexiD text-white font-bold", dark: true };
   if (opts.birthday) return { bg: "bg-bday text-white font-bold", dark: true };
   if (opts.off) return { bg: "bg-grey/30", dark: false };
   return { bg: "", dark: false };
