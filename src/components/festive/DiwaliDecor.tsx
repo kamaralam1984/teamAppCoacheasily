@@ -1,5 +1,6 @@
 import { useTheme } from "@/hooks/useTheme";
 import { useOrgSettings } from "@/hooks/useOrg";
+import { FireworksCanvas } from "@/components/festive/FireworksCanvas";
 
 /**
  * Diwali decorations. On by itself on the Diwali theme's days, or switched on or off for the
@@ -149,33 +150,6 @@ export function Diya({ size = 28, delay = 0, className = "" }: { size?: number; 
   );
 }
 
-/** A firework burst that blooms and fades, again and again. */
-function Burst({ size = 70, color = "#f0c75e", delay = 0, className = "" }: { size?: number; color?: string; delay?: number; className?: string }) {
-  return (
-    <svg aria-hidden viewBox="-50 -50 100 100" width={size} height={size} className={`dw-burst ${className}`} style={{ animationDelay: `${delay}s` }}>
-      {Array.from({ length: 16 }, (_, i) => {
-        const a = (i / 16) * Math.PI * 2;
-        return (
-          <line
-            key={i}
-            x1={Math.cos(a) * 14}
-            y1={Math.sin(a) * 14}
-            x2={Math.cos(a) * 44}
-            y2={Math.sin(a) * 44}
-            stroke={color}
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-        );
-      })}
-      {Array.from({ length: 16 }, (_, i) => {
-        const a = ((i + 0.5) / 16) * Math.PI * 2;
-        return <circle key={`d${i}`} cx={Math.cos(a) * 30} cy={Math.sin(a) * 30} r="1.8" fill="#fff3c4" />;
-      })}
-    </svg>
-  );
-}
-
 /** A rangoli mandala that turns very slowly. */
 function Rangoli({ size = 160, className = "" }: { size?: number; className?: string }) {
   const petals = (n: number, r: number, rx: number, ry: number, fill: string) =>
@@ -193,68 +167,6 @@ function Rangoli({ size = 160, className = "" }: { size?: number; className?: st
       <circle r="9" fill="#c2410c" />
       <circle r="88" fill="none" stroke="#f0c75e" strokeWidth="2" strokeDasharray="2 6" />
     </svg>
-  );
-}
-
-/** A rocket that streaks up from the ground and bursts at the top of its climb. */
-function Rocket({ height = 150, delay = 0, color = "#f0c75e", className = "" }: { height?: number; delay?: number; color?: string; className?: string }) {
-  const style = { animationDelay: `${delay}s` };
-  return (
-    <div aria-hidden className={`absolute ${className}`} style={{ height, width: 70 }}>
-      <span className="dw-rocket absolute bottom-0 left-1/2" style={{ ...style, ["--h" as string]: `${height - 30}px` }} />
-      <Burst className="dw-rocket-burst absolute top-0 left-0" size={70} color={color} delay={delay} />
-    </div>
-  );
-}
-
-/** An anar (flower pot): a little cone throwing a fountain of sparks. */
-function Anar({ className = "" }: { className?: string }) {
-  // fixed spread, so every render (and every viewer) sees the same fountain
-  const sparks = Array.from({ length: 34 }, (_, i) => {
-    const t = (i * 0.618) % 1;
-    const dx = Math.round((t - 0.5) * 60);
-    const dy = -Math.round(40 + ((i * 37) % 45));
-    return { dx, dy, dur: 0.8 + ((i * 13) % 7) / 10, delay: ((i * 7) % 10) / 10 };
-  });
-  return (
-    <div aria-hidden className={`absolute ${className}`} style={{ width: 26, height: 30 }}>
-      <span className="absolute top-[4px] left-1/2 h-0 w-0">
-        {sparks.map((p, i) => (
-          <span
-            key={i}
-            className="dw-spark"
-            style={{
-              ["--dx" as string]: `${p.dx}px`,
-              ["--dy" as string]: `${p.dy}px`,
-              animationDuration: `${p.dur}s`,
-              animationDelay: `${p.delay}s`,
-            }}
-          />
-        ))}
-      </span>
-      <svg viewBox="0 0 26 30" width="26" height="30" className="absolute inset-0">
-        <defs>
-          <linearGradient id="dw-anar" x1="0" x2="1">
-            <stop offset="0" stopColor="#7c2d12" />
-            <stop offset="0.5" stopColor="#ea580c" />
-            <stop offset="1" stopColor="#7c2d12" />
-          </linearGradient>
-        </defs>
-        <path d="M10 4 L16 4 L24 28 L2 28 Z" fill="url(#dw-anar)" />
-        <path d="M6 16 L20 16 M4 22 L22 22" stroke="#fde68a" strokeWidth="1.5" />
-        <ellipse cx="13" cy="4" rx="3.5" ry="1.6" fill="#fde68a" />
-      </svg>
-    </div>
-  );
-}
-
-/** A cracker going off: a quick white flash and a small spray. */
-function Cracker({ delay = 0, className = "" }: { delay?: number; className?: string }) {
-  return (
-    <div aria-hidden className={`absolute ${className}`} style={{ width: 44, height: 44 }}>
-      <span className="dw-pop absolute inset-[14px] rounded-full" style={{ animationDelay: `${delay}s` }} />
-      <Burst className="dw-pop-burst absolute inset-0" size={44} color="#fde68a" delay={delay} />
-    </div>
   );
 }
 
@@ -303,29 +215,18 @@ export function DiwaliHeroDecor() {
     <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[14px]">
       <Garland className="absolute inset-x-0 top-0 opacity-95" />
       <BulbString className="absolute inset-x-8 top-[14px]" count={22} />
+      {/* real-feeling fireworks: rockets that burst, and two anars throwing a big fountain */}
+      <div className="absolute inset-0">
+        <FireworksCanvas />
+      </div>
       <div className="absolute inset-x-0 bottom-[96px] flex w-full flex-col items-center sm:inset-x-auto sm:right-[3%] sm:bottom-[40%] sm:w-[38%]">
-        <Burst className="absolute -top-3 -left-2" size={78} />
-        <Burst className="absolute top-8 -right-1" size={56} color="#f9a8d4" delay={1.2} />
-        <Burst className="absolute top-24 left-2" size={40} color="#fde68a" delay={0.6} />
         <Diya size={52} className="mb-2" />
         <p className="dw-happy text-center leading-[0.82]">
           <span className="block text-[42px]">Happy</span>
           <span className="block text-[74px]">Diwali</span>
         </p>
       </div>
-      {/* rockets, crackers and anars round the greeting */}
-      <div className="absolute inset-x-0 bottom-0 h-[300px] sm:inset-x-auto sm:inset-y-0 sm:right-0 sm:h-auto sm:w-[42%]">
-        <Rocket className="bottom-6 left-[4%]" height={190} delay={0} />
-        <Rocket className="bottom-6 right-[2%]" height={210} delay={1.4} color="#f9a8d4" />
-        <Rocket className="bottom-6 left-[38%]" height={240} delay={2.6} color="#a5f3fc" />
-        <Cracker className="top-[16%] left-[10%]" delay={0.4} />
-        <Cracker className="top-[10%] right-[12%]" delay={1.1} />
-        <Cracker className="top-[46%] right-[4%]" delay={1.9} />
-        <Cracker className="top-[50%] left-[6%]" delay={2.5} />
-        <Anar className="bottom-3 left-[6%]" />
-        <Anar className="right-[1%] bottom-3" />
-      </div>
-      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-end gap-1.5 sm:right-[5%] sm:bottom-3 sm:left-auto sm:translate-x-0">
+      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-end gap-1.5 sm:bottom-3 sm:left-[79%]">
         <Diya size={44} delay={0.3} />
         <Diya size={70} delay={0.1} />
         <Diya size={44} delay={0.5} />
