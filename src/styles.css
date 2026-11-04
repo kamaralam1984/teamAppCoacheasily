@@ -892,23 +892,29 @@
     box-shadow: 0 0 0 1px rgba(255, 243, 196, 0.35) inset, 0 12px 34px rgba(74, 15, 42, 0.35), 0 0 26px rgba(240, 199, 94, 0.3) !important;
   }
 
+  /* With "Reduce motion" on (macOS, Windows, phones) the Diwali scene still lives, just calmer:
+     smaller swings, slower rockets, no spinning rangoli. */
+  @keyframes dw-swing-soft {
+    0%, 100% { transform: rotate(-2.5deg); }
+    50% { transform: rotate(2.5deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dw-swing { animation: dw-swing-soft 5s ease-in-out infinite; }
+    .dw-flame { animation-duration: 1.6s; }
+    .dw-bulb { animation-duration: 3s; }
+    .dw-rocket { animation-duration: 6s; }
+    .dw-rocket-burst { animation-duration: 6s !important; }
+    .dw-burst { animation-duration: 4.5s; }
+    .dw-spark { animation-duration: 1.8s !important; }
+    .dw-pop, .dw-pop-burst { animation-duration: 4.5s !important; }
+    .dw-rangoli { animation: none; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .ce-logo-ring::before,
     .ce-meeting-card::before,
     .ce-meeting-card > .ce-meeting-inner::before,
     .ce-meeting-card .ce-ribbon-shine,
-    .dw-bulb,
-    .dw-swing,
-    .dw-flame,
-    .dw-glow,
-    .dw-burst,
-    .dw-rangoli,
-    .dw-sparkle,
-    .dw-rocket,
-    .dw-rocket-burst,
-    .dw-spark,
-    .dw-pop,
-    .dw-pop-burst,
     .ce-nav-line {
       animation: none;
     }
