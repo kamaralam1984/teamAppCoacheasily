@@ -1741,6 +1741,98 @@ export type Database = {
           },
         ]
       }
+      meeting_goal_updates: {
+        Row: {
+          goal_id: string
+          note: string
+          updated_at: string
+          updated_by: string | null
+          week_start: string
+        }
+        Insert: {
+          goal_id: string
+          note?: string
+          updated_at?: string
+          updated_by?: string | null
+          week_start: string
+        }
+        Update: {
+          goal_id?: string
+          note?: string
+          updated_at?: string
+          updated_by?: string | null
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_goal_updates_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "meeting_goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_goals: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          measure: string | null
+          meeting_id: string
+          org_id: string
+          outcome: string | null
+          position: number
+          profile_id: string
+          timeline: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          measure?: string | null
+          meeting_id: string
+          org_id: string
+          outcome?: string | null
+          position?: number
+          profile_id: string
+          timeline?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          measure?: string | null
+          meeting_id?: string
+          org_id?: string
+          outcome?: string | null
+          position?: number
+          profile_id?: string
+          timeline?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_goals_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "strategic_meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_goals_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null

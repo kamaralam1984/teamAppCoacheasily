@@ -33,6 +33,7 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedReportCenterRouteImport } from './routes/_authenticated/report-center'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedStrategicMeetingsRouteImport } from './routes/_authenticated/strategic-meetings'
 import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/tasks'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedWarriorsRouteImport } from './routes/_authenticated/warriors'
@@ -162,6 +163,12 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedStrategicMeetingsRoute =
+  AuthenticatedStrategicMeetingsRouteImport.update({
+    id: '/strategic-meetings',
+    path: '/strategic-meetings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedTasksRoute = AuthenticatedTasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
@@ -223,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/report-center': typeof AuthenticatedReportCenterRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/strategic-meetings': typeof AuthenticatedStrategicMeetingsRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/team': typeof AuthenticatedTeamRoute
   '/warriors': typeof AuthenticatedWarriorsRoute
@@ -255,6 +263,7 @@ export interface FileRoutesByTo {
   '/report-center': typeof AuthenticatedReportCenterRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/strategic-meetings': typeof AuthenticatedStrategicMeetingsRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/team': typeof AuthenticatedTeamRoute
   '/warriors': typeof AuthenticatedWarriorsRoute
@@ -289,6 +298,7 @@ export interface FileRoutesById {
   '/_authenticated/report-center': typeof AuthenticatedReportCenterRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/strategic-meetings': typeof AuthenticatedStrategicMeetingsRoute
   '/_authenticated/tasks': typeof AuthenticatedTasksRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/warriors': typeof AuthenticatedWarriorsRoute
@@ -323,6 +333,7 @@ export interface FileRouteTypes {
     | '/report-center'
     | '/reports'
     | '/settings'
+    | '/strategic-meetings'
     | '/tasks'
     | '/team'
     | '/warriors'
@@ -355,6 +366,7 @@ export interface FileRouteTypes {
     | '/report-center'
     | '/reports'
     | '/settings'
+    | '/strategic-meetings'
     | '/tasks'
     | '/team'
     | '/warriors'
@@ -388,6 +400,7 @@ export interface FileRouteTypes {
     | '/_authenticated/report-center'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
+    | '/_authenticated/strategic-meetings'
     | '/_authenticated/tasks'
     | '/_authenticated/team'
     | '/_authenticated/warriors'
@@ -577,6 +590,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/strategic-meetings': {
+      id: '/_authenticated/strategic-meetings'
+      path: '/strategic-meetings'
+      fullPath: '/strategic-meetings'
+      preLoaderRoute: typeof AuthenticatedStrategicMeetingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tasks': {
       id: '/_authenticated/tasks'
       path: '/tasks'
@@ -649,6 +669,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedReportCenterRoute: typeof AuthenticatedReportCenterRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedStrategicMeetingsRoute: typeof AuthenticatedStrategicMeetingsRoute
   AuthenticatedTasksRoute: typeof AuthenticatedTasksRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedWarriorsRoute: typeof AuthenticatedWarriorsRoute
@@ -676,6 +697,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedReportCenterRoute: AuthenticatedReportCenterRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedStrategicMeetingsRoute: AuthenticatedStrategicMeetingsRoute,
   AuthenticatedTasksRoute: AuthenticatedTasksRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedWarriorsRoute: AuthenticatedWarriorsRoute,
