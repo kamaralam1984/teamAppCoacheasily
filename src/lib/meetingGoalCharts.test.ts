@@ -1,6 +1,12 @@
 import { describe, it as test } from "node:test";
 import { deepEqual, equal } from "node:assert/strict";
-import { outcomePercent, runCharts, weekCharts } from "./meetingGoalCharts";
+import {
+  outcomePercent,
+  runCharts,
+  runProgress,
+  weekCharts,
+  weekProgress,
+} from "./meetingGoalCharts";
 
 const goal = (id: string, title: string, outcome: string | null = null) => ({ id, title, outcome });
 const note = (goal_id: string, week_start: string, text: string) => ({
@@ -112,5 +118,44 @@ describe("The weekly charts", () => {
   test("the round chart splits that week's goals by outcome", () => {
     const d = weekCharts([goal("a", "A", "done"), goal("b", "B")], all, WEEKS, "2026-10-26", TODAY);
     equal(d.donut?.centreValue, "1/2");
+  });
+});
+
+describe("Weekly progress is a share of goals, never a guess", () => {
+  test("45 days: goals with an update that week, out of real goals", () => {
+    const goals = [goal("a", "A"), goal("b", "B"), goal("c", "  ")];
+    deepEqual(
+      runProgress(
+        goals,
+        [note("a", "2026-10-26", "x"), note("a", "2026-11-02", "x"), note("b", "2026-11-02", "y")],
+        WEEKS,
+        TODAY,
+      ).map((w) => w.pct),
+      [0, 50, 100],
+    );
+  });
+  test("weekly: each week's own goals with an outcome", () => {
+    const rows = [
+      { title: "A", outcome: "done", week_start: "2026-10-26" },
+      { title: "B", outcome: null, week_start: "2026-10-26" },
+      { title: "C", outcome: "90%", week_start: "2026-11-02" },
+    ];
+    deepEqual(
+      weekProgress(rows, WEEKS, "2026-11-02", TODAY).map((w) => w.pct),
+      [0, 50, 100],
+    );
+  });
+  test("no goals is zero, not a division by nothing", () => {
+    deepEqual(
+      runProgress([], [], WEEKS, TODAY).map((w) => w.pct),
+      [0, 0, 0],
+    );
+  });
+  test("the bar axis always reaches 100%, and past it when an outcome does", () => {
+    equal(Math.max(...runCharts([goal("a", "A", "40%")], [], WEEKS, null, TODAY).barTicks), 100);
+    equal(
+      Math.max(...runCharts([goal("a", "A", "105%")], [], WEEKS, null, TODAY).barTicks) >= 105,
+      true,
+    );
   });
 });

@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
-import { GoalCharts } from "@/components/goals/GoalCharts";
+import { MeetingDashboard } from "@/components/goals/MeetingDashboard";
 import { useDeveloperAccess } from "@/hooks/useDeveloper";
 import {
   meetingPeriod,
@@ -18,7 +18,7 @@ import { useMyProfile } from "@/hooks/useMyProfile";
 import { meetingLabel, useStrategicMeetings } from "@/hooks/useStrategicMeetings";
 import { useWarriors } from "@/hooks/useWarriors";
 import { addDays, daysBetween, timeLabel, todayIso } from "@/lib/calendar";
-import { runCharts, weekCharts } from "@/lib/meetingGoalCharts";
+import { runCharts, runProgress, weekCharts, weekProgress } from "@/lib/meetingGoalCharts";
 import { downlineIds, shortDate } from "@/lib/warriors";
 
 export const Route = createFileRoute("/_authenticated/strategic-meetings")({
@@ -154,11 +154,20 @@ function StrategicMeetingsPage() {
     activePerson,
     mode === "week",
   );
-  const charts = useMemo(() => {
+  const dashboard = useMemo(() => {
     const rows = data?.goals ?? [];
+    const allWeeks = period?.weeks ?? [];
     return mode === "week" && weekStart
-      ? weekCharts(rows, weekGoals ?? [], period?.weeks ?? [], weekStart, today)
-      : runCharts(rows, data?.updates ?? [], period?.weeks ?? [], thisWeek, today);
+      ? {
+          charts: weekCharts(rows, weekGoals ?? [], allWeeks, weekStart, today),
+          weeks: weekProgress(weekGoals ?? [], allWeeks, weekStart, today),
+          note: "Goals with an outcome written, each week",
+        }
+      : {
+          charts: runCharts(rows, data?.updates ?? [], allWeeks, thisWeek, today),
+          weeks: runProgress(rows, data?.updates ?? [], allWeeks, today),
+          note: "Goals with an update written, each week",
+        };
   }, [data, weekGoals, mode, weekStart, period, thisWeek, today]);
 
   const fail = (err: unknown) =>
@@ -475,10 +484,12 @@ function StrategicMeetingsPage() {
             </section>
 
             {goals.length > 0 ? (
-              <section className="ce-card p-4">
-                <p className="ce-label mb-3">Week by week</p>
-                <GoalCharts data={charts} />
-              </section>
+              <MeetingDashboard
+                data={dashboard.charts}
+                goals={goals}
+                weeks={dashboard.weeks}
+                overviewNote={dashboard.note}
+              />
             ) : null}
           </>
         )}

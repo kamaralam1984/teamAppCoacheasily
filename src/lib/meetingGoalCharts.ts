@@ -23,6 +23,14 @@ export interface WeekGoalRow {
   week_start: string | null;
 }
 
+export type MeetingChartData = GoalChartData & { barTicks: number[] };
+
+export interface WeekProgress {
+  label: string;
+  /** a share of that week's goals, whole numbers only */
+  pct: number;
+}
+
 /** The first percentage written in an outcome, or null when it has none: "105% Achieved" is 105. */
 export function outcomePercent(outcome: string | null): number | null {
   const match = outcome?.match(/(-?\d+(?:\.\d+)?)\s*%/);
@@ -43,13 +51,15 @@ function outcomeBars(goals: MeetingGoalRow[]) {
 }
 
 function shared(goals: MeetingGoalRow[]) {
+  const bars = outcomeBars(goals);
   return {
     hasEntries: true,
     barUnit: "%",
     barTitle: "Outcome % by goal No.",
     barPrefix: "Goal",
     barEmpty: "Write a percentage in Outcome, like 105%, and it shows here.",
-    bars: outcomeBars(goals),
+    bars,
+    barTicks: niceTicks([100, ...bars.map((b) => b.value)]),
     unit: "",
   };
 }
@@ -61,7 +71,7 @@ export function runCharts(
   weeks: string[],
   thisWeek: string | null,
   today: string,
-): GoalChartData {
+): MeetingChartData {
   const real = goals.filter(hasTitle);
   const ids = new Set(real.map((g) => g.id));
   const countFor = (week: string) =>
@@ -105,7 +115,7 @@ export function weekCharts(
   weeks: string[],
   weekStart: string,
   today: string,
-): GoalChartData {
+): MeetingChartData {
   const real = goals.filter(hasTitle);
   const done = real.filter((g) => written(g.outcome)).length;
   const reached = mondayOf(today);
@@ -143,4 +153,46 @@ export function weekCharts(
           }
         : null,
   };
+}
+
+const share = (done: number, total: number) => (total > 0 ? Math.round((done / total) * 100) : 0);
+
+/** The 45-day table: for each week so far, how many of the goals have an update written. */
+export function runProgress(
+  goals: MeetingGoalRow[],
+  updates: MeetingUpdateRow[],
+  weeks: string[],
+  today: string,
+): WeekProgress[] {
+  const real = goals.filter(hasTitle);
+  const ids = new Set(real.map((g) => g.id));
+  const reached = mondayOf(today);
+  return weeks
+    .filter((w) => w <= reached)
+    .map((w) => ({
+      label: dayLabel(w),
+      pct: share(
+        updates.filter((u) => u.week_start === w && ids.has(u.goal_id) && written(u.note)).length,
+        real.length,
+      ),
+    }));
+}
+
+/** The weekly tables: for each week so far, how many of that week's goals have an outcome. */
+export function weekProgress(
+  allWeekGoals: WeekGoalRow[],
+  weeks: string[],
+  weekStart: string,
+  today: string,
+): WeekProgress[] {
+  const reached = mondayOf(today);
+  return weeks
+    .filter((w) => w <= reached || w === weekStart)
+    .map((w) => {
+      const rows = allWeekGoals.filter((g) => g.week_start === w && hasTitle(g));
+      return {
+        label: dayLabel(w),
+        pct: share(rows.filter((g) => written(g.outcome)).length, rows.length),
+      };
+    });
 }
