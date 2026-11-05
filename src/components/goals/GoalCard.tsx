@@ -1,22 +1,33 @@
 import { toast } from "sonner";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
+import { GoalCharts } from "@/components/goals/GoalCharts";
 import { GoalCollab, GoalStatusChip } from "@/components/goals/GoalCollab";
+import { GoalDownload } from "@/components/goals/GoalDownload";
 import { GoalTasks } from "@/components/goals/GoalTasks";
 import { ProgressNumbers } from "@/components/goals/ProgressNumbers";
 import { Ring } from "@/components/goals/Ring";
 import { StepAdvice } from "@/components/goals/StepAdvice";
 import {
   useArchiveGoal,
+  useGoalEntries,
   useLogEntry,
   usePurgeGoal,
   useSaveLearnings,
 } from "@/hooks/useGoals";
 import { useGoalStatus } from "@/hooks/useGoalCollab";
-import { fmt, istToday, weekLine, type GoalWithProgress } from "@/lib/goals";
+import { buildGoalCharts } from "@/lib/goalCharts";
+import { fmt, istToday, weekLine, type Cycle, type GoalWithProgress } from "@/lib/goals";
+
+/** More than any cycle holds, so the charts always see every day of it. */
+const CHART_ENTRY_LIMIT = 400;
 
 interface Props {
   item: GoalWithProgress;
+  /** the cycle this goal's charts start from */
+  cycle: Cycle | null;
+  /** whose goal it is, printed on the download */
+  personName: string;
   editable: boolean;
   onEdit?: () => void;
   /** HR and Admin only: destroy the goal and its daily numbers for good. */
@@ -24,9 +35,23 @@ interface Props {
   style?: React.CSSProperties;
 }
 
-export function GoalCard({ item, editable, onEdit, canPurge = false, style }: Props) {
+export function GoalCard({
+  item,
+  cycle,
+  personName,
+  editable,
+  onEdit,
+  canPurge = false,
+  style,
+}: Props) {
   const { goal, progress } = item;
   const p = progress;
+  const { data: entries } = useGoalEntries(goal.id, CHART_ENTRY_LIMIT);
+  const charts = useMemo(() => {
+    if (!entries) return null;
+    const oldest = entries[entries.length - 1]?.date;
+    return buildGoalCharts(goal, p, entries, cycle?.start_date ?? oldest ?? istToday());
+  }, [goal, p, entries, cycle?.start_date]);
   const [reviewValue, setReviewValue] = useState("");
   const [reviewNote, setReviewNote] = useState("");
   const [learnings, setLearnings] = useState(goal.learnings ?? "");
@@ -219,6 +244,27 @@ export function GoalCard({ item, editable, onEdit, canPurge = false, style }: Pr
           <br />
           {goal.plan}
         </p>
+      ) : null}
+
+      {charts ? (
+        <div className="mt-5 border-t border-line pt-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <p className="ce-label">Week by week</p>
+            <GoalDownload
+              item={item}
+              data={charts}
+              personName={personName}
+              cycleName={cycle?.name ?? ""}
+            />
+          </div>
+          {charts.hasEntries ? (
+            <GoalCharts data={charts} />
+          ) : (
+            <p className="text-[13px] text-soft">
+              Your charts start with the first number you log for this goal.
+            </p>
+          )}
+        </div>
       ) : null}
 
       {editable ? (

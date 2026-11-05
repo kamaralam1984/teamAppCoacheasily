@@ -198,6 +198,8 @@ function Page() {
           <GoalCard
             key={item.goal.id}
             item={item}
+            cycle={active}
+            personName={profile?.full_name ?? ""}
             editable
             canPurge={role === "hr" || role === "admin"}
             onEdit={() =>
