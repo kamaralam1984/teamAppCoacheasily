@@ -120,7 +120,7 @@ function WeeklyBars({ data, width }: { data: GoalChartData; width?: number | und
         <ReferenceLine y={0} stroke={SOFT} />
         <Tooltip
           cursor={{ fill: GRID, fillOpacity: 0.5 }}
-          content={<ChartTip unit={data.barUnit} prefix="Week of" />}
+          content={<ChartTip unit={data.barUnit} prefix={data.barPrefix} />}
         />
         <Bar
           dataKey="value"
@@ -149,17 +149,19 @@ function ProgressLine({ data, width }: { data: GoalChartData; width?: number | u
           ticks={data.lineTicks}
           domain={[data.lineTicks[0]!, data.lineTicks[data.lineTicks.length - 1]!]}
         />
-        <ReferenceLine
-          y={data.target}
-          stroke={SOFT}
-          strokeDasharray="4 4"
-          label={{
-            value: `Target ${fmt(data.target)}`,
-            position: "insideTopLeft",
-            fontSize: 11,
-            fill: SOFT,
-          }}
-        />
+        {data.target !== null ? (
+          <ReferenceLine
+            y={data.target}
+            stroke={SOFT}
+            strokeDasharray="4 4"
+            label={{
+              value: data.targetLabel ?? "",
+              position: "insideTopLeft",
+              fontSize: 11,
+              fill: SOFT,
+            }}
+          />
+        ) : null}
         <Tooltip
           cursor={{ stroke: SOFT, strokeWidth: 1 }}
           content={<ChartTip unit={data.unit} prefix="Week of" />}
@@ -180,9 +182,7 @@ function ProgressLine({ data, width }: { data: GoalChartData; width?: number | u
 }
 
 function sliceColour(donut: WeeklyDonut, index: number): string {
-  // A number goal's last slice is what is still to go; every funnel slice is something that happened.
-  const isRemaining = donut.slices[index]?.label === "Still to go";
-  return isRemaining ? REMAINING : (SLICES[index] ?? SLICES[0]!);
+  return donut.slices[index]?.quiet ? REMAINING : (SLICES[index] ?? SLICES[0]!);
 }
 
 function WeekRound({ donut, width }: { donut: WeeklyDonut; width?: number | undefined }) {
@@ -284,31 +284,35 @@ export function GoalCharts({
         summary={`${data.barTitle}. ${listed(data.bars, data.barUnit)}.`}
         className={fixed ? "col-span-5" : "sm:col-span-5"}
       >
-        <WeeklyBars data={data} width={fixed?.bar} />
+        {data.bars.length > 0 ? (
+          <WeeklyBars data={data} width={fixed?.bar} />
+        ) : (
+          <p className="py-8 text-center text-[13px] text-soft">{data.barEmpty}</p>
+        )}
       </Panel>
 
       <Panel
         title={data.lineTitle}
-        summary={`${data.lineTitle}, target ${fmt(data.target)}. ${listed(data.line, data.unit)}.`}
+        summary={`${data.lineTitle}${data.targetLabel ? `, ${data.targetLabel}` : ""}. ${listed(data.line, data.unit)}.`}
         className={fixed ? "col-span-3" : "sm:col-span-3"}
       >
         <ProgressLine data={data} width={fixed?.line} />
       </Panel>
 
       <Panel
-        title="This week"
+        title={data.roundTitle}
         subtitle={data.donut?.subtitle}
         summary={
           data.donut
-            ? `This week. ${data.donut.slices.map((s) => `${s.label}: ${fmt(s.value)}`).join(", ")}.`
-            : "Nothing logged this week yet."
+            ? `${data.roundTitle}. ${data.donut.slices.map((s) => `${s.label}: ${fmt(s.value)}`).join(", ")}.`
+            : data.roundEmpty
         }
         className={fixed ? "col-span-2" : "sm:col-span-2"}
       >
         {data.donut ? (
           <WeekRound donut={data.donut} width={fixed?.round} />
         ) : (
-          <p className="py-8 text-center text-[13px] text-soft">Nothing logged this week yet.</p>
+          <p className="py-8 text-center text-[13px] text-soft">{data.roundEmpty}</p>
         )}
       </Panel>
     </div>

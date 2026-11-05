@@ -70,6 +70,28 @@ export function useMeetingGoals(meetingId: string | null, profileId: string | nu
   });
 }
 
+/** Every week's goals for this person, so the weekly chart can show one week beside the others. */
+export function useMeetingWeekGoals(
+  meetingId: string | null,
+  profileId: string | null,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: ["meeting-goals", meetingId, profileId, "all-weeks"],
+    enabled: enabled && Boolean(meetingId && profileId),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("meeting_goals")
+        .select("title, outcome, week_start")
+        .eq("meeting_id", meetingId!)
+        .eq("profile_id", profileId!)
+        .eq("scope", "week");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
 type Values = { [k: string]: Json };
 
 /**
@@ -84,8 +106,10 @@ export function useMeetingGoalWrites(
 ) {
   const qc = useQueryClient();
   const dev = useServerFn(devWriteRow);
-  const refresh = () =>
+  const refresh = () => {
     void qc.invalidateQueries({ queryKey: ["meeting-goals", meetingId, profileId, scopeKey(scope)] });
+    void qc.invalidateQueries({ queryKey: ["meeting-goals", meetingId, profileId, "all-weeks"] });
+  };
 
   const addGoal = useMutation({
     mutationFn: async (args: { orgId: string; position: number; createdBy: string | null }) => {

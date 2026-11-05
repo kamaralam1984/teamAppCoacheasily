@@ -46,6 +46,10 @@ describe("The line's axis always has room for the target", () => {
   test("a figure below zero extends the axis down", () => {
     deepEqual(niceTicks([10, -5]), [-5, 0, 5, 10]);
   });
+  test("a count never gets a fractional mark", () => {
+    deepEqual(niceTicks([1, 0], true), [0, 1]);
+    deepEqual(niceTicks([5, 2], true), [0, 2, 4, 6]);
+  });
   test("all zeros still draw an axis", () => {
     deepEqual(niceTicks([0, 0]), [0, 0.25, 0.5, 0.75, 1]);
   });

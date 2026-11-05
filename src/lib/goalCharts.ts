@@ -27,6 +27,8 @@ export interface LinePoint {
 export interface DonutSlice {
   label: string;
   value: number;
+  /** what has not happened yet: drawn pale so the done parts stand out */
+  quiet?: boolean;
 }
 
 export interface WeeklyDonut {
@@ -45,12 +47,20 @@ export interface GoalChartData {
   /** what the bars count: a funnel's bars are people or things, its line is a percentage */
   barUnit: string;
   barTitle: string;
+  /** the tooltip's word before a bar's label: "Week of", "Goal" */
+  barPrefix: string;
+  /** said instead of an empty chart when there are no bars */
+  barEmpty: string;
   bars: BarPoint[];
   lineTitle: string;
   line: LinePoint[];
   /** the line's axis, always tall enough to hold the target */
   lineTicks: number[];
-  target: number;
+  /** no line is drawn when there is nothing to aim at */
+  target: number | null;
+  targetLabel: string | null;
+  roundTitle: string;
+  roundEmpty: string;
   donut: WeeklyDonut | null;
 }
 
@@ -62,10 +72,11 @@ function amount(n: number, unit: string): string {
 }
 
 /** Round axis marks covering every value given, from zero unless something is below it. */
-export function niceTicks(values: number[]): number[] {
+export function niceTicks(values: number[], wholeOnly = false): number[] {
   const lo = Math.min(0, ...values);
   const hi = Math.max(0, ...values) || (lo < 0 ? 0 : 1);
-  const rough = (hi - lo) / 4;
+  // counting goals: never a mark at 0.25 of one
+  const rough = wholeOnly ? Math.max(1, (hi - lo) / 4) : (hi - lo) / 4;
   const power = 10 ** Math.floor(Math.log10(rough));
   const step = [1, 2, 2.5, 5, 10].map((m) => m * power).find((s) => s >= rough) ?? rough;
 
@@ -112,7 +123,7 @@ export function numberDonut(goal: Goal, p: GoalProgress | null): WeeklyDonut | n
     slices: [
       { label: "Before this week", value: round1(done - thisWeek) },
       { label: "This week", value: round1(thisWeek) },
-      { label: "Still to go", value: round1(span - done) },
+      { label: "Still to go", value: round1(span - done), quiet: true },
     ],
     note:
       moved * direction < 0
@@ -183,6 +194,11 @@ export function buildGoalCharts(
       line,
       lineTicks: lineTicksFor(line, goal.target),
       target: goal.target,
+      targetLabel: `Target ${fmt(goal.target)}`,
+      roundTitle: "This week",
+      roundEmpty: "Nothing logged this week yet.",
+      barPrefix: "Week of",
+      barEmpty: "Nothing logged yet.",
       donut: funnelDonut(goal, progress),
     };
   }
@@ -202,6 +218,11 @@ export function buildGoalCharts(
     line,
     lineTicks: lineTicksFor(line, goal.target),
     target: goal.target,
+    targetLabel: `Target ${fmt(goal.target)}`,
+    roundTitle: "This week",
+    roundEmpty: "Nothing logged this week yet.",
+    barPrefix: "Week of",
+    barEmpty: "Nothing logged yet.",
     donut: numberDonut(goal, progress),
   };
 }

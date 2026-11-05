@@ -3,11 +3,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
+import { GoalCharts } from "@/components/goals/GoalCharts";
 import { useDeveloperAccess } from "@/hooks/useDeveloper";
 import {
   meetingPeriod,
   useMeetingGoals,
   useMeetingGoalWrites,
+  useMeetingWeekGoals,
   type GoalScope,
   type GoalUpdate,
   type MeetingGoal,
@@ -16,6 +18,7 @@ import { useMyProfile } from "@/hooks/useMyProfile";
 import { meetingLabel, useStrategicMeetings } from "@/hooks/useStrategicMeetings";
 import { useWarriors } from "@/hooks/useWarriors";
 import { addDays, daysBetween, timeLabel, todayIso } from "@/lib/calendar";
+import { runCharts, weekCharts } from "@/lib/meetingGoalCharts";
 import { downlineIds, shortDate } from "@/lib/warriors";
 
 export const Route = createFileRoute("/_authenticated/strategic-meetings")({
@@ -145,6 +148,18 @@ function StrategicMeetingsPage() {
     for (const u of data?.updates ?? []) map.set(`${u.goal_id}|${u.week_start}`, u);
     return map;
   }, [data]);
+
+  const { data: weekGoals } = useMeetingWeekGoals(
+    meeting?.id ?? null,
+    activePerson,
+    mode === "week",
+  );
+  const charts = useMemo(() => {
+    const rows = data?.goals ?? [];
+    return mode === "week" && weekStart
+      ? weekCharts(rows, weekGoals ?? [], period?.weeks ?? [], weekStart, today)
+      : runCharts(rows, data?.updates ?? [], period?.weeks ?? [], thisWeek, today);
+  }, [data, weekGoals, mode, weekStart, period, thisWeek, today]);
 
   const fail = (err: unknown) =>
     toast.error(err instanceof Error ? err.message : "That didn't save. Please try again.");
@@ -458,6 +473,13 @@ function StrategicMeetingsPage() {
                 </div>
               ) : null}
             </section>
+
+            {goals.length > 0 ? (
+              <section className="ce-card p-4">
+                <p className="ce-label mb-3">Week by week</p>
+                <GoalCharts data={charts} />
+              </section>
+            ) : null}
           </>
         )}
       </div>
