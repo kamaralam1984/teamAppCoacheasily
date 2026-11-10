@@ -22,6 +22,15 @@ export function OfflineGate() {
 
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
+    // The worker serves same-origin files cache-first, which pins stale modules under the dev
+    // server, so it only runs in production builds.
+    if (import.meta.env.DEV) {
+      void navigator.serviceWorker
+        .getRegistrations()
+        .then((regs) => Promise.all(regs.map((r) => r.unregister())))
+        .catch(() => undefined);
+      return;
+    }
     const register = () => {
       navigator.serviceWorker.register("/sw.js").catch(() => undefined);
     };
