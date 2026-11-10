@@ -27,7 +27,10 @@ export function useDiwaliDecor(): boolean {
   const { theme } = useTheme();
   const { data: org } = useOrgSettings();
   if (localPreview()) return true;
-  const mode = org?.festive_decor;
+  // Until the company setting has loaded, show nothing: otherwise the calendar default flashes
+  // the decorations for a moment even when the setting is "off".
+  if (!org) return false;
+  const mode = org.festive_decor;
   if (mode === "diwali") return true;
   if (mode === "off") return false;
   return theme.key === "diwali";

@@ -23,8 +23,13 @@ describe("Only a percentage someone wrote counts as a percentage", () => {
     equal(outcomePercent("105% Achieved"), 105);
     equal(outcomePercent("reached 82.5 %"), 82.5);
   });
-  test("a bare number is not guessed at", () => {
+  test("a number on its own is that per cent, since Outcome is a percentage column", () => {
+    equal(outcomePercent("100"), 100);
+    equal(outcomePercent(" 82.5 "), 82.5);
+  });
+  test("anything else without a % sign is not guessed at", () => {
     equal(outcomePercent("200+"), null);
+    equal(outcomePercent("5 sales"), null);
     equal(outcomePercent("done"), null);
     equal(outcomePercent(null), null);
   });

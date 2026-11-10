@@ -34,7 +34,10 @@ export interface WeekProgress {
 /** The first percentage written in an outcome, or null when it has none: "105% Achieved" is 105. */
 export function outcomePercent(outcome: string | null): number | null {
   const match = outcome?.match(/(-?\d+(?:\.\d+)?)\s*%/);
-  return match ? Number(match[1]) : null;
+  if (match) return Number(match[1]);
+  // Outcome is a percentage column, so a bare number on its own ("100") means that per cent.
+  const bare = outcome?.trim().match(/^-?\d+(?:\.\d+)?$/);
+  return bare ? Number(bare[0]) : null;
 }
 
 const written = (text: string | null | undefined) => Boolean(text?.trim());
