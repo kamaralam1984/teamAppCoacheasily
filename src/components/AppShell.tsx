@@ -370,7 +370,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           ref={stripRef}
           className="relative overflow-hidden border-t border-night2 bg-night2 lg:hidden"
         >
-          <div className="flex items-center gap-1 px-2 py-2">
+          <div className="flex items-center justify-center gap-1 px-2 py-2">
             {mobileTabs.slice(0, fitCount).map((tab) => {
               const active = pathname === tab.to;
               return (
@@ -409,7 +409,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         {tabs.length > 0 || showAvailability ? (
           <nav className="no-scrollbar hidden overflow-x-auto border-t border-night2 bg-night2 lg:block">
-            <div ref={navRef} className="mx-auto flex max-w-6xl items-center gap-1 px-2 py-2">
+            <div ref={navRef} className="mx-auto flex w-max items-center gap-1 px-2 py-2">
               {tabs.length === 0 && showAvailability ? (
                 <a
                   href={SIR_AVAILABILITY_URL}
