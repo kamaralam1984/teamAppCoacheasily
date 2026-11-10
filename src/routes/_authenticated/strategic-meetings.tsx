@@ -18,7 +18,9 @@ import { useMyProfile } from "@/hooks/useMyProfile";
 import { meetingLabel, useStrategicMeetings } from "@/hooks/useStrategicMeetings";
 import { useWarriors } from "@/hooks/useWarriors";
 import { addDays, daysBetween, timeLabel, todayIso } from "@/lib/calendar";
+import { buildCsv, buildPdf, downloadBytes, MIME, safeFileName } from "@/lib/exporters";
 import { runCharts, runProgress, weekCharts, weekProgress } from "@/lib/meetingGoalCharts";
+import { meetingGoalTable } from "@/lib/meetingGoalExport";
 import { downlineIds, shortDate } from "@/lib/warriors";
 
 export const Route = createFileRoute("/_authenticated/strategic-meetings")({
@@ -176,6 +178,42 @@ function StrategicMeetingsPage() {
   const isHr = viewer?.role === "hr" || viewer?.role === "admin";
   const runDays = period ? daysBetween(period.from, period.to) + 1 : 0;
 
+  const heading =
+    scope.kind === "week"
+      ? `Goals for the week of ${shortDate(scope.weekStart)}`
+      : `Goals for next ${runDays} days`;
+  const periodLine =
+    scope.kind === "week"
+      ? `${shortDate(scope.weekStart)} to ${shortDate(addDays(scope.weekStart, 6))}`
+      : period
+        ? `${shortDate(period.from)} to ${shortDate(period.to)}`
+        : "";
+
+  /** The table as it stands on screen, downloaded as a CSV or a PDF. */
+  function exportAs(kind: "csv" | "pdf") {
+    if (!meeting || goals.length === 0) return;
+    const table = meetingGoalTable({
+      person: person?.full_name ?? "Goals",
+      heading,
+      period: [periodLine, meetingLabel(meeting)].filter(Boolean).join(" · "),
+      goals,
+      updates: data?.updates ?? [],
+      weeks: weekColumns,
+      weekLabel: shortDate,
+      dateLabel: shortDate,
+    });
+    const name = safeFileName(`${table.title} ${meetingLabel(meeting)}`, kind);
+    if (kind === "csv") downloadBytes(name, buildCsv(table.columns, table.rows), MIME.csv);
+    else {
+      downloadBytes(
+        name,
+        buildPdf(table.title, table.subtitle, table.columns, table.rows, new Date(), 10),
+        MIME.pdf,
+      );
+    }
+    toast.success(`${kind.toUpperCase()} downloaded.`);
+  }
+
   return (
     <AppShell>
       <div className="space-y-5 py-2">
@@ -290,17 +328,10 @@ function StrategicMeetingsPage() {
               <div className="bg-night px-4 py-3 text-center text-white">
                 <p className="font-display text-xl">
                   {person ? `${person.full_name} — ` : ""}
-                  {scope.kind === "week"
-                    ? `Goals for the week of ${shortDate(scope.weekStart)}`
-                    : `Goals for next ${runDays} days`}
+                  {heading}
                 </p>
                 <p className="text-[12px] font-bold tracking-[0.08em] text-goldL uppercase">
-                  {scope.kind === "week"
-                    ? `${shortDate(scope.weekStart)} to ${shortDate(addDays(scope.weekStart, 6))}`
-                    : period
-                      ? `${shortDate(period.from)} to ${shortDate(period.to)}`
-                      : ""}{" "}
-                  · {meetingLabel(meeting)}
+                  {periodLine} · {meetingLabel(meeting)}
                 </p>
                 {meeting.tagline || meeting.from_time || meeting.location ? (
                   <p className="mt-0.5 text-[12px] text-mist">
@@ -310,6 +341,22 @@ function StrategicMeetingsPage() {
                   </p>
                 ) : null}
               </div>
+
+              {!isLoading && goals.length > 0 ? (
+                <div className="flex flex-wrap items-center justify-end gap-2 border-b border-line bg-cream px-4 py-2">
+                  <span className="mr-auto text-[12px] text-soft">Download this table</span>
+                  <button type="button" className="btn3d" onClick={() => exportAs("csv")}>
+                    CSV
+                  </button>
+                  <button
+                    type="button"
+                    className="btn3d btn3d-gold"
+                    onClick={() => exportAs("pdf")}
+                  >
+                    PDF
+                  </button>
+                </div>
+              ) : null}
 
               {!canWrite ? (
                 <p className="border-b border-line bg-cream px-4 py-2 text-[12px] text-soft">

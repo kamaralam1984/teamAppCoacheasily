@@ -381,6 +381,8 @@ export function buildPdf(
   columns: ExportColumn[],
   rows: ExportRow[],
   generatedOn = new Date(),
+  /** how many lines a cell may wrap to before it is cut with "..." */
+  maxCellLines = 3,
 ): Uint8Array {
   const landscape = columns.length > 6;
   const W = landscape ? 842 : 595;
@@ -400,6 +402,19 @@ export function buildPdf(
   });
   const sum = want.reduce((a, b) => a + b, 0);
   const widths = want.map((w) => (w * usable) / Math.max(sum, usable));
+  // Shrinking to fit must not cut a heading's word in half ("Tim el..."), so every column keeps
+  // room for its longest heading word, paid for by the columns that have room to spare.
+  const floor = columns.map(
+    (c) => Math.max(...winAnsiText(c.label).split(" ").map((w) => textWidth(w, SIZE, true))) + 10,
+  );
+  const short = widths.reduce((a, w, i) => a + Math.max(0, (floor[i] as number) - w), 0);
+  const spare = widths.reduce((a, w, i) => a + Math.max(0, w - (floor[i] as number)), 0);
+  if (short > 0 && spare >= short) {
+    widths.forEach((w, i) => {
+      const f = floor[i] as number;
+      widths[i] = w < f ? f : w - ((w - f) * short) / spare;
+    });
+  }
   const xs = widths.map((_, i) => M + widths.slice(0, i).reduce((a, b) => a + b, 0));
 
   type Page = string[];
@@ -446,7 +461,7 @@ export function buildPdf(
 
   rows.forEach((row, rowIndex) => {
     const cells = columns.map((c, i) =>
-      wrap(winAnsiText(cellText(row[c.key])), (widths[i] as number) - 8, SIZE, false, 3),
+      wrap(winAnsiText(cellText(row[c.key])), (widths[i] as number) - 8, SIZE, false, maxCellLines),
     );
     const height = Math.max(...cells.map((l) => l.length)) * LINE + 5;
     if (y - height < M + 18) {
