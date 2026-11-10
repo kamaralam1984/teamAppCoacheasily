@@ -12,6 +12,7 @@ import {
   type GoalDraft,
 } from "@/components/goals/GoalForm";
 import { ImportGoals } from "@/components/goals/ImportGoals";
+import { PastCycles } from "@/components/goals/PastCycles";
 import { PreviousCycleCard } from "@/components/goals/PreviousCycleCard";
 import { ReviewMode, type ReviewSlide } from "@/components/goals/ReviewMode";
 import { WeeklyUpdate } from "@/components/goals/WeeklyUpdate";
@@ -248,6 +249,14 @@ function Page() {
         ) : null}
 
         <ArchivedGoals cycleId={active?.id ?? null} />
+
+        {profile && cycles ? (
+          <PastCycles
+            cycles={cycles}
+            profileId={profile.id}
+            onCarryForward={active ? (d) => setDraft(d) : undefined}
+          />
+        ) : null}
       </div>
 
       {review && active ? (
