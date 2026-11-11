@@ -66,3 +66,36 @@ test("the weekly view has no week columns", () => {
   equal(t.columns.length, 5);
   equal(t.rows.length, 0);
 });
+
+describe("Challenges and Learnings are in the download only when added", () => {
+  const goals = [
+    { id: "a", title: "Post Monitoring", measure: null, timeline: null, outcome: null },
+    { id: "b", title: "Chat Bot", measure: null, timeline: null, outcome: null },
+  ];
+
+  test("not added: no extra columns", () => {
+    const t = meetingGoalTable({ ...base, goals, updates: [], weeks: [], challenges: null });
+    equal(
+      t.columns.some((c) => c.key === "challenges" || c.key === "learnings"),
+      false,
+    );
+  });
+
+  test("added: one column each, the text in the first row", () => {
+    const t = meetingGoalTable({
+      ...base,
+      goals,
+      updates: [],
+      weeks: [],
+      challenges: "Not attended - 98",
+      learnings: "",
+    });
+    deepEqual(
+      t.columns.slice(-2).map((c) => c.label),
+      ["Challenges", "Learnings"],
+    );
+    equal(t.rows[0]?.["challenges"], "Not attended - 98");
+    equal(t.rows[1]?.["challenges"], "");
+    equal(t.rows[0]?.["learnings"], "");
+  });
+});

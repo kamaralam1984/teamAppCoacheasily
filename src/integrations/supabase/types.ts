@@ -1741,6 +1741,68 @@ export type Database = {
           },
         ]
       }
+      meeting_goal_notes: {
+        Row: {
+          challenges: string | null
+          learnings: string | null
+          meeting_id: string
+          org_id: string
+          period: string
+          profile_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          challenges?: string | null
+          learnings?: string | null
+          meeting_id: string
+          org_id: string
+          period: string
+          profile_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          challenges?: string | null
+          learnings?: string | null
+          meeting_id?: string
+          org_id?: string
+          period?: string
+          profile_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_goal_notes_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "strategic_meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_goal_notes_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_goal_notes_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_goal_notes_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meeting_goal_updates: {
         Row: {
           goal_id: string

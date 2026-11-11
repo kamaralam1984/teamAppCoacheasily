@@ -22,7 +22,9 @@ export function meetingPeriod(meeting: StrategicMeeting, all: StrategicMeeting[]
     .filter((m) => m.meeting_date < meeting.meeting_date)
     .sort((a, b) => b.meeting_date.localeCompare(a.meeting_date))[0];
   // 45 days counting the meeting day itself, e.g. 7 Oct to 20 Nov
-  const from = prev ? addDays(prev.meeting_date, 1) : addDays(meeting.meeting_date, -(DEFAULT_RUN - 1));
+  const from = prev
+    ? addDays(prev.meeting_date, 1)
+    : addDays(meeting.meeting_date, -(DEFAULT_RUN - 1));
   const to = meeting.meeting_date;
   const dow = new Date(`${from}T00:00:00Z`).getUTCDay(); // 0 Sun … 6 Sat
   let monday = addDays(from, dow === 0 ? -6 : 1 - dow);
@@ -42,7 +44,11 @@ function scopeKey(scope: GoalScope) {
 }
 
 /** One person's goals for one meeting (45-day or one week), with their weekly updates. */
-export function useMeetingGoals(meetingId: string | null, profileId: string | null, scope: GoalScope) {
+export function useMeetingGoals(
+  meetingId: string | null,
+  profileId: string | null,
+  scope: GoalScope,
+) {
   return useQuery({
     queryKey: ["meeting-goals", meetingId, profileId, scopeKey(scope)],
     enabled: Boolean(meetingId && profileId),
@@ -107,7 +113,9 @@ export function useMeetingGoalWrites(
   const qc = useQueryClient();
   const dev = useServerFn(devWriteRow);
   const refresh = () => {
-    void qc.invalidateQueries({ queryKey: ["meeting-goals", meetingId, profileId, scopeKey(scope)] });
+    void qc.invalidateQueries({
+      queryKey: ["meeting-goals", meetingId, profileId, scopeKey(scope)],
+    });
     void qc.invalidateQueries({ queryKey: ["meeting-goals", meetingId, profileId, "all-weeks"] });
   };
 
@@ -134,9 +142,19 @@ export function useMeetingGoalWrites(
   });
 
   const saveGoal = useMutation({
-    mutationFn: async (args: { id: string; values: Partial<Pick<MeetingGoal, "title" | "measure" | "timeline" | "outcome">> }) => {
+    mutationFn: async (args: {
+      id: string;
+      values: Partial<Pick<MeetingGoal, "title" | "measure" | "timeline" | "outcome">>;
+    }) => {
       if (viaDev) {
-        await dev({ data: { table: "meeting_goals", op: "update", key: { id: args.id }, values: args.values as Values } });
+        await dev({
+          data: {
+            table: "meeting_goals",
+            op: "update",
+            key: { id: args.id },
+            values: args.values as Values,
+          },
+        });
         return;
       }
       const { error } = await supabase.from("meeting_goals").update(args.values).eq("id", args.id);
@@ -158,7 +176,13 @@ export function useMeetingGoalWrites(
   });
 
   const saveUpdate = useMutation({
-    mutationFn: async (args: { goalId: string; weekStart: string; note: string; by: string | null; exists: boolean }) => {
+    mutationFn: async (args: {
+      goalId: string;
+      weekStart: string;
+      note: string;
+      by: string | null;
+      exists: boolean;
+    }) => {
       const key = { goal_id: args.goalId, week_start: args.weekStart };
       if (viaDev) {
         await dev({
@@ -170,11 +194,98 @@ export function useMeetingGoalWrites(
       }
       const { error } = await supabase
         .from("meeting_goal_updates")
-        .upsert({ ...key, note: args.note, updated_by: args.by }, { onConflict: "goal_id,week_start" });
+        .upsert(
+          { ...key, note: args.note, updated_by: args.by },
+          { onConflict: "goal_id,week_start" },
+        );
       if (error) throw error;
     },
     onSettled: refresh,
   });
 
   return { addGoal, saveGoal, deleteGoal, saveUpdate };
+}
+
+export type GoalNotes = Tables<"meeting_goal_notes">;
+export type NoteField = "challenges" | "learnings";
+
+/** The `period` a table's notes are kept under: 'run', or the Monday of a weekly table. */
+function notesPeriod(scope: GoalScope) {
+  return scope.kind === "run" ? "run" : scope.weekStart;
+}
+
+/**
+ * The optional Challenges and Learnings boxes for one person's table. A field that is null has
+ * not been added; an empty string has been added with nothing written yet.
+ */
+export function useMeetingGoalNotes(
+  meetingId: string | null,
+  profileId: string | null,
+  scope: GoalScope,
+) {
+  return useQuery({
+    queryKey: ["meeting-goal-notes", meetingId, profileId, scopeKey(scope)],
+    enabled: Boolean(meetingId && profileId),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("meeting_goal_notes")
+        .select("*")
+        .eq("meeting_id", meetingId!)
+        .eq("profile_id", profileId!)
+        .eq("period", notesPeriod(scope))
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+/** Add, write or remove a Challenges or Learnings box (remove = set it back to null). */
+export function useSaveMeetingGoalNote(
+  meetingId: string | null,
+  profileId: string | null,
+  viaDev: boolean,
+  scope: GoalScope,
+) {
+  const qc = useQueryClient();
+  const dev = useServerFn(devWriteRow);
+  return useMutation({
+    mutationFn: async (args: {
+      orgId: string;
+      field: NoteField;
+      value: string | null;
+      by: string | null;
+      exists: boolean;
+    }) => {
+      const key = { meeting_id: meetingId!, profile_id: profileId!, period: notesPeriod(scope) };
+      if (viaDev) {
+        await dev({
+          data: args.exists
+            ? {
+                table: "meeting_goal_notes",
+                op: "update",
+                key,
+                values: { [args.field]: args.value },
+              }
+            : {
+                table: "meeting_goal_notes",
+                op: "insert",
+                values: { ...key, org_id: args.orgId, [args.field]: args.value },
+              },
+        });
+        return;
+      }
+      const { error } = await supabase
+        .from("meeting_goal_notes")
+        .upsert(
+          { ...key, org_id: args.orgId, [args.field]: args.value, updated_by: args.by },
+          { onConflict: "meeting_id,profile_id,period" },
+        );
+      if (error) throw error;
+    },
+    onSettled: () =>
+      void qc.invalidateQueries({
+        queryKey: ["meeting-goal-notes", meetingId, profileId, scopeKey(scope)],
+      }),
+  });
 }

@@ -36,6 +36,9 @@ export function meetingGoalTable(args: {
   weeks: string[];
   weekLabel: (week: string) => string;
   dateLabel: (iso: string) => string;
+  /** The optional Challenges / Learnings boxes: null (or left out) when not added. */
+  challenges?: string | null | undefined;
+  learnings?: string | null | undefined;
 }): MeetingGoalTable {
   const notes = new Map<string, string>();
   for (const u of args.updates) notes.set(`${u.goal_id}|${u.week_start}`, u.note);
@@ -48,6 +51,14 @@ export function meetingGoalTable(args: {
     { key: "outcome", label: "Outcome" },
     ...args.weeks.map((w) => ({ key: weekKey(w), label: `Week of ${args.weekLabel(w)}` })),
   ];
+  // one box for the whole table, so its text goes in the first row, as in the shared sheet
+  const boxes = (
+    [
+      ["challenges", "Challenges", args.challenges],
+      ["learnings", "Learnings", args.learnings],
+    ] as const
+  ).filter(([, , text]) => text != null);
+  for (const [key, label] of boxes) columns.push({ key, label });
 
   const rows: ExportRow[] = args.goals.map((g, i) => {
     const row: ExportRow = {
@@ -58,6 +69,7 @@ export function meetingGoalTable(args: {
       outcome: g.outcome ?? "",
     };
     for (const w of args.weeks) row[weekKey(w)] = notes.get(`${g.id}|${w}`) ?? "";
+    for (const [key, , text] of boxes) row[key] = i === 0 ? (text ?? "") : "";
     return row;
   });
 

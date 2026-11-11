@@ -8,11 +8,14 @@ import { useDeveloperAccess } from "@/hooks/useDeveloper";
 import {
   meetingPeriod,
   useMeetingGoals,
+  useMeetingGoalNotes,
   useMeetingGoalWrites,
   useMeetingWeekGoals,
+  useSaveMeetingGoalNote,
   type GoalScope,
   type GoalUpdate,
   type MeetingGoal,
+  type NoteField,
 } from "@/hooks/useMeetingGoals";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { meetingLabel, useStrategicMeetings } from "@/hooks/useStrategicMeetings";
@@ -50,6 +53,7 @@ function Cell({
   placeholder,
   type = "text",
   multiline = false,
+  rows = 2,
   className = "",
 }: {
   value: string;
@@ -57,6 +61,7 @@ function Cell({
   placeholder?: string;
   type?: "text" | "date";
   multiline?: boolean;
+  rows?: number;
   className?: string;
 }) {
   const [draft, setDraft] = useState(value);
@@ -67,7 +72,7 @@ function Cell({
   const base = `w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 text-[13px] text-ink hover:border-line focus:border-gold focus:bg-white focus:outline-none ${className}`;
   return multiline ? (
     <textarea
-      rows={2}
+      rows={rows}
       className={`${base} min-h-[52px] resize-y`}
       value={draft}
       placeholder={placeholder}
@@ -151,6 +156,32 @@ function StrategicMeetingsPage() {
     return map;
   }, [data]);
 
+  // the optional Challenges / Learnings boxes: only shown once this person has added them
+  const { data: notes } = useMeetingGoalNotes(meeting?.id ?? null, activePerson, scope);
+  const saveNote = useSaveMeetingGoalNote(meeting?.id ?? null, activePerson, viaDev, scope);
+  const boxes = (
+    [
+      {
+        field: "challenges",
+        label: "Challenges",
+        tone: "bg-red/10",
+        placeholder: "What got in the way…",
+      },
+      {
+        field: "learnings",
+        label: "Learnings",
+        tone: "bg-gold/15",
+        placeholder: "1. What worked…",
+      },
+    ] as const
+  ).filter((b) => notes?.[b.field] != null);
+  const missingBoxes = (
+    [
+      ["challenges", "Challenges"],
+      ["learnings", "Learnings"],
+    ] as const
+  ).filter(([field]) => notes?.[field] == null);
+
   const { data: weekGoals } = useMeetingWeekGoals(
     meeting?.id ?? null,
     activePerson,
@@ -174,6 +205,14 @@ function StrategicMeetingsPage() {
 
   const fail = (err: unknown) =>
     toast.error(err instanceof Error ? err.message : "That didn't save. Please try again.");
+
+  /** Add (""), write (text) or remove (null) a Challenges or Learnings box. */
+  const writeNote = (field: NoteField, value: string | null) =>
+    viewer &&
+    saveNote.mutate(
+      { orgId: viewer.org_id, field, value, by: viewer.id, exists: Boolean(notes) },
+      { onError: fail },
+    );
 
   const isHr = viewer?.role === "hr" || viewer?.role === "admin";
   const runDays = period ? daysBetween(period.from, period.to) + 1 : 0;
@@ -201,6 +240,8 @@ function StrategicMeetingsPage() {
       weeks: weekColumns,
       weekLabel: shortDate,
       dateLabel: shortDate,
+      challenges: notes?.challenges,
+      learnings: notes?.learnings,
     });
     const name = safeFileName(`${table.title} ${meetingLabel(meeting)}`, kind);
     if (kind === "csv") downloadBytes(name, buildCsv(table.columns, table.rows), MIME.csv);
@@ -367,7 +408,8 @@ function StrategicMeetingsPage() {
 
               <div className="overflow-x-auto">
                 <table
-                  className={`w-full border-collapse text-left ${weekColumns.length > 0 ? "min-w-[880px]" : "min-w-[640px]"}`}
+                  className="w-full border-collapse text-left"
+                  style={{ minWidth: (weekColumns.length > 0 ? 880 : 640) + boxes.length * 240 }}
                 >
                   <thead>
                     <tr className="bg-gold/25 text-[11px] font-bold tracking-[0.04em] text-ink uppercase">
@@ -377,8 +419,38 @@ function StrategicMeetingsPage() {
                       <th className="w-[140px] border border-line px-2 py-2">Timeline</th>
                       <th className="min-w-[110px] border border-line px-2 py-2">Outcome</th>
                       {weekColumns.map((w) => (
-                        <th key={w} className="min-w-[170px] border border-line bg-emer/15 px-2 py-2">
+                        <th
+                          key={w}
+                          className="min-w-[170px] border border-line bg-emer/15 px-2 py-2"
+                        >
                           Week of {shortDate(w)}
+                        </th>
+                      ))}
+                      {boxes.map((b) => (
+                        <th
+                          key={b.field}
+                          className={`min-w-[240px] border border-line px-2 py-2 ${b.tone}`}
+                        >
+                          <span className="flex items-center justify-between gap-2">
+                            {b.label}
+                            {canWrite ? (
+                              <button
+                                type="button"
+                                aria-label={`Remove the ${b.label} box`}
+                                className="rounded px-1.5 text-[14px] text-red hover:bg-red/10"
+                                onClick={() => {
+                                  if (
+                                    notes?.[b.field]?.trim() &&
+                                    !window.confirm(`Remove ${b.label} and what is written in it?`)
+                                  )
+                                    return;
+                                  writeNote(b.field, null);
+                                }}
+                              >
+                                ×
+                              </button>
+                            ) : null}
+                          </span>
                         </th>
                       ))}
                       {canWrite ? <th className="w-10 border border-line" /> : null}
@@ -413,7 +485,12 @@ function StrategicMeetingsPage() {
                                   className="font-bold"
                                   value={g.title}
                                   placeholder="Increase show up rate of …"
-                                  onSave={(v) => writes.saveGoal.mutate({ id: g.id, values: { title: v } }, { onError: fail })}
+                                  onSave={(v) =>
+                                    writes.saveGoal.mutate(
+                                      { id: g.id, values: { title: v } },
+                                      { onError: fail },
+                                    )
+                                  }
                                 />
                               </td>
                               <td className="border border-line p-0.5">
@@ -421,7 +498,10 @@ function StrategicMeetingsPage() {
                                   value={g.measure ?? ""}
                                   placeholder="200+"
                                   onSave={(v) =>
-                                    writes.saveGoal.mutate({ id: g.id, values: { measure: v.trim() || null } }, { onError: fail })
+                                    writes.saveGoal.mutate(
+                                      { id: g.id, values: { measure: v.trim() || null } },
+                                      { onError: fail },
+                                    )
                                   }
                                 />
                               </td>
@@ -430,7 +510,10 @@ function StrategicMeetingsPage() {
                                   type="date"
                                   value={g.timeline ?? ""}
                                   onSave={(v) =>
-                                    writes.saveGoal.mutate({ id: g.id, values: { timeline: v || null } }, { onError: fail })
+                                    writes.saveGoal.mutate(
+                                      { id: g.id, values: { timeline: v || null } },
+                                      { onError: fail },
+                                    )
                                   }
                                 />
                               </td>
@@ -441,7 +524,10 @@ function StrategicMeetingsPage() {
                                   value={g.outcome ?? ""}
                                   placeholder="105% Achieved"
                                   onSave={(v) =>
-                                    writes.saveGoal.mutate({ id: g.id, values: { outcome: v.trim() || null } }, { onError: fail })
+                                    writes.saveGoal.mutate(
+                                      { id: g.id, values: { outcome: v.trim() || null } },
+                                      { onError: fail },
+                                    )
                                   }
                                 />
                               </td>
@@ -455,7 +541,13 @@ function StrategicMeetingsPage() {
                                       placeholder="This week…"
                                       onSave={(v) =>
                                         writes.saveUpdate.mutate(
-                                          { goalId: g.id, weekStart: w, note: v, by: viewer?.id ?? null, exists: Boolean(u) },
+                                          {
+                                            goalId: g.id,
+                                            weekStart: w,
+                                            note: v,
+                                            by: viewer?.id ?? null,
+                                            exists: Boolean(u),
+                                          },
                                           { onError: fail },
                                         )
                                       }
@@ -463,13 +555,31 @@ function StrategicMeetingsPage() {
                                   </td>
                                 );
                               })}
+                              {i === 0
+                                ? boxes.map((b) => (
+                                    <td
+                                      key={b.field}
+                                      rowSpan={goals.length}
+                                      className={`border border-line p-0.5 align-top ${b.tone}`}
+                                    >
+                                      <Cell
+                                        multiline
+                                        rows={Math.max(3, goals.length * 3)}
+                                        value={notes?.[b.field] ?? ""}
+                                        placeholder={b.placeholder}
+                                        onSave={(v) => writeNote(b.field, v)}
+                                      />
+                                    </td>
+                                  ))
+                                : null}
                               <td className="border border-line px-1 py-2 text-center">
                                 <button
                                   type="button"
                                   aria-label="Remove this goal"
                                   className="rounded px-1.5 text-[16px] text-red hover:bg-red/10"
                                   onClick={() => {
-                                    if (!window.confirm("Remove this goal and its weekly updates?")) return;
+                                    if (!window.confirm("Remove this goal and its weekly updates?"))
+                                      return;
                                     writes.deleteGoal.mutate(g.id, { onError: fail });
                                   }}
                                 >
@@ -482,7 +592,9 @@ function StrategicMeetingsPage() {
                               <td className="border border-line px-2 py-2 text-[13px] font-bold whitespace-pre-line text-ink">
                                 {g.title || "—"}
                               </td>
-                              <td className="border border-line px-2 py-2 text-[13px] text-ink">{g.measure ?? ""}</td>
+                              <td className="border border-line px-2 py-2 text-[13px] text-ink">
+                                {g.measure ?? ""}
+                              </td>
                               <td className="border border-line px-2 py-2 text-[13px] text-ink">
                                 {g.timeline ? shortDate(g.timeline) : ""}
                               </td>
@@ -490,10 +602,24 @@ function StrategicMeetingsPage() {
                                 {g.outcome ?? ""}
                               </td>
                               {weekColumns.map((w) => (
-                                <td key={w} className="border border-line px-2 py-2 text-[12px] whitespace-pre-line text-ink">
+                                <td
+                                  key={w}
+                                  className="border border-line px-2 py-2 text-[12px] whitespace-pre-line text-ink"
+                                >
                                   {updates.get(`${g.id}|${w}`)?.note ?? ""}
                                 </td>
                               ))}
+                              {i === 0
+                                ? boxes.map((b) => (
+                                    <td
+                                      key={b.field}
+                                      rowSpan={goals.length}
+                                      className={`border border-line px-2 py-2 text-[12px] whitespace-pre-line text-ink ${b.tone}`}
+                                    >
+                                      {notes?.[b.field] ?? ""}
+                                    </td>
+                                  ))
+                                : null}
                             </>
                           )}
                         </tr>
@@ -523,6 +649,20 @@ function StrategicMeetingsPage() {
                   >
                     + Add goal
                   </button>
+                  {goals.length > 0
+                    ? missingBoxes.map(([field, label]) => (
+                        <button
+                          key={field}
+                          type="button"
+                          className="btn3d ml-2"
+                          disabled={saveNote.isPending || !viewer}
+                          title={`Add a ${label} box beside this table (only if you need it)`}
+                          onClick={() => writeNote(field, "")}
+                        >
+                          + {label}
+                        </button>
+                      ))
+                    : null}
                   <span className="ml-3 text-[12px] text-soft">
                     Type in any cell; it saves when you click away.
                   </span>
