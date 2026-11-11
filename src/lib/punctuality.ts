@@ -56,6 +56,9 @@ export interface OrgSettings {
   birthday_reminder_days?: number[];
   /** Letters in front of a new person's employee id, e.g. CE gives CE-014. */
   employee_code_prefix?: string;
+  /** Flexi holidays: how many one person may take in a calendar year, and from which year. */
+  flexi_holidays_per_year?: number;
+  flexi_holidays_from?: number;
 }
 
 export const DEFAULT_MEETING_TIME = "11:00";

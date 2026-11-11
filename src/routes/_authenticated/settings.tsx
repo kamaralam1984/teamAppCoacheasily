@@ -9,6 +9,7 @@ import { CyclesCard } from "@/components/settings/CyclesCard";
 import { DepartmentsCard } from "@/components/settings/DepartmentsCard";
 import { EarnedLeavePolicyCard } from "@/components/settings/EarnedLeavePolicyCard";
 import { EmployeeIdPrefixCard } from "@/components/settings/EmployeeIdPrefixCard";
+import { FlexiHolidaysCard } from "@/components/settings/FlexiHolidaysCard";
 import { LeaveQuotasCard } from "@/components/settings/LeaveQuotasCard";
 import { PlaybookEditor } from "@/components/settings/PlaybookEditor";
 import { StrategicMeetingsCard } from "@/components/settings/StrategicMeetingsCard";
@@ -48,8 +49,7 @@ function SettingsPage() {
     return (
       <AppShell>
         <div className="ce-card mx-auto mt-6 max-w-xl p-6 text-sm text-soft">
-          These controls belong to HR. Ask Shubhangi or Supriya if something here
-          needs changing.
+          These controls belong to HR. Ask Shubhangi or Supriya if something here needs changing.
         </div>
       </AppShell>
     );
@@ -62,13 +62,14 @@ function SettingsPage() {
           <h1 className="font-display text-3xl text-ink">Admin settings</h1>
           <HelpLink screen="settings" />
           <p className="mt-2 text-sm text-soft">
-            Everything a human should own lives here. A change flows straight through the org
-            chart, approvals, calendar, goals and reports.
+            Everything a human should own lives here. A change flows straight through the org chart,
+            approvals, calendar, goals and reports.
           </p>
         </div>
 
         <DepartmentsCard orgId={profile?.org_id ?? null} />
         <LeaveQuotasCard />
+        <FlexiHolidaysCard />
         <EarnedLeavePolicyCard orgId={profile?.org_id ?? null} />
         <HolidaysCard orgId={profile?.org_id ?? null} canManage />
         <BirthdayRemindersCard />
@@ -148,13 +149,12 @@ function SettingsPage() {
             }
           />
           <p className="mt-2 text-[13px] text-soft">
-            The testing banner and the note on the Leave screen both disappear on their own
-            after this date. Clear the field to switch them off straight away.
+            The testing banner and the note on the Leave screen both disappear on their own after
+            this date. Clear the field to switch them off straight away.
           </p>
         </section>
 
         <section className="ce-card p-5">
-
           <h2 className="font-display text-2xl text-ink">Daily and weekly digests</h2>
           <label className="mt-3 flex items-start gap-3">
             <input
@@ -176,8 +176,7 @@ function SettingsPage() {
             </span>
           </label>
           <p className="mt-2 text-[13px] text-soft">
-            Digest emails also need the mail key configured — until it is, this switch stays
-            quiet.
+            Digest emails also need the mail key configured — until it is, this switch stays quiet.
           </p>
         </section>
       </div>
