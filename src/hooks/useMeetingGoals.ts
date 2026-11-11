@@ -144,7 +144,9 @@ export function useMeetingGoalWrites(
   const saveGoal = useMutation({
     mutationFn: async (args: {
       id: string;
-      values: Partial<Pick<MeetingGoal, "title" | "measure" | "timeline" | "outcome">>;
+      values: Partial<
+        Pick<MeetingGoal, "title" | "measure" | "timeline" | "outcome" | "challenges" | "learnings">
+      >;
     }) => {
       if (viaDev) {
         await dev({

@@ -9,6 +9,8 @@ export interface ExportGoal {
   measure: string | null;
   timeline: string | null;
   outcome: string | null;
+  challenges?: string | null;
+  learnings?: string | null;
 }
 
 export interface ExportUpdate {
@@ -36,9 +38,8 @@ export function meetingGoalTable(args: {
   weeks: string[];
   weekLabel: (week: string) => string;
   dateLabel: (iso: string) => string;
-  /** The optional Challenges / Learnings boxes: null (or left out) when not added. */
-  challenges?: string | null | undefined;
-  learnings?: string | null | undefined;
+  /** The optional Challenges / Learnings columns this table has added (one entry per goal). */
+  columnsAdded?: ("challenges" | "learnings")[];
 }): MeetingGoalTable {
   const notes = new Map<string, string>();
   for (const u of args.updates) notes.set(`${u.goal_id}|${u.week_start}`, u.note);
@@ -51,13 +52,13 @@ export function meetingGoalTable(args: {
     { key: "outcome", label: "Outcome" },
     ...args.weeks.map((w) => ({ key: weekKey(w), label: `Week of ${args.weekLabel(w)}` })),
   ];
-  // one box for the whole table, so its text goes in the first row, as in the shared sheet
+  // only the optional columns this table has added, each goal's own entry beside it
   const boxes = (
     [
-      ["challenges", "Challenges", args.challenges],
-      ["learnings", "Learnings", args.learnings],
+      ["challenges", "Challenges"],
+      ["learnings", "Learnings"],
     ] as const
-  ).filter(([, , text]) => text != null);
+  ).filter(([key]) => args.columnsAdded?.includes(key));
   for (const [key, label] of boxes) columns.push({ key, label });
 
   const rows: ExportRow[] = args.goals.map((g, i) => {
@@ -69,7 +70,7 @@ export function meetingGoalTable(args: {
       outcome: g.outcome ?? "",
     };
     for (const w of args.weeks) row[weekKey(w)] = notes.get(`${g.id}|${w}`) ?? "";
-    for (const [key, , text] of boxes) row[key] = i === 0 ? (text ?? "") : "";
+    for (const [key] of boxes) row[key] = g[key] ?? "";
     return row;
   });
 

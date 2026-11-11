@@ -1837,9 +1837,11 @@ export type Database = {
       }
       meeting_goals: {
         Row: {
+          challenges: string | null
           created_at: string
           created_by: string | null
           id: string
+          learnings: string | null
           measure: string | null
           meeting_id: string
           org_id: string
@@ -1853,9 +1855,11 @@ export type Database = {
           week_start: string | null
         }
         Insert: {
+          challenges?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
+          learnings?: string | null
           measure?: string | null
           meeting_id: string
           org_id: string
@@ -1869,9 +1873,11 @@ export type Database = {
           week_start?: string | null
         }
         Update: {
+          challenges?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
+          learnings?: string | null
           measure?: string | null
           meeting_id?: string
           org_id?: string

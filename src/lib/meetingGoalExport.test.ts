@@ -69,33 +69,46 @@ test("the weekly view has no week columns", () => {
 
 describe("Challenges and Learnings are in the download only when added", () => {
   const goals = [
-    { id: "a", title: "Post Monitoring", measure: null, timeline: null, outcome: null },
-    { id: "b", title: "Chat Bot", measure: null, timeline: null, outcome: null },
+    {
+      id: "a",
+      title: "Post Monitoring",
+      measure: null,
+      timeline: null,
+      outcome: null,
+      challenges: "Festival week",
+    },
+    {
+      id: "b",
+      title: "Chat Bot",
+      measure: null,
+      timeline: null,
+      outcome: null,
+      learnings: "Plan early",
+    },
   ];
 
-  test("not added: no extra columns", () => {
-    const t = meetingGoalTable({ ...base, goals, updates: [], weeks: [], challenges: null });
+  test("not added: no extra columns, even if a goal has text", () => {
+    const t = meetingGoalTable({ ...base, goals, updates: [], weeks: [] });
     equal(
       t.columns.some((c) => c.key === "challenges" || c.key === "learnings"),
       false,
     );
   });
 
-  test("added: one column each, the text in the first row", () => {
+  test("added: one column each, every goal's own entry beside it", () => {
     const t = meetingGoalTable({
       ...base,
       goals,
       updates: [],
       weeks: [],
-      challenges: "Not attended - 98",
-      learnings: "",
+      columnsAdded: ["challenges", "learnings"],
     });
     deepEqual(
       t.columns.slice(-2).map((c) => c.label),
       ["Challenges", "Learnings"],
     );
-    equal(t.rows[0]?.["challenges"], "Not attended - 98");
+    equal(t.rows[0]?.["challenges"], "Festival week");
     equal(t.rows[1]?.["challenges"], "");
-    equal(t.rows[0]?.["learnings"], "");
+    equal(t.rows[1]?.["learnings"], "Plan early");
   });
 });

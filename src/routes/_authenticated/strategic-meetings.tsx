@@ -156,7 +156,7 @@ function StrategicMeetingsPage() {
     return map;
   }, [data]);
 
-  // the optional Challenges / Learnings boxes: only shown once this person has added them
+  // the optional Challenges / Learnings columns (one entry per goal): only shown once added
   const { data: notes } = useMeetingGoalNotes(meeting?.id ?? null, activePerson, scope);
   const saveNote = useSaveMeetingGoalNote(meeting?.id ?? null, activePerson, viaDev, scope);
   const boxes = (
@@ -171,7 +171,7 @@ function StrategicMeetingsPage() {
         field: "learnings",
         label: "Learnings",
         tone: "bg-gold/15",
-        placeholder: "1. What worked…",
+        placeholder: "What I learned…",
       },
     ] as const
   ).filter((b) => notes?.[b.field] != null);
@@ -240,8 +240,7 @@ function StrategicMeetingsPage() {
       weeks: weekColumns,
       weekLabel: shortDate,
       dateLabel: shortDate,
-      challenges: notes?.challenges,
-      learnings: notes?.learnings,
+      columnsAdded: boxes.map((b) => b.field),
     });
     const name = safeFileName(`${table.title} ${meetingLabel(meeting)}`, kind);
     if (kind === "csv") downloadBytes(name, buildCsv(table.columns, table.rows), MIME.csv);
@@ -436,16 +435,10 @@ function StrategicMeetingsPage() {
                             {canWrite ? (
                               <button
                                 type="button"
-                                aria-label={`Remove the ${b.label} box`}
+                                aria-label={`Hide the ${b.label} column`}
                                 className="rounded px-1.5 text-[14px] text-red hover:bg-red/10"
-                                onClick={() => {
-                                  if (
-                                    notes?.[b.field]?.trim() &&
-                                    !window.confirm(`Remove ${b.label} and what is written in it?`)
-                                  )
-                                    return;
-                                  writeNote(b.field, null);
-                                }}
+                                title="Hide this column; what is written stays saved and comes back if you add it again"
+                                onClick={() => writeNote(b.field, null)}
                               >
                                 ×
                               </button>
@@ -555,23 +548,21 @@ function StrategicMeetingsPage() {
                                   </td>
                                 );
                               })}
-                              {i === 0
-                                ? boxes.map((b) => (
-                                    <td
-                                      key={b.field}
-                                      rowSpan={goals.length}
-                                      className={`border border-line p-0.5 align-top ${b.tone}`}
-                                    >
-                                      <Cell
-                                        multiline
-                                        rows={Math.max(3, goals.length * 3)}
-                                        value={notes?.[b.field] ?? ""}
-                                        placeholder={b.placeholder}
-                                        onSave={(v) => writeNote(b.field, v)}
-                                      />
-                                    </td>
-                                  ))
-                                : null}
+                              {boxes.map((b) => (
+                                <td key={b.field} className={`border border-line p-0.5 ${b.tone}`}>
+                                  <Cell
+                                    multiline
+                                    value={g[b.field] ?? ""}
+                                    placeholder={b.placeholder}
+                                    onSave={(v) =>
+                                      writes.saveGoal.mutate(
+                                        { id: g.id, values: { [b.field]: v.trim() || null } },
+                                        { onError: fail },
+                                      )
+                                    }
+                                  />
+                                </td>
+                              ))}
                               <td className="border border-line px-1 py-2 text-center">
                                 <button
                                   type="button"
@@ -609,17 +600,14 @@ function StrategicMeetingsPage() {
                                   {updates.get(`${g.id}|${w}`)?.note ?? ""}
                                 </td>
                               ))}
-                              {i === 0
-                                ? boxes.map((b) => (
-                                    <td
-                                      key={b.field}
-                                      rowSpan={goals.length}
-                                      className={`border border-line px-2 py-2 text-[12px] whitespace-pre-line text-ink ${b.tone}`}
-                                    >
-                                      {notes?.[b.field] ?? ""}
-                                    </td>
-                                  ))
-                                : null}
+                              {boxes.map((b) => (
+                                <td
+                                  key={b.field}
+                                  className={`border border-line px-2 py-2 text-[12px] whitespace-pre-line text-ink ${b.tone}`}
+                                >
+                                  {g[b.field] ?? ""}
+                                </td>
+                              ))}
                             </>
                           )}
                         </tr>
@@ -656,7 +644,7 @@ function StrategicMeetingsPage() {
                           type="button"
                           className="btn3d ml-2"
                           disabled={saveNote.isPending || !viewer}
-                          title={`Add a ${label} box beside this table (only if you need it)`}
+                          title={`Add a ${label} column, one entry beside each goal (only if you need it)`}
                           onClick={() => writeNote(field, "")}
                         >
                           + {label}
