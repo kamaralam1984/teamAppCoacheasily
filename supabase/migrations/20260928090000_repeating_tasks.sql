@@ -84,9 +84,14 @@ REVOKE ALL ON FUNCTION public.tasks_repeat_tick() FROM public, anon, authenticat
 GRANT EXECUTE ON FUNCTION public.tasks_repeat_tick() TO service_role;
 
 -- 00:05 IST, before the 09:10 IST due-date notices
-SELECT cron.unschedule('ce-task-repeat-tick')
- WHERE EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'ce-task-repeat-tick');
-SELECT cron.schedule('ce-task-repeat-tick', '35 18 * * *', $$SELECT public.tasks_repeat_tick()$$);
+-- (pg_cron lives only in the 'postgres' database, not in the deploy rehearsal copy)
+DO $$
+BEGIN
+  IF current_database() = 'postgres' THEN
+    PERFORM cron.schedule('ce-task-repeat-tick', '35 18 * * *',
+                          $c$SELECT public.tasks_repeat_tick()$c$);
+  END IF;
+END $$;
 
 -- Same as before, except repeating tasks don't get a "Due today" notice every single day.
 CREATE OR REPLACE FUNCTION public.tasks_due_tick() RETURNS integer
