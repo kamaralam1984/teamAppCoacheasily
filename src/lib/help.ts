@@ -91,7 +91,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     group: "Start here",
     body: [
       "1. Open Tasks and type in the “Add a task” line. You can set a date, a part of the day (morning, afternoon, evening), a priority, and tie it to one of your goals.",
-      "Same work every day? Set Repeat to “Every day” or “Weekdays (Mon–Fri)” when you add it, or later from the task's details. Add it once: every night after midnight it comes back un-ticked and due that day, and each day's tick is kept in your history.",
+      "Same work every day? Set Repeat to “Every day” or “Every working day” (every day except your weekly off, company holidays and your approved flexi holidays) when you add it, or later from the task's details. Add it once: every night after midnight it comes back un-ticked and due that day, and each day's tick is kept in your history.",
       "2. Have a lot to write down? Paste it all into the Brain dump. It proposes separate tasks, and nothing is saved until you confirm.",
       "3. Each morning pick the few things that matter most today and commit to them. In the evening, close the day to see what you kept.",
       "4. A task moves from Assigned to Accepted to In progress, then to Completed. A task you made for yourself you can complete straight away. A task somebody else gave you goes to them for review first, and they approve it or send it back.",
@@ -186,7 +186,7 @@ export const HELP_TOPICS: HelpTopic[] = [
   },
   {
     key: "moved-vs-target",
-    title: "\"Moved this cycle\" and \"of target\"",
+    title: '"Moved this cycle" and "of target"',
     group: "Goals and numbers",
     body: [
       "Moved this cycle is how far you travelled from where you started towards your target. It only counts what changed in these days.",
@@ -292,7 +292,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     screen: "calendar",
     body: [
       "Programs, meetings, holidays and who is away — one month at a time. Tap a day to see everything on it.",
-      "Most people come here to check what is on and who is out. If you schedule, you can type a plain sentence like \"Batch 12 session 3 on Tuesday at 7pm\" and the app works it out before you confirm.",
+      'Most people come here to check what is on and who is out. If you schedule, you can type a plain sentence like "Batch 12 session 3 on Tuesday at 7pm" and the app works it out before you confirm.',
       "Worth knowing: if a host has approved leave on the day of their session, a red line says so — in the calendar and again in Approvals, before anybody signs anything off.",
     ],
   },
@@ -468,7 +468,6 @@ export function searchHelp(query: string): HelpTopic[] {
   if (!q) return HELP_TOPICS;
   return HELP_TOPICS.filter(
     (t) =>
-      t.title.toLowerCase().includes(q) ||
-      t.body.some((line) => line.toLowerCase().includes(q)),
+      t.title.toLowerCase().includes(q) || t.body.some((line) => line.toLowerCase().includes(q)),
   );
 }

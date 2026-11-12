@@ -108,7 +108,10 @@ export function QuickAdd({ meId, line, openTasks, goals = [], pending, onAdd }: 
             {repeats !== "none" ? (
               <p className="mt-1 text-[12px] text-soft">
                 Add it once. Every night it comes back un-ticked, due the next{" "}
-                {repeats === "weekdays" ? "weekday" : "day"}.
+                {repeats === "weekdays"
+                  ? "day you work. It stays away on the weekly off, holidays and approved flexi holidays"
+                  : "day"}
+                .
               </p>
             ) : null}
           </div>

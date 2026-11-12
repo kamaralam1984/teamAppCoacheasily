@@ -166,7 +166,7 @@ export function TaskDetails({
                       toast.success(
                         repeats === "none"
                           ? "It won't repeat any more."
-                          : `It comes back ${repeats === "weekdays" ? "every weekday" : "every day"} now.`,
+                          : `It comes back ${repeats === "weekdays" ? "every working day" : "every day"} now.`,
                       ),
                     onError: (err) => toast.error((err as Error).message || "That didn't save."),
                   },

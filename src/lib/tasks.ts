@@ -14,12 +14,12 @@ export type Repeats = (typeof REPEATS)[number];
 export const REPEAT_LABEL: Record<string, string> = {
   none: "Just once",
   daily: "Every day",
-  weekdays: "Weekdays (Mon–Fri)",
+  weekdays: "Every working day (skips weekly off and holidays)",
 };
 /** Short badge text on a task row. */
 export const REPEAT_BADGE: Record<string, string> = {
   daily: "↻ Every day",
-  weekdays: "↻ Weekdays",
+  weekdays: "↻ Working days",
 };
 
 export const SLOT_ICON: Record<string, string> = {

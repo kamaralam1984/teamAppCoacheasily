@@ -3,24 +3,47 @@
 -- came back when its owner pressed "close the day". This nightly job brings every repeating
 -- task back on its own, just after midnight IST:
 --   * the day's tick is kept in task_days (the history), then the task is un-ticked,
---   * its due date moves to the new day (weekday tasks skip Saturday and Sunday),
+--   * its due date moves to the new day,
+--   * 'weekdays' means "every working day", any day Mon–Sun except that person's days off:
+--     their weekly off (is_off_day(), so an approved weekly off shift counts too), a fixed
+--     company holiday (holidays) and their own approved flexi holiday (leave_requests 'flexi'),
 --   * nothing is deleted.
 -- Repeating tasks also stop sending a "Due today" notice every morning.
+
+-- Is this a day off for this person: weekly off, a company holiday, or their approved flexi holiday.
+CREATE OR REPLACE FUNCTION public.task_rest_day(p_profile_id uuid, p_date date) RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT EXISTS (
+           SELECT 1 FROM profiles p
+            WHERE p.id = p_profile_id
+              AND (public.is_off_day(p.id, p.weekly_off, p_date)
+                   OR EXISTS (SELECT 1 FROM holidays h WHERE h.org_id = p.org_id AND h.date = p_date)))
+      OR EXISTS (SELECT 1 FROM leave_requests l
+                  WHERE l.profile_id = p_profile_id AND l.type = 'flexi' AND l.status = 'approved'
+                    AND p_date BETWEEN l.from_date AND l.to_date)
+$$;
+REVOKE ALL ON FUNCTION public.task_rest_day(uuid, date) FROM public, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.task_rest_day(uuid, date) TO service_role;
 
 CREATE OR REPLACE FUNCTION public.tasks_repeat_tick() RETURNS integer
 LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path = public AS $$
 DECLARE
   v_today date := (now() AT TIME ZONE 'Asia/Kolkata')::date;
-  v_dow int := extract(isodow FROM v_today)::int; -- 1 Mon … 7 Sun
   v_n integer := 0;
   r record;
+  v_rest boolean;
   v_next date;
 BEGIN
   FOR r IN SELECT * FROM tasks WHERE repeats <> 'none' LOOP
-    v_next := CASE
-      WHEN r.repeats = 'weekdays' AND v_dow >= 6 THEN v_today + (8 - v_dow)  -- next Monday
-      ELSE v_today
-    END;
+    v_rest := false;
+    v_next := v_today;
+    IF r.repeats = 'weekdays' THEN
+      v_rest := public.task_rest_day(r.owner_id, v_today);
+      -- the next day this person works (a fortnight at most)
+      WHILE public.task_rest_day(r.owner_id, v_next) AND v_next < v_today + 14 LOOP
+        v_next := v_next + 1;
+      END LOOP;
+    END IF;
 
     -- keep the record of a day that was planned but never closed
     IF r.committed_on IS NOT NULL AND r.committed_on < v_today THEN
@@ -28,8 +51,8 @@ BEGIN
        WHERE task_id = r.id AND day = r.committed_on;
     END IF;
 
-    -- weekday tasks wait over the weekend; finished ones stay ticked until Monday
-    IF r.repeats = 'weekdays' AND v_dow >= 6 THEN
+    -- on a day off a working-day task waits; a finished one stays ticked until the next working day
+    IF v_rest THEN
       IF r.due_date IS NULL OR r.due_date < v_next THEN
         UPDATE tasks SET due_date = v_next WHERE id = r.id AND NOT done;
       END IF;
