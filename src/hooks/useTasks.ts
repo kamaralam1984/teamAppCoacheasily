@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyByEmail } from "@/lib/notify";
 import type { Profile } from "@/lib/warriors";
-import type { Priority, Slot, Task } from "@/lib/tasks";
+import { istToday, type Priority, type Repeats, type Slot, type Task } from "@/lib/tasks";
 
 /** Every task I own or handed to somebody in my line. */
 export function useTasks(profileId?: string | null) {
@@ -32,6 +32,8 @@ export interface TaskInput {
   owner_id: string;
   blocked_by?: string | null;
   goal_id?: string | null;
+  /** "daily" / "weekdays" bring the task back every day without adding it again */
+  repeats?: Repeats;
 }
 
 export function useCreateTasks(orgId?: string | null, createdBy?: string | null) {
@@ -46,11 +48,13 @@ export function useCreateTasks(orgId?: string | null, createdBy?: string | null)
           owner_id: t.owner_id,
           title: t.title.trim(),
           description: t.description?.trim() || null,
-          due_date: t.due_date || null,
+          // a repeating task is due every day, starting today unless a date was picked
+          due_date: t.due_date || (t.repeats && t.repeats !== "none" ? istToday() : null),
           slot: t.slot,
           priority: t.priority,
           blocked_by: t.blocked_by || null,
           goal_id: t.goal_id || null,
+          repeats: t.repeats ?? "none",
         })),
       );
       if (error) throw error;

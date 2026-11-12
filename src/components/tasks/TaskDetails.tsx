@@ -8,7 +8,16 @@ import {
   useTaskComments,
   useTaskEvents,
 } from "@/hooks/useTaskWorkflow";
-import { PRIORITY_TONE, shortDay, type Task } from "@/lib/tasks";
+import { useUpdateTask } from "@/hooks/useTasks";
+import {
+  istToday,
+  PRIORITY_TONE,
+  REPEAT_LABEL,
+  REPEATS,
+  shortDay,
+  type Repeats,
+  type Task,
+} from "@/lib/tasks";
 import {
   actionsFor,
   describeEvent,
@@ -53,6 +62,7 @@ export function TaskDetails({
   const { data: events } = useTaskEvents(task.id);
   const addComment = useAddTaskComment(orgId, meId);
   const setStatus = useSetTaskStatus();
+  const update = useUpdateTask();
   const [body, setBody] = useState("");
   const [evidence, setEvidence] = useState("");
 
@@ -129,6 +139,52 @@ export function TaskDetails({
         </p>
         {task.description ? (
           <p className="text-sm leading-relaxed text-ink">{task.description}</p>
+        ) : null}
+
+        {isOwner || isReviewer ? (
+          <div>
+            <label htmlFor="td-repeat" className="ce-label">
+              Repeat
+            </label>
+            <select
+              id="td-repeat"
+              className="ce-input"
+              value={task.repeats}
+              disabled={update.isPending}
+              onChange={(e) => {
+                const repeats = e.target.value as Repeats;
+                update.mutate(
+                  {
+                    id: task.id,
+                    patch:
+                      repeats !== "none" && !task.due_date
+                        ? { repeats, due_date: istToday() }
+                        : { repeats },
+                  },
+                  {
+                    onSuccess: () =>
+                      toast.success(
+                        repeats === "none"
+                          ? "It won't repeat any more."
+                          : `It comes back ${repeats === "weekdays" ? "every weekday" : "every day"} now.`,
+                      ),
+                    onError: (err) => toast.error((err as Error).message || "That didn't save."),
+                  },
+                );
+              }}
+            >
+              {REPEATS.map((r) => (
+                <option key={r} value={r}>
+                  {REPEAT_LABEL[r]}
+                </option>
+              ))}
+            </select>
+            {task.repeats !== "none" ? (
+              <p className="mt-1 text-[12px] text-soft">
+                Tick it when it's done today. After midnight it comes back un-ticked by itself.
+              </p>
+            ) : null}
+          </div>
         ) : null}
 
         {actions.length > 0 ? (

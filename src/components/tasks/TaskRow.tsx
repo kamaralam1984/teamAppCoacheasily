@@ -1,12 +1,7 @@
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
 
-import {
-  PRIORITY_TONE,
-  SLOT_ICON,
-  shortDay,
-  type Task,
-} from "@/lib/tasks";
+import { PRIORITY_TONE, REPEAT_BADGE, SLOT_ICON, shortDay, type Task } from "@/lib/tasks";
 import { CARRY_COACHING, carriedLine } from "@/lib/day";
 import { isOverdue, STATUS_LABEL, STATUS_TONE, statusOf } from "@/lib/taskWorkflow";
 
@@ -83,7 +78,12 @@ export function TaskRow({
               Overdue
             </span>
           ) : null}
-          {task.due_date ? (
+          {REPEAT_BADGE[task.repeats] ? (
+            <span className="rounded-full bg-emer/10 px-2 py-0.5 text-[11px] font-bold text-emer">
+              {REPEAT_BADGE[task.repeats]}
+            </span>
+          ) : null}
+          {task.due_date && !REPEAT_BADGE[task.repeats] ? (
             <span className="rounded-full bg-cream px-2 py-0.5 text-[11px] font-bold text-soft">
               {shortDay(task.due_date)}
             </span>

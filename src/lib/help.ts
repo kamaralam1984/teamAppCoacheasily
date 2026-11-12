@@ -91,6 +91,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     group: "Start here",
     body: [
       "1. Open Tasks and type in the “Add a task” line. You can set a date, a part of the day (morning, afternoon, evening), a priority, and tie it to one of your goals.",
+      "Same work every day? Set Repeat to “Every day” or “Weekdays (Mon–Fri)” when you add it, or later from the task's details. Add it once: every night after midnight it comes back un-ticked and due that day, and each day's tick is kept in your history.",
       "2. Have a lot to write down? Paste it all into the Brain dump. It proposes separate tasks, and nothing is saved until you confirm.",
       "3. Each morning pick the few things that matter most today and commit to them. In the evening, close the day to see what you kept.",
       "4. A task moves from Assigned to Accepted to In progress, then to Completed. A task you made for yourself you can complete straight away. A task somebody else gave you goes to them for review first, and they approve it or send it back.",

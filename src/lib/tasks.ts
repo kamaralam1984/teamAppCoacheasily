@@ -8,6 +8,20 @@ export type Slot = (typeof SLOTS)[number];
 export const PRIORITIES = ["Low", "Normal", "High", "Urgent"] as const;
 export type Priority = (typeof PRIORITIES)[number];
 
+/** How often a task comes back. A repeating task is un-ticked every night and due again the next day. */
+export const REPEATS = ["none", "daily", "weekdays"] as const;
+export type Repeats = (typeof REPEATS)[number];
+export const REPEAT_LABEL: Record<string, string> = {
+  none: "Just once",
+  daily: "Every day",
+  weekdays: "Weekdays (Mon–Fri)",
+};
+/** Short badge text on a task row. */
+export const REPEAT_BADGE: Record<string, string> = {
+  daily: "↻ Every day",
+  weekdays: "↻ Weekdays",
+};
+
 export const SLOT_ICON: Record<string, string> = {
   Morning: "🌅",
   Afternoon: "☀️",

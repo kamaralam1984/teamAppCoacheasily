@@ -1,7 +1,16 @@
 import { toast } from "sonner";
 import { useState } from "react";
 
-import { PRIORITIES, SLOTS, type Priority, type Slot, type Task } from "@/lib/tasks";
+import {
+  PRIORITIES,
+  REPEAT_LABEL,
+  REPEATS,
+  SLOTS,
+  type Priority,
+  type Repeats,
+  type Slot,
+  type Task,
+} from "@/lib/tasks";
 import type { Profile } from "@/lib/warriors";
 import type { TaskInput } from "@/hooks/useTasks";
 
@@ -24,6 +33,7 @@ export function QuickAdd({ meId, line, openTasks, goals = [], pending, onAdd }: 
   const [owner, setOwner] = useState(meId);
   const [blockedBy, setBlockedBy] = useState("");
   const [goalId, setGoalId] = useState("");
+  const [repeats, setRepeats] = useState<Repeats>("none");
 
   const submit = () => {
     if (!title.trim()) {
@@ -39,6 +49,7 @@ export function QuickAdd({ meId, line, openTasks, goals = [], pending, onAdd }: 
       owner_id: owner || meId,
       blocked_by: blockedBy || null,
       goal_id: goalId || null,
+      repeats,
     });
     setTitle("");
     setDescription("");
@@ -47,6 +58,7 @@ export function QuickAdd({ meId, line, openTasks, goals = [], pending, onAdd }: 
     setPriority("Normal");
     setBlockedBy("");
     setGoalId("");
+    setRepeats("none");
     setOwner(meId);
     setOpen(false);
   };
@@ -77,10 +89,34 @@ export function QuickAdd({ meId, line, openTasks, goals = [], pending, onAdd }: 
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
+          <div>
+            <label htmlFor="qa-repeat" className="ce-label">
+              Repeat
+            </label>
+            <select
+              id="qa-repeat"
+              className="ce-input"
+              value={repeats}
+              onChange={(e) => setRepeats(e.target.value as Repeats)}
+            >
+              {REPEATS.map((r) => (
+                <option key={r} value={r}>
+                  {REPEAT_LABEL[r]}
+                </option>
+              ))}
+            </select>
+            {repeats !== "none" ? (
+              <p className="mt-1 text-[12px] text-soft">
+                Add it once. Every night it comes back un-ticked, due the next{" "}
+                {repeats === "weekdays" ? "weekday" : "day"}.
+              </p>
+            ) : null}
+          </div>
+
           <div className="grid gap-3 sm:grid-cols-3">
             <div>
               <label htmlFor="qa-due" className="ce-label">
-                Due
+                {repeats !== "none" ? "Starts on" : "Due"}
               </label>
               <input
                 id="qa-due"
