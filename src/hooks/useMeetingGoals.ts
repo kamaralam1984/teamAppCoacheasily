@@ -104,11 +104,16 @@ export function useMeetingWeekGoals(
         const all = await dev({ data: { meetingId: meetingId!, profileId: profileId! } });
         return (all.goals as unknown as MeetingGoal[])
           .filter((g) => g.scope === "week")
-          .map(({ title, outcome, week_start }) => ({ title, outcome, week_start }));
+          .map(({ title, outcome, week_start, parent_id }) => ({
+            title,
+            outcome,
+            week_start,
+            parent_id,
+          }));
       }
       const { data, error } = await supabase
         .from("meeting_goals")
-        .select("title, outcome, week_start")
+        .select("title, outcome, week_start, parent_id")
         .eq("meeting_id", meetingId!)
         .eq("profile_id", profileId!)
         .eq("scope", "week");
@@ -167,7 +172,14 @@ export function useMeetingGoalWrites(
       values: Partial<
         Pick<
           MeetingGoal,
-          "title" | "measure" | "timeline" | "outcome" | "challenges" | "learnings" | "remarks"
+          | "title"
+          | "measure"
+          | "timeline"
+          | "outcome"
+          | "challenges"
+          | "learnings"
+          | "remarks"
+          | "parent_id"
         >
       >;
     }) => {

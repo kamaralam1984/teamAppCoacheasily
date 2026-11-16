@@ -1850,6 +1850,7 @@ export type Database = {
           meeting_id: string
           org_id: string
           outcome: string | null
+          parent_id: string | null
           position: number
           profile_id: string
           scope: string
@@ -1869,6 +1870,7 @@ export type Database = {
           meeting_id: string
           org_id: string
           outcome?: string | null
+          parent_id?: string | null
           position?: number
           profile_id: string
           scope?: string
@@ -1888,6 +1890,7 @@ export type Database = {
           meeting_id?: string
           org_id?: string
           outcome?: string | null
+          parent_id?: string | null
           position?: number
           profile_id?: string
           scope?: string

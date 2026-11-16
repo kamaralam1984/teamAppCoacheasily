@@ -32,6 +32,7 @@ import { addDays, daysBetween, timeLabel, todayIso } from "@/lib/calendar";
 import { buildCsv, buildPdf, downloadBytes, MIME, safeFileName } from "@/lib/exporters";
 import { runCharts, runProgress, weekCharts, weekProgress } from "@/lib/meetingGoalCharts";
 import { meetingGoalTable } from "@/lib/meetingGoalExport";
+import { goalTree, parentChoices } from "@/lib/meetingGoalTree";
 import { downlineIds, shortDate } from "@/lib/warriors";
 
 export const Route = createFileRoute("/_authenticated/strategic-meetings")({
@@ -231,6 +232,9 @@ function StrategicMeetingsPage() {
   const { data, isLoading } = useMeetingGoals(meeting?.id ?? null, activePerson, scope, viaDev);
   const writes = useMeetingGoalWrites(meeting?.id ?? null, activePerson, viaDev, scope);
   const goals: MeetingGoal[] = data?.goals ?? [];
+  // main goals with their sub-goals right under them, numbered 1, 1.1, 1.2, 2 …
+  const tree = useMemo(() => goalTree(data?.goals ?? []), [data]);
+  const mainGoals = useMemo(() => tree.filter((r) => !r.sub).map((r) => r.goal), [tree]);
   const updates = useMemo(() => {
     const map = new Map<string, GoalUpdate>();
     for (const u of data?.updates ?? []) map.set(`${u.goal_id}|${u.week_start}`, u);
@@ -277,12 +281,14 @@ function StrategicMeetingsPage() {
     viaDev,
   );
   const dashboard = useMemo(() => {
-    const rows = data?.goals ?? [];
+    // the charts count main goals only; a sub-goal's work shows inside its main goal
+    const rows = mainGoals;
+    const mainWeekGoals = (weekGoals ?? []).filter((g) => !g.parent_id);
     const allWeeks = period?.weeks ?? [];
     return mode === "week" && weekStart
       ? {
-          charts: weekCharts(rows, weekGoals ?? [], allWeeks, weekStart, today),
-          weeks: weekProgress(weekGoals ?? [], allWeeks, weekStart, today),
+          charts: weekCharts(rows, mainWeekGoals, allWeeks, weekStart, today),
+          weeks: weekProgress(mainWeekGoals, allWeeks, weekStart, today),
           note: "Goals with an outcome written, each week",
         }
       : {
@@ -290,7 +296,7 @@ function StrategicMeetingsPage() {
           weeks: runProgress(rows, data?.updates ?? [], allWeeks, today),
           note: "Goals with an update written, each week",
         };
-  }, [data, weekGoals, mode, weekStart, period, thisWeek, today]);
+  }, [data, mainGoals, weekGoals, mode, weekStart, period, thisWeek, today]);
 
   // every cell's unsaved typing: saved by the Save button, and before the page is hidden or left
   const [dirtyCount, setDirtyCount] = useState(0);
@@ -371,7 +377,8 @@ function StrategicMeetingsPage() {
       person: person?.full_name ?? "Goals",
       heading,
       period: [periodLine, meetingLabel(meeting)].filter(Boolean).join(" · "),
-      goals,
+      goals: tree.map((r) => r.goal),
+      numbers: tree.map((r) => r.no),
       updates: data?.updates ?? [],
       weeks: weekColumns,
       weekLabel: shortDate,
@@ -552,11 +559,12 @@ function StrategicMeetingsPage() {
                 <div className="overflow-x-auto">
                   <table
                     className="w-full border-collapse text-left"
-                    style={{ minWidth: (weekColumns.length > 0 ? 880 : 640) + boxes.length * 240 }}
+                    style={{ minWidth: (weekColumns.length > 0 ? 1030 : 790) + boxes.length * 240 }}
                   >
                     <thead>
                       <tr className="bg-gold/25 text-[11px] font-bold tracking-[0.04em] text-ink uppercase">
-                        <th className="w-10 border border-line px-2 py-2 text-center">No</th>
+                        <th className="w-[150px] border border-line px-2 py-2">Type</th>
+                        <th className="w-12 border border-line px-2 py-2 text-center">No</th>
                         <th className="min-w-[220px] border border-line px-2 py-2">Goal / Task</th>
                         <th className="min-w-[120px] border border-line px-2 py-2">Measure</th>
                         <th className="w-[140px] border border-line px-2 py-2">Timeline</th>
@@ -609,17 +617,52 @@ function StrategicMeetingsPage() {
                           </td>
                         </tr>
                       ) : (
-                        goals.map((g, i) => (
-                          <tr key={g.id} className="align-top odd:bg-white even:bg-cream/50">
-                            <td className="border border-line px-2 py-2 text-center text-[13px] font-bold text-ink">
-                              {i + 1}
+                        tree.map(({ goal: g, no, sub }) => (
+                          <tr
+                            key={g.id}
+                            className={`align-top ${sub ? "bg-cream/40" : "bg-white"}`}
+                          >
+                            <td className="border border-line p-0.5">
+                              {canWrite ? (
+                                <select
+                                  aria-label={`Type of goal ${no}`}
+                                  className="w-full rounded-md border border-transparent bg-transparent px-1 py-1.5 text-[12px] text-ink hover:border-line focus:border-gold focus:outline-none"
+                                  value={g.parent_id ?? ""}
+                                  disabled={writes.saveGoal.isPending}
+                                  onChange={(e) =>
+                                    writes.saveGoal.mutate(
+                                      { id: g.id, values: { parent_id: e.target.value || null } },
+                                      { onError: fail },
+                                    )
+                                  }
+                                >
+                                  <option value="">Main goal</option>
+                                  {parentChoices(tree, g.id).map((p) => (
+                                    <option key={p.goal.id} value={p.goal.id}>
+                                      Sub-goal of {p.no}
+                                      {p.goal.title ? ` · ${p.goal.title.slice(0, 40)}` : ""}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <span className="block px-2 py-2 text-[12px] text-soft">
+                                  {sub ? `Sub-goal of ${no.split(".")[0]}` : "Main goal"}
+                                </span>
+                              )}
+                            </td>
+                            <td
+                              className={`border border-line px-2 py-2 text-[13px] font-bold text-ink ${
+                                sub ? "pl-5 text-right font-normal text-soft" : "text-center"
+                              }`}
+                            >
+                              {no}
                             </td>
                             {canWrite ? (
                               <>
                                 <td className="border border-line p-0.5">
                                   <Cell
                                     multiline
-                                    className="font-bold"
+                                    className={sub ? "pl-6" : "font-bold"}
                                     value={g.title}
                                     placeholder="Increase show up rate of …"
                                     onSave={(v) =>
@@ -729,7 +772,11 @@ function StrategicMeetingsPage() {
                               </>
                             ) : (
                               <>
-                                <td className="border border-line px-2 py-2 text-[13px] font-bold whitespace-pre-line text-ink">
+                                <td
+                                  className={`border border-line px-2 py-2 text-[13px] whitespace-pre-line text-ink ${
+                                    sub ? "pl-8" : "font-bold"
+                                  }`}
+                                >
                                   {g.title || "—"}
                                 </td>
                                 <td className="border border-line px-2 py-2 text-[13px] text-ink">
@@ -827,7 +874,7 @@ function StrategicMeetingsPage() {
             {goals.length > 0 ? (
               <MeetingDashboard
                 data={dashboard.charts}
-                goals={goals}
+                goals={mainGoals}
                 weeks={dashboard.weeks}
                 overviewNote={dashboard.note}
               />
