@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 
@@ -46,7 +54,25 @@ export const Route = createFileRoute("/_authenticated/strategic-meetings")({
   component: StrategicMeetingsPage,
 });
 
-/** A cell you can type in; it saves when you leave it, and only if it changed. */
+/** How long a cell waits after the last key before it saves by itself. */
+const AUTOSAVE_MS = 1000;
+
+/**
+ * The page's unsaved cells: each cell registers how to save itself now, and says when it holds
+ * typing that has not been sent yet, so the Save button, leaving the page and the status line
+ * all see the same thing.
+ */
+type Drafts = {
+  register: (flush: () => void) => () => void;
+  setDirty: (key: object, dirty: boolean) => void;
+};
+const DraftsContext = createContext<Drafts | null>(null);
+
+/**
+ * A cell you can type in. It saves by itself a moment after you stop typing, when you leave it,
+ * when its table goes away (another person, meeting or week) and when the page is hidden or
+ * closed; only if it changed. Typing is never overwritten by a reload of the table.
+ */
 function Cell({
   value,
   onSave,
@@ -64,11 +90,61 @@ function Cell({
   rows?: number;
   className?: string;
 }) {
+  const drafts = useContext(DraftsContext);
   const [draft, setDraft] = useState(value);
-  useEffect(() => setDraft(value), [value]);
-  const commit = () => {
-    if (draft !== value) onSave(draft);
+  const draftRef = useRef(value);
+  const sent = useRef(value); // the value last saved, or last loaded
+  const focused = useRef(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onSaveRef = useRef(onSave);
+  onSaveRef.current = onSave;
+  const [key] = useState(() => ({}));
+
+  const flush = useCallback(() => {
+    if (timer.current) {
+      clearTimeout(timer.current);
+      timer.current = null;
+    }
+    const v = draftRef.current;
+    if (v !== sent.current) {
+      sent.current = v;
+      onSaveRef.current(v);
+    }
+    drafts?.setDirty(key, false);
+  }, [drafts, key]);
+
+  // take the saved value from the server, but never over typing that is in progress
+  useEffect(() => {
+    if (focused.current || draftRef.current !== sent.current) return;
+    sent.current = value;
+    draftRef.current = value;
+    setDraft(value);
+  }, [value]);
+
+  // save what is left when the cell goes away
+  useEffect(() => {
+    const off = drafts?.register(flush);
+    return () => {
+      off?.();
+      flush();
+    };
+  }, [drafts, flush]);
+
+  const change = (v: string) => {
+    setDraft(v);
+    draftRef.current = v;
+    drafts?.setDirty(key, v !== sent.current);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(flush, AUTOSAVE_MS);
   };
+  const focus = () => {
+    focused.current = true;
+  };
+  const blur = () => {
+    focused.current = false;
+    flush();
+  };
+
   const base = `w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 text-[13px] text-ink hover:border-line focus:border-gold focus:bg-white focus:outline-none ${className}`;
   return multiline ? (
     <textarea
@@ -76,8 +152,9 @@ function Cell({
       className={`${base} min-h-[52px] resize-y`}
       value={draft}
       placeholder={placeholder}
-      onChange={(e) => setDraft(e.target.value)}
-      onBlur={commit}
+      onChange={(e) => change(e.target.value)}
+      onFocus={focus}
+      onBlur={blur}
     />
   ) : (
     <input
@@ -85,8 +162,9 @@ function Cell({
       className={base}
       value={draft}
       placeholder={placeholder}
-      onChange={(e) => setDraft(e.target.value)}
-      onBlur={commit}
+      onChange={(e) => change(e.target.value)}
+      onFocus={focus}
+      onBlur={blur}
       onKeyDown={(e) => {
         if (e.key === "Enter") (e.target as HTMLInputElement).blur();
       }}
@@ -156,7 +234,7 @@ function StrategicMeetingsPage() {
     return map;
   }, [data]);
 
-  // the optional Challenges / Learnings columns (one entry per goal): only shown once added
+  // the optional Challenges / Learnings / Remarks columns (one entry per goal): only shown once added
   const { data: notes } = useMeetingGoalNotes(meeting?.id ?? null, activePerson, scope);
   const saveNote = useSaveMeetingGoalNote(meeting?.id ?? null, activePerson, viaDev, scope);
   const boxes = (
@@ -173,12 +251,19 @@ function StrategicMeetingsPage() {
         tone: "bg-gold/15",
         placeholder: "What I learned…",
       },
+      {
+        field: "remarks",
+        label: "Remarks",
+        tone: "bg-emer/10",
+        placeholder: "Any remark…",
+      },
     ] as const
   ).filter((b) => notes?.[b.field] != null);
   const missingBoxes = (
     [
       ["challenges", "Challenges"],
       ["learnings", "Learnings"],
+      ["remarks", "Remarks"],
     ] as const
   ).filter(([field]) => notes?.[field] == null);
 
@@ -203,10 +288,57 @@ function StrategicMeetingsPage() {
         };
   }, [data, weekGoals, mode, weekStart, period, thisWeek, today]);
 
+  // every cell's unsaved typing: saved by the Save button, and before the page is hidden or left
+  const [dirtyCount, setDirtyCount] = useState(0);
+  const drafts = useMemo(() => {
+    const flushers = new Set<() => void>();
+    const dirty = new Set<object>();
+    return {
+      register(flush: () => void) {
+        flushers.add(flush);
+        return () => void flushers.delete(flush);
+      },
+      setDirty(key: object, on: boolean) {
+        if (on === dirty.has(key)) return;
+        if (on) dirty.add(key);
+        else dirty.delete(key);
+        setDirtyCount(dirty.size);
+      },
+      flushAll() {
+        for (const f of [...flushers]) f();
+      },
+    };
+  }, []);
+  const saving = writes.saveGoal.isPending || writes.saveUpdate.isPending || saveNote.isPending;
+  const unsaved = dirtyCount > 0 || saving;
+  useEffect(() => {
+    const hide = () => drafts.flushAll();
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") drafts.flushAll();
+    };
+    window.addEventListener("pagehide", hide);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("pagehide", hide);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [drafts]);
+  useEffect(() => {
+    if (!unsaved) return;
+    // closing or reloading while a save is still on its way: ask first
+    const warn = (e: BeforeUnloadEvent) => {
+      drafts.flushAll();
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [unsaved, drafts]);
+
   const fail = (err: unknown) =>
     toast.error(err instanceof Error ? err.message : "That didn't save. Please try again.");
 
-  /** Add (""), write (text) or remove (null) a Challenges or Learnings box. */
+  /** Add (""), write (text) or remove (null) a Challenges, Learnings or Remarks box. */
   const writeNote = (field: NoteField, value: string | null) =>
     viewer &&
     saveNote.mutate(
@@ -364,299 +496,322 @@ function StrategicMeetingsPage() {
               ) : null}
             </section>
 
-            <section className="ce-card overflow-hidden">
-              <div className="bg-night px-4 py-3 text-center text-white">
-                <p className="font-display text-xl">
-                  {person ? `${person.full_name} — ` : ""}
-                  {heading}
-                </p>
-                <p className="text-[12px] font-bold tracking-[0.08em] text-goldL uppercase">
-                  {periodLine} · {meetingLabel(meeting)}
-                </p>
-                {meeting.tagline || meeting.from_time || meeting.location ? (
-                  <p className="mt-0.5 text-[12px] text-mist">
-                    {[meeting.tagline, timeLabel(meeting.from_time), meeting.location]
-                      .filter(Boolean)
-                      .join(" · ")}
+            <DraftsContext.Provider value={drafts}>
+              <section className="ce-card overflow-hidden">
+                <div className="bg-night px-4 py-3 text-center text-white">
+                  <p className="font-display text-xl">
+                    {person ? `${person.full_name} — ` : ""}
+                    {heading}
+                  </p>
+                  <p className="text-[12px] font-bold tracking-[0.08em] text-goldL uppercase">
+                    {periodLine} · {meetingLabel(meeting)}
+                  </p>
+                  {meeting.tagline || meeting.from_time || meeting.location ? (
+                    <p className="mt-0.5 text-[12px] text-mist">
+                      {[meeting.tagline, timeLabel(meeting.from_time), meeting.location]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                  ) : null}
+                </div>
+
+                {!isLoading && goals.length > 0 ? (
+                  <div className="flex flex-wrap items-center justify-end gap-2 border-b border-line bg-cream px-4 py-2">
+                    <span className="mr-auto text-[12px] text-soft">Download this table</span>
+                    <button type="button" className="btn3d" onClick={() => exportAs("csv")}>
+                      CSV
+                    </button>
+                    <button
+                      type="button"
+                      className="btn3d btn3d-gold"
+                      onClick={() => exportAs("pdf")}
+                    >
+                      PDF
+                    </button>
+                  </div>
+                ) : null}
+
+                {!canWrite ? (
+                  <p className="border-b border-line bg-cream px-4 py-2 text-[12px] text-soft">
+                    You can read this table. {person?.full_name.split(" ")[0] ?? "They"}, their
+                    manager and HR can change it.
                   </p>
                 ) : null}
-              </div>
 
-              {!isLoading && goals.length > 0 ? (
-                <div className="flex flex-wrap items-center justify-end gap-2 border-b border-line bg-cream px-4 py-2">
-                  <span className="mr-auto text-[12px] text-soft">Download this table</span>
-                  <button type="button" className="btn3d" onClick={() => exportAs("csv")}>
-                    CSV
-                  </button>
-                  <button
-                    type="button"
-                    className="btn3d btn3d-gold"
-                    onClick={() => exportAs("pdf")}
+                <div className="overflow-x-auto">
+                  <table
+                    className="w-full border-collapse text-left"
+                    style={{ minWidth: (weekColumns.length > 0 ? 880 : 640) + boxes.length * 240 }}
                   >
-                    PDF
-                  </button>
-                </div>
-              ) : null}
-
-              {!canWrite ? (
-                <p className="border-b border-line bg-cream px-4 py-2 text-[12px] text-soft">
-                  You can read this table. {person?.full_name.split(" ")[0] ?? "They"}, their
-                  manager and HR can change it.
-                </p>
-              ) : null}
-
-              <div className="overflow-x-auto">
-                <table
-                  className="w-full border-collapse text-left"
-                  style={{ minWidth: (weekColumns.length > 0 ? 880 : 640) + boxes.length * 240 }}
-                >
-                  <thead>
-                    <tr className="bg-gold/25 text-[11px] font-bold tracking-[0.04em] text-ink uppercase">
-                      <th className="w-10 border border-line px-2 py-2 text-center">No</th>
-                      <th className="min-w-[220px] border border-line px-2 py-2">Goal / Task</th>
-                      <th className="min-w-[120px] border border-line px-2 py-2">Measure</th>
-                      <th className="w-[140px] border border-line px-2 py-2">Timeline</th>
-                      <th className="min-w-[110px] border border-line px-2 py-2">Outcome</th>
-                      {weekColumns.map((w) => (
-                        <th
-                          key={w}
-                          className="min-w-[170px] border border-line bg-emer/15 px-2 py-2"
-                        >
-                          Week of {shortDate(w)}
-                        </th>
-                      ))}
-                      {boxes.map((b) => (
-                        <th
-                          key={b.field}
-                          className={`min-w-[240px] border border-line px-2 py-2 ${b.tone}`}
-                        >
-                          <span className="flex items-center justify-between gap-2">
-                            {b.label}
-                            {canWrite ? (
-                              <button
-                                type="button"
-                                aria-label={`Hide the ${b.label} column`}
-                                className="rounded px-1.5 text-[14px] text-red hover:bg-red/10"
-                                title="Hide this column; what is written stays saved and comes back if you add it again"
-                                onClick={() => writeNote(b.field, null)}
-                              >
-                                ×
-                              </button>
-                            ) : null}
-                          </span>
-                        </th>
-                      ))}
-                      {canWrite ? <th className="w-10 border border-line" /> : null}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {isLoading ? (
-                      <tr>
-                        <td colSpan={99} className="px-4 py-6 text-sm text-soft">
-                          Loading…
-                        </td>
+                    <thead>
+                      <tr className="bg-gold/25 text-[11px] font-bold tracking-[0.04em] text-ink uppercase">
+                        <th className="w-10 border border-line px-2 py-2 text-center">No</th>
+                        <th className="min-w-[220px] border border-line px-2 py-2">Goal / Task</th>
+                        <th className="min-w-[120px] border border-line px-2 py-2">Measure</th>
+                        <th className="w-[140px] border border-line px-2 py-2">Timeline</th>
+                        <th className="min-w-[110px] border border-line px-2 py-2">Outcome</th>
+                        {weekColumns.map((w) => (
+                          <th
+                            key={w}
+                            className="min-w-[170px] border border-line bg-emer/15 px-2 py-2"
+                          >
+                            Week of {shortDate(w)}
+                          </th>
+                        ))}
+                        {boxes.map((b) => (
+                          <th
+                            key={b.field}
+                            className={`min-w-[240px] border border-line px-2 py-2 ${b.tone}`}
+                          >
+                            <span className="flex items-center justify-between gap-2">
+                              {b.label}
+                              {canWrite ? (
+                                <button
+                                  type="button"
+                                  aria-label={`Hide the ${b.label} column`}
+                                  className="rounded px-1.5 text-[14px] text-red hover:bg-red/10"
+                                  title="Hide this column; what is written stays saved and comes back if you add it again"
+                                  onClick={() => writeNote(b.field, null)}
+                                >
+                                  ×
+                                </button>
+                              ) : null}
+                            </span>
+                          </th>
+                        ))}
+                        {canWrite ? <th className="w-10 border border-line" /> : null}
                       </tr>
-                    ) : goals.length === 0 ? (
-                      <tr>
-                        <td colSpan={99} className="px-4 py-6 text-sm text-soft">
-                          {scope.kind === "week"
-                            ? "No goals written for this week yet."
-                            : "No goals written for this meeting yet."}
-                        </td>
-                      </tr>
-                    ) : (
-                      goals.map((g, i) => (
-                        <tr key={g.id} className="align-top odd:bg-white even:bg-cream/50">
-                          <td className="border border-line px-2 py-2 text-center text-[13px] font-bold text-ink">
-                            {i + 1}
+                    </thead>
+                    <tbody>
+                      {isLoading ? (
+                        <tr>
+                          <td colSpan={99} className="px-4 py-6 text-sm text-soft">
+                            Loading…
                           </td>
-                          {canWrite ? (
-                            <>
-                              <td className="border border-line p-0.5">
-                                <Cell
-                                  multiline
-                                  className="font-bold"
-                                  value={g.title}
-                                  placeholder="Increase show up rate of …"
-                                  onSave={(v) =>
-                                    writes.saveGoal.mutate(
-                                      { id: g.id, values: { title: v } },
-                                      { onError: fail },
-                                    )
-                                  }
-                                />
-                              </td>
-                              <td className="border border-line p-0.5">
-                                <Cell
-                                  value={g.measure ?? ""}
-                                  placeholder="200+"
-                                  onSave={(v) =>
-                                    writes.saveGoal.mutate(
-                                      { id: g.id, values: { measure: v.trim() || null } },
-                                      { onError: fail },
-                                    )
-                                  }
-                                />
-                              </td>
-                              <td className="border border-line p-0.5">
-                                <Cell
-                                  type="date"
-                                  value={g.timeline ?? ""}
-                                  onSave={(v) =>
-                                    writes.saveGoal.mutate(
-                                      { id: g.id, values: { timeline: v || null } },
-                                      { onError: fail },
-                                    )
-                                  }
-                                />
-                              </td>
-                              <td className="border border-line p-0.5">
-                                <Cell
-                                  multiline
-                                  className="font-bold text-emer"
-                                  value={g.outcome ?? ""}
-                                  placeholder="105% Achieved"
-                                  onSave={(v) =>
-                                    writes.saveGoal.mutate(
-                                      { id: g.id, values: { outcome: v.trim() || null } },
-                                      { onError: fail },
-                                    )
-                                  }
-                                />
-                              </td>
-                              {weekColumns.map((w) => {
-                                const u = updates.get(`${g.id}|${w}`);
-                                return (
-                                  <td key={w} className="border border-line p-0.5">
-                                    <Cell
-                                      multiline
-                                      value={u?.note ?? ""}
-                                      placeholder="This week…"
-                                      onSave={(v) =>
-                                        writes.saveUpdate.mutate(
-                                          {
-                                            goalId: g.id,
-                                            weekStart: w,
-                                            note: v,
-                                            by: viewer?.id ?? null,
-                                            exists: Boolean(u),
-                                          },
-                                          { onError: fail },
-                                        )
-                                      }
-                                    />
-                                  </td>
-                                );
-                              })}
-                              {boxes.map((b) => (
-                                <td key={b.field} className={`border border-line p-0.5 ${b.tone}`}>
+                        </tr>
+                      ) : goals.length === 0 ? (
+                        <tr>
+                          <td colSpan={99} className="px-4 py-6 text-sm text-soft">
+                            {scope.kind === "week"
+                              ? "No goals written for this week yet."
+                              : "No goals written for this meeting yet."}
+                          </td>
+                        </tr>
+                      ) : (
+                        goals.map((g, i) => (
+                          <tr key={g.id} className="align-top odd:bg-white even:bg-cream/50">
+                            <td className="border border-line px-2 py-2 text-center text-[13px] font-bold text-ink">
+                              {i + 1}
+                            </td>
+                            {canWrite ? (
+                              <>
+                                <td className="border border-line p-0.5">
                                   <Cell
                                     multiline
-                                    value={g[b.field] ?? ""}
-                                    placeholder={b.placeholder}
+                                    className="font-bold"
+                                    value={g.title}
+                                    placeholder="Increase show up rate of …"
                                     onSave={(v) =>
                                       writes.saveGoal.mutate(
-                                        { id: g.id, values: { [b.field]: v.trim() || null } },
+                                        { id: g.id, values: { title: v } },
                                         { onError: fail },
                                       )
                                     }
                                   />
                                 </td>
-                              ))}
-                              <td className="border border-line px-1 py-2 text-center">
-                                <button
-                                  type="button"
-                                  aria-label="Remove this goal"
-                                  className="rounded px-1.5 text-[16px] text-red hover:bg-red/10"
-                                  onClick={() => {
-                                    if (!window.confirm("Remove this goal and its weekly updates?"))
-                                      return;
-                                    writes.deleteGoal.mutate(g.id, { onError: fail });
-                                  }}
-                                >
-                                  ×
-                                </button>
-                              </td>
-                            </>
-                          ) : (
-                            <>
-                              <td className="border border-line px-2 py-2 text-[13px] font-bold whitespace-pre-line text-ink">
-                                {g.title || "—"}
-                              </td>
-                              <td className="border border-line px-2 py-2 text-[13px] text-ink">
-                                {g.measure ?? ""}
-                              </td>
-                              <td className="border border-line px-2 py-2 text-[13px] text-ink">
-                                {g.timeline ? shortDate(g.timeline) : ""}
-                              </td>
-                              <td className="border border-line px-2 py-2 text-[13px] font-bold text-emer">
-                                {g.outcome ?? ""}
-                              </td>
-                              {weekColumns.map((w) => (
-                                <td
-                                  key={w}
-                                  className="border border-line px-2 py-2 text-[12px] whitespace-pre-line text-ink"
-                                >
-                                  {updates.get(`${g.id}|${w}`)?.note ?? ""}
+                                <td className="border border-line p-0.5">
+                                  <Cell
+                                    value={g.measure ?? ""}
+                                    placeholder="200+"
+                                    onSave={(v) =>
+                                      writes.saveGoal.mutate(
+                                        { id: g.id, values: { measure: v.trim() || null } },
+                                        { onError: fail },
+                                      )
+                                    }
+                                  />
                                 </td>
-                              ))}
-                              {boxes.map((b) => (
-                                <td
-                                  key={b.field}
-                                  className={`border border-line px-2 py-2 text-[12px] whitespace-pre-line text-ink ${b.tone}`}
-                                >
-                                  {g[b.field] ?? ""}
+                                <td className="border border-line p-0.5">
+                                  <Cell
+                                    type="date"
+                                    value={g.timeline ?? ""}
+                                    onSave={(v) =>
+                                      writes.saveGoal.mutate(
+                                        { id: g.id, values: { timeline: v || null } },
+                                        { onError: fail },
+                                      )
+                                    }
+                                  />
                                 </td>
-                              ))}
-                            </>
-                          )}
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {canWrite ? (
-                <div className="border-t border-line p-3">
-                  <button
-                    type="button"
-                    className="btn3d btn3d-gold"
-                    disabled={writes.addGoal.isPending || !viewer}
-                    onClick={() =>
-                      viewer &&
-                      writes.addGoal.mutate(
-                        {
-                          orgId: viewer.org_id,
-                          position: (goals[goals.length - 1]?.position ?? 0) + 10,
-                          createdBy: viewer.id,
-                        },
-                        { onError: fail },
-                      )
-                    }
-                  >
-                    + Add goal
-                  </button>
-                  {goals.length > 0
-                    ? missingBoxes.map(([field, label]) => (
-                        <button
-                          key={field}
-                          type="button"
-                          className="btn3d ml-2"
-                          disabled={saveNote.isPending || !viewer}
-                          title={`Add a ${label} column, one entry beside each goal (only if you need it)`}
-                          onClick={() => writeNote(field, "")}
-                        >
-                          + {label}
-                        </button>
-                      ))
-                    : null}
-                  <span className="ml-3 text-[12px] text-soft">
-                    Type in any cell; it saves when you click away.
-                  </span>
+                                <td className="border border-line p-0.5">
+                                  <Cell
+                                    multiline
+                                    className="font-bold text-emer"
+                                    value={g.outcome ?? ""}
+                                    placeholder="105% Achieved"
+                                    onSave={(v) =>
+                                      writes.saveGoal.mutate(
+                                        { id: g.id, values: { outcome: v.trim() || null } },
+                                        { onError: fail },
+                                      )
+                                    }
+                                  />
+                                </td>
+                                {weekColumns.map((w) => {
+                                  const u = updates.get(`${g.id}|${w}`);
+                                  return (
+                                    <td key={w} className="border border-line p-0.5">
+                                      <Cell
+                                        multiline
+                                        value={u?.note ?? ""}
+                                        placeholder="This week…"
+                                        onSave={(v) =>
+                                          writes.saveUpdate.mutate(
+                                            {
+                                              goalId: g.id,
+                                              weekStart: w,
+                                              note: v,
+                                              by: viewer?.id ?? null,
+                                              exists: Boolean(u),
+                                            },
+                                            { onError: fail },
+                                          )
+                                        }
+                                      />
+                                    </td>
+                                  );
+                                })}
+                                {boxes.map((b) => (
+                                  <td
+                                    key={b.field}
+                                    className={`border border-line p-0.5 ${b.tone}`}
+                                  >
+                                    <Cell
+                                      multiline
+                                      value={g[b.field] ?? ""}
+                                      placeholder={b.placeholder}
+                                      onSave={(v) =>
+                                        writes.saveGoal.mutate(
+                                          { id: g.id, values: { [b.field]: v.trim() || null } },
+                                          { onError: fail },
+                                        )
+                                      }
+                                    />
+                                  </td>
+                                ))}
+                                <td className="border border-line px-1 py-2 text-center">
+                                  <button
+                                    type="button"
+                                    aria-label="Remove this goal"
+                                    className="rounded px-1.5 text-[16px] text-red hover:bg-red/10"
+                                    onClick={() => {
+                                      if (
+                                        !window.confirm("Remove this goal and its weekly updates?")
+                                      )
+                                        return;
+                                      writes.deleteGoal.mutate(g.id, { onError: fail });
+                                    }}
+                                  >
+                                    ×
+                                  </button>
+                                </td>
+                              </>
+                            ) : (
+                              <>
+                                <td className="border border-line px-2 py-2 text-[13px] font-bold whitespace-pre-line text-ink">
+                                  {g.title || "—"}
+                                </td>
+                                <td className="border border-line px-2 py-2 text-[13px] text-ink">
+                                  {g.measure ?? ""}
+                                </td>
+                                <td className="border border-line px-2 py-2 text-[13px] text-ink">
+                                  {g.timeline ? shortDate(g.timeline) : ""}
+                                </td>
+                                <td className="border border-line px-2 py-2 text-[13px] font-bold text-emer">
+                                  {g.outcome ?? ""}
+                                </td>
+                                {weekColumns.map((w) => (
+                                  <td
+                                    key={w}
+                                    className="border border-line px-2 py-2 text-[12px] whitespace-pre-line text-ink"
+                                  >
+                                    {updates.get(`${g.id}|${w}`)?.note ?? ""}
+                                  </td>
+                                ))}
+                                {boxes.map((b) => (
+                                  <td
+                                    key={b.field}
+                                    className={`border border-line px-2 py-2 text-[12px] whitespace-pre-line text-ink ${b.tone}`}
+                                  >
+                                    {g[b.field] ?? ""}
+                                  </td>
+                                ))}
+                              </>
+                            )}
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-              ) : null}
-            </section>
+
+                {canWrite ? (
+                  <div className="border-t border-line p-3">
+                    <button
+                      type="button"
+                      className="btn3d btn3d-gold"
+                      disabled={writes.addGoal.isPending || !viewer}
+                      onClick={() =>
+                        viewer &&
+                        writes.addGoal.mutate(
+                          {
+                            orgId: viewer.org_id,
+                            position: (goals[goals.length - 1]?.position ?? 0) + 10,
+                            createdBy: viewer.id,
+                          },
+                          { onError: fail },
+                        )
+                      }
+                    >
+                      + Add goal
+                    </button>
+                    {goals.length > 0
+                      ? missingBoxes.map(([field, label]) => (
+                          <button
+                            key={field}
+                            type="button"
+                            className="btn3d ml-2"
+                            disabled={saveNote.isPending || !viewer}
+                            title={`Add a ${label} column, one entry beside each goal (only if you need it)`}
+                            onClick={() => writeNote(field, "")}
+                          >
+                            + {label}
+                          </button>
+                        ))
+                      : null}
+                    <button
+                      type="button"
+                      className="btn3d btn3d-gold ml-2"
+                      disabled={!unsaved}
+                      title="Save everything typed in this table now"
+                      onClick={() => drafts.flushAll()}
+                    >
+                      Save
+                    </button>
+                    <span
+                      className={`ml-3 text-[12px] ${unsaved ? "font-bold text-goldD" : "text-soft"}`}
+                      aria-live="polite"
+                    >
+                      {saving
+                        ? "Saving…"
+                        : dirtyCount > 0
+                          ? "Unsaved changes, saving in a moment…"
+                          : "All changes saved. Cells save by themselves as you type."}
+                    </span>
+                  </div>
+                ) : null}
+              </section>
+            </DraftsContext.Provider>
 
             {goals.length > 0 ? (
               <MeetingDashboard

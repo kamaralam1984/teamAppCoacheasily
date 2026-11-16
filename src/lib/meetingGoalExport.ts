@@ -11,6 +11,7 @@ export interface ExportGoal {
   outcome: string | null;
   challenges?: string | null;
   learnings?: string | null;
+  remarks?: string | null;
 }
 
 export interface ExportUpdate {
@@ -38,8 +39,8 @@ export function meetingGoalTable(args: {
   weeks: string[];
   weekLabel: (week: string) => string;
   dateLabel: (iso: string) => string;
-  /** The optional Challenges / Learnings columns this table has added (one entry per goal). */
-  columnsAdded?: ("challenges" | "learnings")[];
+  /** The optional Challenges / Learnings / Remarks columns this table has added (one entry per goal). */
+  columnsAdded?: ("challenges" | "learnings" | "remarks")[];
 }): MeetingGoalTable {
   const notes = new Map<string, string>();
   for (const u of args.updates) notes.set(`${u.goal_id}|${u.week_start}`, u.note);
@@ -57,6 +58,7 @@ export function meetingGoalTable(args: {
     [
       ["challenges", "Challenges"],
       ["learnings", "Learnings"],
+      ["remarks", "Remarks"],
     ] as const
   ).filter(([key]) => args.columnsAdded?.includes(key));
   for (const [key, label] of boxes) columns.push({ key, label });

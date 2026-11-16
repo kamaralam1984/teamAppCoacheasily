@@ -145,7 +145,10 @@ export function useMeetingGoalWrites(
     mutationFn: async (args: {
       id: string;
       values: Partial<
-        Pick<MeetingGoal, "title" | "measure" | "timeline" | "outcome" | "challenges" | "learnings">
+        Pick<
+          MeetingGoal,
+          "title" | "measure" | "timeline" | "outcome" | "challenges" | "learnings" | "remarks"
+        >
       >;
     }) => {
       if (viaDev) {
@@ -209,7 +212,7 @@ export function useMeetingGoalWrites(
 }
 
 export type GoalNotes = Tables<"meeting_goal_notes">;
-export type NoteField = "challenges" | "learnings";
+export type NoteField = "challenges" | "learnings" | "remarks";
 
 /** The `period` a table's notes are kept under: 'run', or the Monday of a weekly table. */
 function notesPeriod(scope: GoalScope) {
@@ -217,7 +220,7 @@ function notesPeriod(scope: GoalScope) {
 }
 
 /**
- * The optional Challenges and Learnings boxes for one person's table. A field that is null has
+ * The optional Challenges, Learnings and Remarks boxes for one person's table. A field that is null has
  * not been added; an empty string has been added with nothing written yet.
  */
 export function useMeetingGoalNotes(
@@ -242,7 +245,7 @@ export function useMeetingGoalNotes(
   });
 }
 
-/** Add, write or remove a Challenges or Learnings box (remove = set it back to null). */
+/** Add, write or remove a Challenges, Learnings or Remarks box (remove = set it back to null). */
 export function useSaveMeetingGoalNote(
   meetingId: string | null,
   profileId: string | null,

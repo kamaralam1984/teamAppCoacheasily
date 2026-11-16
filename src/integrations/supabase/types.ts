@@ -1745,6 +1745,7 @@ export type Database = {
         Row: {
           challenges: string | null
           learnings: string | null
+          remarks: string | null
           meeting_id: string
           org_id: string
           period: string
@@ -1755,6 +1756,7 @@ export type Database = {
         Insert: {
           challenges?: string | null
           learnings?: string | null
+          remarks?: string | null
           meeting_id: string
           org_id: string
           period: string
@@ -1765,6 +1767,7 @@ export type Database = {
         Update: {
           challenges?: string | null
           learnings?: string | null
+          remarks?: string | null
           meeting_id?: string
           org_id?: string
           period?: string
@@ -1842,6 +1845,7 @@ export type Database = {
           created_by: string | null
           id: string
           learnings: string | null
+          remarks: string | null
           measure: string | null
           meeting_id: string
           org_id: string
@@ -1860,6 +1864,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           learnings?: string | null
+          remarks?: string | null
           measure?: string | null
           meeting_id: string
           org_id: string
@@ -1878,6 +1883,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           learnings?: string | null
+          remarks?: string | null
           measure?: string | null
           meeting_id?: string
           org_id?: string
