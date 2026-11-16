@@ -6,6 +6,8 @@ import type { ExportColumn, ExportRow } from "@/lib/exporters";
 export interface ExportGoal {
   id: string;
   title: string;
+  /** 'main' or 'sub'; shown as Main Goal / Sub Goal */
+  goal_type?: string;
   measure: string | null;
   timeline: string | null;
   outcome: string | null;
@@ -46,6 +48,7 @@ export function meetingGoalTable(args: {
   for (const u of args.updates) notes.set(`${u.goal_id}|${u.week_start}`, u.note);
 
   const columns: ExportColumn[] = [
+    { key: "type", label: "Type" },
     { key: "no", label: "No" },
     { key: "title", label: "Goal / Task" },
     { key: "measure", label: "Measure" },
@@ -65,6 +68,7 @@ export function meetingGoalTable(args: {
 
   const rows: ExportRow[] = args.goals.map((g, i) => {
     const row: ExportRow = {
+      type: g.goal_type === "sub" ? "Sub Goal" : "Main Goal",
       no: i + 1,
       title: g.title,
       measure: g.measure ?? "",

@@ -1843,6 +1843,7 @@ export type Database = {
           challenges: string | null
           created_at: string
           created_by: string | null
+          goal_type: string
           id: string
           learnings: string | null
           remarks: string | null
@@ -1862,6 +1863,7 @@ export type Database = {
           challenges?: string | null
           created_at?: string
           created_by?: string | null
+          goal_type?: string
           id?: string
           learnings?: string | null
           remarks?: string | null
@@ -1881,6 +1883,7 @@ export type Database = {
           challenges?: string | null
           created_at?: string
           created_by?: string | null
+          goal_type?: string
           id?: string
           learnings?: string | null
           remarks?: string | null

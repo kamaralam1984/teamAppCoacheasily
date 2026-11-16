@@ -552,10 +552,11 @@ function StrategicMeetingsPage() {
                 <div className="overflow-x-auto">
                   <table
                     className="w-full border-collapse text-left"
-                    style={{ minWidth: (weekColumns.length > 0 ? 880 : 640) + boxes.length * 240 }}
+                    style={{ minWidth: (weekColumns.length > 0 ? 1010 : 770) + boxes.length * 240 }}
                   >
                     <thead>
                       <tr className="bg-gold/25 text-[11px] font-bold tracking-[0.04em] text-ink uppercase">
+                        <th className="w-[130px] border border-line px-2 py-2">Type</th>
                         <th className="w-10 border border-line px-2 py-2 text-center">No</th>
                         <th className="min-w-[220px] border border-line px-2 py-2">Goal / Task</th>
                         <th className="min-w-[120px] border border-line px-2 py-2">Measure</th>
@@ -611,6 +612,28 @@ function StrategicMeetingsPage() {
                       ) : (
                         goals.map((g, i) => (
                           <tr key={g.id} className="align-top odd:bg-white even:bg-cream/50">
+                            <td className="border border-line p-0.5">
+                              {canWrite ? (
+                                <select
+                                  aria-label={`Goal ${i + 1}: main goal or sub goal`}
+                                  className="w-full rounded-md border border-transparent bg-transparent px-1 py-1.5 text-[12px] font-bold text-ink hover:border-line focus:border-gold focus:outline-none"
+                                  value={g.goal_type === "sub" ? "sub" : "main"}
+                                  onChange={(e) =>
+                                    writes.saveGoal.mutate(
+                                      { id: g.id, values: { goal_type: e.target.value } },
+                                      { onError: fail },
+                                    )
+                                  }
+                                >
+                                  <option value="main">Main Goal</option>
+                                  <option value="sub">Sub Goal</option>
+                                </select>
+                              ) : (
+                                <span className="block px-2 py-2 text-[12px] font-bold text-ink">
+                                  {g.goal_type === "sub" ? "Sub Goal" : "Main Goal"}
+                                </span>
+                              )}
+                            </td>
                             <td className="border border-line px-2 py-2 text-center text-[13px] font-bold text-ink">
                               {i + 1}
                             </td>

@@ -167,7 +167,14 @@ export function useMeetingGoalWrites(
       values: Partial<
         Pick<
           MeetingGoal,
-          "title" | "measure" | "timeline" | "outcome" | "challenges" | "learnings" | "remarks"
+          | "title"
+          | "measure"
+          | "timeline"
+          | "outcome"
+          | "challenges"
+          | "learnings"
+          | "remarks"
+          | "goal_type"
         >
       >;
     }) => {

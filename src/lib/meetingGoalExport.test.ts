@@ -22,7 +22,14 @@ describe("The downloaded goals table matches the page", () => {
         timeline: "2026-11-20",
         outcome: "100%",
       },
-      { id: "b", title: "Chat Bot", measure: null, timeline: null, outcome: null },
+      {
+        id: "b",
+        title: "Chat Bot",
+        goal_type: "sub",
+        measure: null,
+        timeline: null,
+        outcome: null,
+      },
     ],
     updates: [
       { goal_id: "a", week_start: "2026-11-02", note: "140 – 100% done" },
@@ -35,7 +42,16 @@ describe("The downloaded goals table matches the page", () => {
   test("same columns, in the same order, one per week", () => {
     deepEqual(
       table.columns.map((c) => c.label),
-      ["No", "Goal / Task", "Measure", "Timeline", "Outcome", "Week of 11-02", "Week of 11-09"],
+      [
+        "Type",
+        "No",
+        "Goal / Task",
+        "Measure",
+        "Timeline",
+        "Outcome",
+        "Week of 11-02",
+        "Week of 11-09",
+      ],
     );
   });
   test("each week's update sits under its own week, empty where none was written", () => {
@@ -52,6 +68,12 @@ describe("The downloaded goals table matches the page", () => {
       ],
     );
   });
+  test("each goal is labelled Main Goal or Sub Goal, Main Goal when not set", () => {
+    deepEqual(
+      table.rows.map((r) => r["type"]),
+      ["Main Goal", "Sub Goal"],
+    );
+  });
   test("the title names the person", () => {
     equal(table.title, "Kamar Alam - Goals for next 45 days");
   });
@@ -63,7 +85,7 @@ describe("The downloaded goals table matches the page", () => {
 
 test("the weekly view has no week columns", () => {
   const t = meetingGoalTable({ ...base, goals: [], updates: [], weeks: [] });
-  equal(t.columns.length, 5);
+  equal(t.columns.length, 6);
   equal(t.rows.length, 0);
 });
 
