@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Link } from "@tanstack/react-router";
 
 import { useProbationOverview } from "@/hooks/useProbation";
 import { niceDate } from "@/lib/calendar";
@@ -17,7 +18,12 @@ export function ProbationPanel({ onOpen }: { onOpen: (profileId: string) => void
 
   return (
     <div className="ce-card p-6">
-      <h2 className="font-display text-2xl text-ink">Probation</h2>
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="font-display text-2xl text-ink">Probation</h2>
+        <Link to="/probation-review" className="text-sm font-bold text-goldD underline">
+          KRA reviews →
+        </Link>
+      </div>
       <div className="mt-4 space-y-3">
         {isLoading ? (
           <p className="text-sm text-soft">Loading…</p>

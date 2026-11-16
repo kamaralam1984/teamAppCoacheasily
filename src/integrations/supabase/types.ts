@@ -2245,6 +2245,198 @@ export type Database = {
           },
         ]
       }
+      probation_feedback: {
+        Row: {
+          feedback: string
+          kind: string
+          org_id: string
+          profile_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          feedback?: string
+          kind: string
+          org_id: string
+          profile_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          feedback?: string
+          kind?: string
+          org_id?: string
+          profile_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      probation_internal_notes: {
+        Row: {
+          kind: string
+          note: string
+          org_id: string
+          profile_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          kind: string
+          note?: string
+          org_id: string
+          profile_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          kind?: string
+          note?: string
+          org_id?: string
+          profile_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      probation_kras: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          emp_achievement: string | null
+          emp_evaluation: string | null
+          emp_remark: string | null
+          id: string
+          measure: string
+          mgr_achievement: string | null
+          mgr_evaluation: string | null
+          mgr_remark: string | null
+          org_id: string
+          position: number
+          profile_id: string
+          removed_at: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          emp_achievement?: string | null
+          emp_evaluation?: string | null
+          emp_remark?: string | null
+          id?: string
+          measure?: string
+          mgr_achievement?: string | null
+          mgr_evaluation?: string | null
+          mgr_remark?: string | null
+          org_id: string
+          position?: number
+          profile_id: string
+          removed_at?: string | null
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          emp_achievement?: string | null
+          emp_evaluation?: string | null
+          emp_remark?: string | null
+          id?: string
+          measure?: string
+          mgr_achievement?: string | null
+          mgr_evaluation?: string | null
+          mgr_remark?: string | null
+          org_id?: string
+          position?: number
+          profile_id?: string
+          removed_at?: string | null
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      probation_review_log: {
+        Row: {
+          action: string
+          actor: string | null
+          changes: Json
+          created_at: string
+          entity: string
+          entity_key: string | null
+          id: number
+          org_id: string
+          profile_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          changes?: Json
+          created_at?: string
+          entity: string
+          entity_key?: string | null
+          id?: number
+          org_id: string
+          profile_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          changes?: Json
+          created_at?: string
+          entity?: string
+          entity_key?: string | null
+          id?: number
+          org_id?: string
+          profile_id?: string
+        }
+        Relationships: []
+      }
+      probation_reviews: {
+        Row: {
+          created_at: string
+          emp_submitted_at: string | null
+          final_decision: string | null
+          finalized_at: string | null
+          finalized_by: string | null
+          mgr_recommendation: string | null
+          mgr_submitted_at: string | null
+          mgr_submitted_by: string | null
+          org_id: string
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          emp_submitted_at?: string | null
+          final_decision?: string | null
+          finalized_at?: string | null
+          finalized_by?: string | null
+          mgr_recommendation?: string | null
+          mgr_submitted_at?: string | null
+          mgr_submitted_by?: string | null
+          org_id: string
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          emp_submitted_at?: string | null
+          final_decision?: string | null
+          finalized_at?: string | null
+          finalized_by?: string | null
+          mgr_recommendation?: string | null
+          mgr_submitted_at?: string | null
+          mgr_submitted_by?: string | null
+          org_id?: string
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       probations: {
         Row: {
           created_at: string
@@ -4064,6 +4256,23 @@ export type Database = {
         Returns: Json
       }
       probation_history: { Args: { p_profile_id: string }; Returns: Json }
+      probation_review_finalize: {
+        Args: {
+          p_decision: string
+          p_months?: number
+          p_note?: string
+          p_profile_id: string
+        }
+        Returns: Json
+      }
+      probation_review_reopen: {
+        Args: { p_profile_id: string; p_stage: string }
+        Returns: undefined
+      }
+      probation_review_submit: {
+        Args: { p_profile_id: string; p_recommendation?: string; p_stage: string }
+        Returns: undefined
+      }
       probation_overview: { Args: never; Returns: Json }
       probation_tick: { Args: never; Returns: number }
       profile_360: { Args: { p_profile_id: string }; Returns: Json }

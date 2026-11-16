@@ -29,6 +29,7 @@ import { Route as AuthenticatedIdeasRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedLeaveRouteImport } from './routes/_authenticated/leave'
 import { Route as AuthenticatedMyReportRouteImport } from './routes/_authenticated/my-report'
 import { Route as AuthenticatedOverviewRouteImport } from './routes/_authenticated/overview'
+import { Route as AuthenticatedProbationReviewRouteImport } from './routes/_authenticated/probation-review'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedReportCenterRouteImport } from './routes/_authenticated/report-center'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
@@ -142,6 +143,12 @@ const AuthenticatedOverviewRoute = AuthenticatedOverviewRouteImport.update({
   path: '/overview',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProbationReviewRoute =
+  AuthenticatedProbationReviewRouteImport.update({
+    id: '/probation-review',
+    path: '/probation-review',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -226,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/leave': typeof AuthenticatedLeaveRoute
   '/my-report': typeof AuthenticatedMyReportRoute
   '/overview': typeof AuthenticatedOverviewRoute
+  '/probation-review': typeof AuthenticatedProbationReviewRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/report-center': typeof AuthenticatedReportCenterRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -259,6 +267,7 @@ export interface FileRoutesByTo {
   '/leave': typeof AuthenticatedLeaveRoute
   '/my-report': typeof AuthenticatedMyReportRoute
   '/overview': typeof AuthenticatedOverviewRoute
+  '/probation-review': typeof AuthenticatedProbationReviewRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/report-center': typeof AuthenticatedReportCenterRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -294,6 +303,7 @@ export interface FileRoutesById {
   '/_authenticated/leave': typeof AuthenticatedLeaveRoute
   '/_authenticated/my-report': typeof AuthenticatedMyReportRoute
   '/_authenticated/overview': typeof AuthenticatedOverviewRoute
+  '/_authenticated/probation-review': typeof AuthenticatedProbationReviewRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/report-center': typeof AuthenticatedReportCenterRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
@@ -329,6 +339,7 @@ export interface FileRouteTypes {
     | '/leave'
     | '/my-report'
     | '/overview'
+    | '/probation-review'
     | '/profile'
     | '/report-center'
     | '/reports'
@@ -362,6 +373,7 @@ export interface FileRouteTypes {
     | '/leave'
     | '/my-report'
     | '/overview'
+    | '/probation-review'
     | '/profile'
     | '/report-center'
     | '/reports'
@@ -396,6 +408,7 @@ export interface FileRouteTypes {
     | '/_authenticated/leave'
     | '/_authenticated/my-report'
     | '/_authenticated/overview'
+    | '/_authenticated/probation-review'
     | '/_authenticated/profile'
     | '/_authenticated/report-center'
     | '/_authenticated/reports'
@@ -562,6 +575,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOverviewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/probation-review': {
+      id: '/_authenticated/probation-review'
+      path: '/probation-review'
+      fullPath: '/probation-review'
+      preLoaderRoute: typeof AuthenticatedProbationReviewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -665,6 +685,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLeaveRoute: typeof AuthenticatedLeaveRoute
   AuthenticatedMyReportRoute: typeof AuthenticatedMyReportRoute
   AuthenticatedOverviewRoute: typeof AuthenticatedOverviewRoute
+  AuthenticatedProbationReviewRoute: typeof AuthenticatedProbationReviewRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedReportCenterRoute: typeof AuthenticatedReportCenterRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
@@ -693,6 +714,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLeaveRoute: AuthenticatedLeaveRoute,
   AuthenticatedMyReportRoute: AuthenticatedMyReportRoute,
   AuthenticatedOverviewRoute: AuthenticatedOverviewRoute,
+  AuthenticatedProbationReviewRoute: AuthenticatedProbationReviewRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedReportCenterRoute: AuthenticatedReportCenterRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,

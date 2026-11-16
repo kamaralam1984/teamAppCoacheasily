@@ -3,7 +3,7 @@ export const DEV_TABLES = [
   "attendance", "calendar_attendees", "calendar_tokens", "checkin_requests", "comp_off_credits",
   "cycles", "daily_codes", "daily_reflections", "day_plans", "departments", "energy_logs", "events",
   "goal_advice", "goal_entries", "goals", "holidays", "idea_votes", "ideas", "leave_requests", "meeting_goal_notes", "meeting_goal_updates", "meeting_goals",
-  "notifications", "open_positions", "organisations", "profile_education", "profile_employment", "profile_milestones",
+  "notifications", "open_positions", "organisations", "probation_feedback", "probation_internal_notes", "probation_kras", "probation_reviews", "profile_education", "profile_employment", "profile_milestones",
   "profile_private", "profiles", "programs", "pulse_done", "pulse_responses", "pulse_rounds",
   "recognitions", "release_announced", "release_items", "release_seen", "releases", "ritual_logs",
   "rituals", "sop_items", "sop_logs", "strategic_meetings", "task_days", "tasks", "themes", "tour_seen", "weekly_reviews",
@@ -23,12 +23,24 @@ const KEYS: Partial<Record<DevTable, string[]>> = {
   idea_votes: ["idea_id", "profile_id"],
   meeting_goal_notes: ["meeting_id", "profile_id", "period"],
   meeting_goal_updates: ["goal_id", "week_start"],
+  probation_feedback: ["profile_id", "kind"],
+  probation_internal_notes: ["profile_id", "kind"],
+  probation_reviews: ["profile_id"],
   profile_private: ["profile_id"],
   pulse_done: ["round_id", "profile_id"],
   release_announced: ["release_id"],
   release_seen: ["release_id", "profile_id"],
   tour_seen: ["profile_id"],
 };
+
+// Rows here are never deleted, not even from the Developer panel: they are a person's record.
+const NO_DELETE = new Set<DevTable>([
+  "probation_feedback", "probation_internal_notes", "probation_kras", "probation_reviews",
+]);
+
+export function assertDevDeletable(table: DevTable): void {
+  if (NO_DELETE.has(table)) throw new Error("Rows in this table cannot be deleted.");
+}
 
 export function keyColumns(table: DevTable): string[] {
   return KEYS[table] ?? ["id"];

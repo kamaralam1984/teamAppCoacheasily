@@ -20,6 +20,7 @@ import {
   KeyRound,
   LayoutDashboard,
   LifeBuoy,
+  ClipboardCheck,
   Flag,
   Lightbulb,
   ListChecks,
@@ -55,6 +56,7 @@ import {
   useDiwaliDecor,
 } from "@/components/festive/DiwaliDecor";
 import { ProbationAlert } from "@/components/probation/ProbationAlert";
+import { useProbationOverview } from "@/hooks/useProbation";
 import { useLatestUnseenRelease } from "@/hooks/useReleases";
 import { PeopleSearch } from "@/components/PeopleSearch";
 import { useDeveloperAccess } from "@/hooks/useDeveloper";
@@ -101,6 +103,9 @@ const HR_TABS: readonly Tab[] = [
 ];
 
 const DEV_TAB: Tab = { label: "Developer", to: "/developer", icon: Code2 };
+// Its own tab: for HR, admin, developers and managers with someone on probation, and for the
+// person on probation (until 60 days after it ends, so they can read the final feedback).
+const PROBATION_TAB: Tab = { label: "Probation", to: "/probation-review", icon: ClipboardCheck };
 
 const MOBILE_TAB_GAP = 4; // px between tabs in the phone top strip (gap-1)
 const MOBILE_STRIP_PAD = 16; // px of horizontal padding in the phone top strip (px-2)
@@ -120,6 +125,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { data: orgSettings } = useOrgSettings(Boolean(data?.profile));
   const { data: unseenRelease } = useLatestUnseenRelease(Boolean(data?.profile));
   const { data: dev } = useDeveloperAccess(Boolean(data?.user));
+  const { data: probations } = useProbationOverview(Boolean(data?.profile));
 
   const profile = data?.profile ?? null;
   const role = profile?.role ?? "member";
@@ -181,10 +187,22 @@ export function AppShell({ children }: { children: ReactNode }) {
   const leadTabs = role === "manager" || role === "hr" || role === "admin" ? LEAD_TABS : [];
   const hrTabs = role === "hr" || role === "admin" ? HR_TABS : [];
   const devTabs = dev?.isDeveloper ? [DEV_TAB] : [];
+  const showProbation =
+    role === "hr" ||
+    role === "admin" ||
+    Boolean(dev?.isDeveloper) ||
+    (probations ?? []).some((r) =>
+      r.profile_id === profile?.id
+        ? r.status !== "confirmed" || r.days_left >= -60
+        : r.status !== "confirmed",
+    );
+  const personalTabs: readonly Tab[] = showProbation
+    ? BASE_TABS.flatMap((t) => (t.to === "/my-report" ? [t, PROBATION_TAB] : [t]))
+    : BASE_TABS;
   const roleTabs = [...leadTabs, ...hrTabs, ...devTabs];
   // Desktop top bar: the everyday tabs first, then team, HR and developer tabs.
   const tabs = [...TOP_TABS, ...roleTabs];
-  const mobileTabs: readonly Tab[] = [...BASE_TABS, ...roleTabs];
+  const mobileTabs: readonly Tab[] = [...personalTabs, ...roleTabs];
   const inStrip = new Set(mobileTabs.slice(0, fitCount).map((t) => t.to));
   const drawerSections: { title: string; items: readonly Tab[] }[] = [
     { title: "Team", items: leadTabs.filter((t) => !inStrip.has(t.to)) },
@@ -504,7 +522,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </button>
           <nav className="no-scrollbar flex-1 overflow-y-auto px-2 py-3">
             <ul className="flex flex-col gap-1">
-              {BASE_TABS.map((tab) => {
+              {personalTabs.map((tab) => {
                 const active = pathname === tab.to;
                 const Icon = tab.icon;
                 return (

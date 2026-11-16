@@ -4,7 +4,14 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Json } from "@/integrations/supabase/types";
 import { impersonationBlockedReason, validateImpersonationInput } from "@/lib/developerImpersonation";
 import { validateTeamOrderInput } from "@/lib/teamOrder";
-import { assertDevDataProfileUpdate, assertDevTable, DEV_TABLES, istToday, keyColumns } from "@/lib/developerTables";
+import {
+  assertDevDataProfileUpdate,
+  assertDevDeletable,
+  assertDevTable,
+  DEV_TABLES,
+  istToday,
+  keyColumns,
+} from "@/lib/developerTables";
 
 type Row = { [k: string]: Json };
 
@@ -300,6 +307,50 @@ export const devMeetingGoals = createServerFn({ method: "POST" })
     return { goals, updates, notes: (n.data ?? []) as Row[] };
   });
 
+/** Everyone's probation and review progress, for a developer (reads are otherwise limited by RLS). */
+export const devProbationList = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { db } = await gate(context.userId);
+    const pr = await db.from("probations").select("profile_id, start_date, end_date, status");
+    if (pr.error) throw new Error(pr.error.message);
+    const rv = await db.from("probation_reviews").select("*");
+    if (rv.error) throw new Error(rv.error.message);
+    return { probations: (pr.data ?? []) as Row[], reviews: (rv.data ?? []) as Row[] };
+  });
+
+/** One person's whole probation review (KRAs, steps, feedback, internal notes, history). */
+export const devProbationReview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { profileId: string }) => {
+    if (!UUID.test(i?.profileId ?? "")) throw new Error("Invalid id");
+    return { profileId: i.profileId };
+  })
+  .handler(async ({ data, context }) => {
+    const { db } = await gate(context.userId);
+    const id = data.profileId;
+    const [kras, review, feedback, notes, log] = await Promise.all([
+      db.from("probation_kras").select("*").eq("profile_id", id).order("position").order("created_at"),
+      db.from("probation_reviews").select("*").eq("profile_id", id).maybeSingle(),
+      db.from("probation_feedback").select("*").eq("profile_id", id),
+      db.from("probation_internal_notes").select("*").eq("profile_id", id),
+      db
+        .from("probation_review_log")
+        .select("*")
+        .eq("profile_id", id)
+        .order("created_at", { ascending: false })
+        .limit(200),
+    ]);
+    for (const r of [kras, review, feedback, notes, log]) if (r.error) throw new Error(r.error.message);
+    return {
+      kras: (kras.data ?? []) as Row[],
+      review: (review.data ?? null) as Row | null,
+      feedback: (feedback.data ?? []) as Row[],
+      notes: (notes.data ?? []) as Row[],
+      log: (log.data ?? []) as Row[],
+    };
+  });
+
 const EXPORT_CHUNK = 1000;
 
 /** One slice of a table for the full-database export; the client loops until `done`. */
@@ -344,6 +395,7 @@ export const devWriteRow = createServerFn({ method: "POST" })
   .inputValidator((i: WriteInput) => {
     const table = assertDevTable(i?.table);
     if (!["insert", "update", "delete"].includes(i.op)) throw new Error("Invalid op");
+    if (i.op === "delete") assertDevDeletable(table);
     const values = i.values ?? {};
     if (typeof values !== "object" || Array.isArray(values)) throw new Error("Values must be an object");
     return { table, op: i.op, key: i.key ?? {}, values };
