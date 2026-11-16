@@ -204,14 +204,13 @@ function StrategicMeetingsPage() {
     (personId && people.some((p) => p.id === personId) ? personId : null) ?? viewer?.id ?? null;
   const person = people.find((p) => p.id === activePerson) ?? null;
 
-  // who may write this table: HR and admin all, managers their team, everyone their own;
-  // a developer who is none of those writes through the audited Developer route
+  // who may write this table: HR and admin all, everyone their own (a manager only reads their
+  // team's); a developer who is neither writes through the audited Developer route
   const direct = useMemo(() => {
     if (!viewer || !activePerson) return false;
     if (viewer.role === "hr" || viewer.role === "admin") return true;
-    if (viewer.id === activePerson) return true;
-    return downlineIds(warriors ?? [], viewer.id).has(activePerson);
-  }, [viewer, activePerson, warriors]);
+    return viewer.id === activePerson;
+  }, [viewer, activePerson]);
   const viaDev = !direct && Boolean(dev?.isDeveloper);
   const canWrite = direct || viaDev;
 
@@ -538,8 +537,8 @@ function StrategicMeetingsPage() {
 
                 {!canWrite ? (
                   <p className="border-b border-line bg-cream px-4 py-2 text-[12px] text-soft">
-                    You can read this table. {person?.full_name.split(" ")[0] ?? "They"}, their
-                    manager and HR can change it.
+                    You can read this table. Only {person?.full_name.split(" ")[0] ?? "they"} and HR
+                    can change it.
                   </p>
                 ) : null}
 
