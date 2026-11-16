@@ -41,8 +41,6 @@ export function meetingGoalTable(args: {
   dateLabel: (iso: string) => string;
   /** The optional Challenges / Learnings / Remarks columns this table has added (one entry per goal). */
   columnsAdded?: ("challenges" | "learnings" | "remarks")[];
-  /** Each goal's number as shown ("1", "1.1"); by default 1, 2, 3 … */
-  numbers?: string[];
 }): MeetingGoalTable {
   const notes = new Map<string, string>();
   for (const u of args.updates) notes.set(`${u.goal_id}|${u.week_start}`, u.note);
@@ -67,7 +65,7 @@ export function meetingGoalTable(args: {
 
   const rows: ExportRow[] = args.goals.map((g, i) => {
     const row: ExportRow = {
-      no: args.numbers?.[i] ?? i + 1,
+      no: i + 1,
       title: g.title,
       measure: g.measure ?? "",
       timeline: g.timeline ? args.dateLabel(g.timeline) : "",
