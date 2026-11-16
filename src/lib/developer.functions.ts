@@ -20,7 +20,7 @@ async function log(...args: Parameters<typeof import("@/lib/developer.server").a
   return audit(...args);
 }
 
-export const devWhoAmI = createServerFn({ method: "GET" })
+export const devWhoAmI = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { checkDeveloper } = await import("@/lib/developer.server");
@@ -28,7 +28,7 @@ export const devWhoAmI = createServerFn({ method: "GET" })
     return { isDeveloper: r.ok, email: r.email };
   });
 
-export const devOverview = createServerFn({ method: "GET" })
+export const devOverview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { db } = await gate(context.userId);
@@ -59,7 +59,7 @@ export const devOverview = createServerFn({ method: "GET" })
     };
   });
 
-export const devListUsers = createServerFn({ method: "GET" })
+export const devListUsers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { db } = await gate(context.userId);
@@ -385,7 +385,7 @@ export const devWriteRow = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const devListOrgs = createServerFn({ method: "GET" })
+export const devListOrgs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { db } = await gate(context.userId);
@@ -459,7 +459,7 @@ export const devAddPunch = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const devAuditLog = createServerFn({ method: "GET" })
+export const devAuditLog = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { db } = await gate(context.userId);
@@ -479,7 +479,7 @@ export const devAuditLog = createServerFn({ method: "GET" })
   });
 
 /** Everybody still here, with what the team list needs to be ordered and shown. */
-export const devTeamList = createServerFn({ method: "GET" })
+export const devTeamList = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { db } = await gate(context.userId);
