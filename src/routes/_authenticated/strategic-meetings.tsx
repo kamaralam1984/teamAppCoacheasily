@@ -622,7 +622,7 @@ function StrategicMeetingsPage() {
                     <thead>
                       <tr className="bg-gold/25 text-[11px] font-bold tracking-[0.04em] text-ink uppercase">
                         <th
-                          className="relative w-[130px] border border-line px-2 py-2"
+                          className="relative min-w-[120px] border border-line px-2 py-2"
                           style={colStyle("type")}
                         >
                           Type
