@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json, Tables } from "@/integrations/supabase/types";
 import { addDays, daysBetween } from "@/lib/calendar";
-import { devWriteRow } from "@/lib/developer.functions";
+import { devMeetingGoals, devWriteRow } from "@/lib/developer.functions";
 import type { StrategicMeeting } from "@/hooks/useStrategicMeetings";
 
 export type MeetingGoal = Tables<"meeting_goals">;
@@ -48,11 +48,23 @@ export function useMeetingGoals(
   meetingId: string | null,
   profileId: string | null,
   scope: GoalScope,
+  viaDev = false,
 ) {
+  const dev = useServerFn(devMeetingGoals);
   return useQuery({
-    queryKey: ["meeting-goals", meetingId, profileId, scopeKey(scope)],
+    queryKey: ["meeting-goals", meetingId, profileId, scopeKey(scope), viaDev],
     enabled: Boolean(meetingId && profileId),
     queryFn: async () => {
+      if (viaDev) {
+        const all = await dev({ data: { meetingId: meetingId!, profileId: profileId! } });
+        const goals = (all.goals as unknown as MeetingGoal[]).filter(
+          (g) =>
+            g.scope === scope.kind && (scope.kind !== "week" || g.week_start === scope.weekStart),
+        );
+        const ids = new Set(goals.map((g) => g.id));
+        const updates = (all.updates as unknown as GoalUpdate[]).filter((u) => ids.has(u.goal_id));
+        return { goals, updates };
+      }
       let q = supabase
         .from("meeting_goals")
         .select("*")
@@ -81,11 +93,19 @@ export function useMeetingWeekGoals(
   meetingId: string | null,
   profileId: string | null,
   enabled: boolean,
+  viaDev = false,
 ) {
+  const dev = useServerFn(devMeetingGoals);
   return useQuery({
-    queryKey: ["meeting-goals", meetingId, profileId, "all-weeks"],
+    queryKey: ["meeting-goals", meetingId, profileId, "all-weeks", viaDev],
     enabled: enabled && Boolean(meetingId && profileId),
     queryFn: async () => {
+      if (viaDev) {
+        const all = await dev({ data: { meetingId: meetingId!, profileId: profileId! } });
+        return (all.goals as unknown as MeetingGoal[])
+          .filter((g) => g.scope === "week")
+          .map(({ title, outcome, week_start }) => ({ title, outcome, week_start }));
+      }
       const { data, error } = await supabase
         .from("meeting_goals")
         .select("title, outcome, week_start")
@@ -227,11 +247,19 @@ export function useMeetingGoalNotes(
   meetingId: string | null,
   profileId: string | null,
   scope: GoalScope,
+  viaDev = false,
 ) {
+  const dev = useServerFn(devMeetingGoals);
   return useQuery({
-    queryKey: ["meeting-goal-notes", meetingId, profileId, scopeKey(scope)],
+    queryKey: ["meeting-goal-notes", meetingId, profileId, scopeKey(scope), viaDev],
     enabled: Boolean(meetingId && profileId),
     queryFn: async () => {
+      if (viaDev) {
+        const all = await dev({ data: { meetingId: meetingId!, profileId: profileId! } });
+        return (
+          (all.notes as unknown as GoalNotes[]).find((n) => n.period === notesPeriod(scope)) ?? null
+        );
+      }
       const { data, error } = await supabase
         .from("meeting_goal_notes")
         .select("*")

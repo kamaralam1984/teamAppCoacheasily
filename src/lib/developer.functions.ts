@@ -260,6 +260,46 @@ export const devBrowse = createServerFn({ method: "POST" })
     return { rows: (res.data ?? []) as Row[], total: res.count ?? 0, pageSize: PAGE, keys: keyColumns(data.table) };
   });
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * One person's Strategic Meeting goals (every scope), their weekly updates and notes, for a
+ * developer who is not their manager/HR — reads are otherwise limited by RLS.
+ */
+export const devMeetingGoals = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { meetingId: string; profileId: string }) => {
+    if (!UUID.test(i?.meetingId ?? "") || !UUID.test(i?.profileId ?? ""))
+      throw new Error("Invalid id");
+    return { meetingId: i.meetingId, profileId: i.profileId };
+  })
+  .handler(async ({ data, context }) => {
+    const { db } = await gate(context.userId);
+    const g = await db
+      .from("meeting_goals")
+      .select("*")
+      .eq("meeting_id", data.meetingId)
+      .eq("profile_id", data.profileId)
+      .order("position", { ascending: true })
+      .order("created_at", { ascending: true });
+    if (g.error) throw new Error(g.error.message);
+    const goals = (g.data ?? []) as Row[];
+    const ids = goals.map((r) => r["id"] as string);
+    let updates: Row[] = [];
+    if (ids.length > 0) {
+      const u = await db.from("meeting_goal_updates").select("*").in("goal_id", ids);
+      if (u.error) throw new Error(u.error.message);
+      updates = (u.data ?? []) as Row[];
+    }
+    const n = await db
+      .from("meeting_goal_notes")
+      .select("*")
+      .eq("meeting_id", data.meetingId)
+      .eq("profile_id", data.profileId);
+    if (n.error) throw new Error(n.error.message);
+    return { goals, updates, notes: (n.data ?? []) as Row[] };
+  });
+
 const EXPORT_CHUNK = 1000;
 
 /** One slice of a table for the full-database export; the client loops until `done`. */

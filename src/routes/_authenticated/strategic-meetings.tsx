@@ -180,13 +180,16 @@ function StrategicMeetingsPage() {
   const { data: warriors } = useWarriors();
   const { data: dev } = useDeveloperAccess(Boolean(viewer));
 
-  const people = useMemo(
-    () =>
-      (warriors ?? [])
-        .filter((p) => p.status === "active")
-        .sort((a, b) => a.full_name.localeCompare(b.full_name)),
-    [warriors],
-  );
+  // whose table you can open: HR, admin (Sir) and developers everyone; a manager their own
+  // team (everyone below them); everyone else only their own. The database enforces the same.
+  const people = useMemo(() => {
+    const active = (warriors ?? []).filter((p) => p.status === "active");
+    const seeAll = viewer?.role === "hr" || viewer?.role === "admin" || Boolean(dev?.isDeveloper);
+    const team = viewer ? downlineIds(warriors ?? [], viewer.id) : new Set<string>();
+    return active
+      .filter((p) => seeAll || p.id === viewer?.id || team.has(p.id))
+      .sort((a, b) => a.full_name.localeCompare(b.full_name));
+  }, [warriors, viewer, dev]);
 
   // the next meeting by default, else the latest one
   const defaultMeeting = useMemo(() => {
@@ -197,7 +200,8 @@ function StrategicMeetingsPage() {
   const meeting = (meetings ?? []).find((m) => m.id === (meetingId ?? defaultMeeting?.id)) ?? null;
 
   const [personId, setPersonId] = useState<string | null>(null);
-  const activePerson = personId ?? viewer?.id ?? null;
+  const activePerson =
+    (personId && people.some((p) => p.id === personId) ? personId : null) ?? viewer?.id ?? null;
   const person = people.find((p) => p.id === activePerson) ?? null;
 
   // who may write this table: HR and admin all, managers their team, everyone their own;
@@ -225,7 +229,7 @@ function StrategicMeetingsPage() {
     mode === "week" && weekStart ? { kind: "week", weekStart } : { kind: "run" };
   const weekColumns = scope.kind === "run" ? weeks : [];
 
-  const { data, isLoading } = useMeetingGoals(meeting?.id ?? null, activePerson, scope);
+  const { data, isLoading } = useMeetingGoals(meeting?.id ?? null, activePerson, scope, viaDev);
   const writes = useMeetingGoalWrites(meeting?.id ?? null, activePerson, viaDev, scope);
   const goals: MeetingGoal[] = data?.goals ?? [];
   const updates = useMemo(() => {
@@ -235,7 +239,7 @@ function StrategicMeetingsPage() {
   }, [data]);
 
   // the optional Challenges / Learnings / Remarks columns (one entry per goal): only shown once added
-  const { data: notes } = useMeetingGoalNotes(meeting?.id ?? null, activePerson, scope);
+  const { data: notes } = useMeetingGoalNotes(meeting?.id ?? null, activePerson, scope, viaDev);
   const saveNote = useSaveMeetingGoalNote(meeting?.id ?? null, activePerson, viaDev, scope);
   const boxes = (
     [
@@ -271,6 +275,7 @@ function StrategicMeetingsPage() {
     meeting?.id ?? null,
     activePerson,
     mode === "week",
+    viaDev,
   );
   const dashboard = useMemo(() => {
     const rows = data?.goals ?? [];
