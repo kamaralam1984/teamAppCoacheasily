@@ -1083,3 +1083,9 @@
     border-left: 1px solid var(--ce-mist);
   }
 }
+
+/* Strategic Meetings: a row made taller by dragging lets its text boxes fill the height
+   (unlayered, so it wins over the textarea's own min-height utility) */
+.ce-rowsize textarea {
+  min-height: var(--row-h, 52px);
+}

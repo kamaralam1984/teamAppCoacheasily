@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
 } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -26,6 +27,7 @@ import {
   type NoteField,
 } from "@/hooks/useMeetingGoals";
 import { useMyProfile } from "@/hooks/useMyProfile";
+import { startDrag, useTableSizes } from "@/hooks/useTableSizes";
 import { meetingLabel, useStrategicMeetings } from "@/hooks/useStrategicMeetings";
 import { useWarriors } from "@/hooks/useWarriors";
 import { addDays, daysBetween, timeLabel, todayIso } from "@/lib/calendar";
@@ -339,6 +341,52 @@ function StrategicMeetingsPage() {
     return () => window.removeEventListener("beforeunload", warn);
   }, [unsaved, drafts]);
 
+  // column widths and row heights dragged like a spreadsheet; kept in this browser only
+  const sizes = useTableSizes("ce-strategic-goals-sizes:v1");
+  const COL_DEFAULT: Record<string, number> = {
+    type: 130,
+    no: 48,
+    title: 240,
+    measure: 140,
+    timeline: 150,
+    outcome: 120,
+  };
+  const colKeys = [
+    "type",
+    "no",
+    "title",
+    "measure",
+    "timeline",
+    "outcome",
+    ...weekColumns.map((w) => `week:${w}`),
+    ...boxes.map((b) => `box:${b.field}`),
+  ];
+  const colWidth = (k: string) =>
+    sizes.col(k) ?? COL_DEFAULT[k] ?? (k.startsWith("week:") ? 180 : 240);
+  // once anything is resized the table switches to fixed widths, so every column keeps its size
+  const colStyle = (k: string) => {
+    if (!sizes.changed) return undefined;
+    const w = colWidth(k);
+    return { width: w, minWidth: w, maxWidth: w };
+  };
+  const colGrip = (k: string) => (
+    <span
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Drag to change the column width"
+      title="Drag to change the width"
+      className="absolute top-0 right-0 z-10 h-full w-2 cursor-col-resize hover:bg-gold/70"
+      onPointerDown={(e) =>
+        startDrag(
+          e,
+          "x",
+          (e.currentTarget.parentElement as HTMLElement).getBoundingClientRect().width,
+          (w) => sizes.setCol(k, w),
+        )
+      }
+    />
+  );
+
   const fail = (err: unknown) =>
     toast.error(err instanceof Error ? err.message : "That didn't save. Please try again.");
 
@@ -528,7 +576,15 @@ function StrategicMeetingsPage() {
 
                 {!isLoading && goals.length > 0 ? (
                   <div className="flex flex-wrap items-center justify-end gap-2 border-b border-line bg-cream px-4 py-2">
-                    <span className="mr-auto text-[12px] text-soft">Download this table</span>
+                    <span className="mr-auto text-[12px] text-soft">
+                      Download this table · drag a column's right edge or a row's bottom edge (in
+                      No) to resize
+                    </span>
+                    {sizes.changed ? (
+                      <button type="button" className="btn3d btn3d-ghost" onClick={sizes.reset}>
+                        Reset sizes
+                      </button>
+                    ) : null}
                     <button type="button" className="btn3d" onClick={() => exportAs("csv")}>
                       CSV
                     </button>
@@ -551,29 +607,77 @@ function StrategicMeetingsPage() {
 
                 <div className="overflow-x-auto">
                   <table
-                    className="w-full border-collapse text-left"
-                    style={{ minWidth: (weekColumns.length > 0 ? 1010 : 770) + boxes.length * 240 }}
+                    className={`border-collapse text-left ${sizes.changed ? "" : "w-full"}`}
+                    style={
+                      sizes.changed
+                        ? {
+                            tableLayout: "fixed",
+                            width:
+                              colKeys.reduce((sum, k) => sum + colWidth(k), 0) +
+                              (canWrite ? 40 : 0),
+                          }
+                        : { minWidth: (weekColumns.length > 0 ? 1010 : 770) + boxes.length * 240 }
+                    }
                   >
                     <thead>
                       <tr className="bg-gold/25 text-[11px] font-bold tracking-[0.04em] text-ink uppercase">
-                        <th className="w-[130px] border border-line px-2 py-2">Type</th>
-                        <th className="w-10 border border-line px-2 py-2 text-center">No</th>
-                        <th className="min-w-[220px] border border-line px-2 py-2">Goal / Task</th>
-                        <th className="min-w-[120px] border border-line px-2 py-2">Measure</th>
-                        <th className="w-[140px] border border-line px-2 py-2">Timeline</th>
-                        <th className="min-w-[110px] border border-line px-2 py-2">Outcome</th>
+                        <th
+                          className="relative w-[130px] border border-line px-2 py-2"
+                          style={colStyle("type")}
+                        >
+                          Type
+                          {colGrip("type")}
+                        </th>
+                        <th
+                          className="relative w-10 border border-line px-2 py-2 text-center"
+                          style={colStyle("no")}
+                        >
+                          No
+                          {colGrip("no")}
+                        </th>
+                        <th
+                          className="relative min-w-[220px] border border-line px-2 py-2"
+                          style={colStyle("title")}
+                        >
+                          Goal / Task
+                          {colGrip("title")}
+                        </th>
+                        <th
+                          className="relative min-w-[120px] border border-line px-2 py-2"
+                          style={colStyle("measure")}
+                        >
+                          Measure
+                          {colGrip("measure")}
+                        </th>
+                        <th
+                          className="relative w-[140px] border border-line px-2 py-2"
+                          style={colStyle("timeline")}
+                        >
+                          Timeline
+                          {colGrip("timeline")}
+                        </th>
+                        <th
+                          className="relative min-w-[110px] border border-line px-2 py-2"
+                          style={colStyle("outcome")}
+                        >
+                          Outcome
+                          {colGrip("outcome")}
+                        </th>
                         {weekColumns.map((w) => (
                           <th
                             key={w}
-                            className="min-w-[170px] border border-line bg-emer/15 px-2 py-2"
+                            className="relative min-w-[170px] border border-line bg-emer/15 px-2 py-2"
+                            style={colStyle(`week:${w}`)}
                           >
                             Week of {shortDate(w)}
+                            {colGrip(`week:${w}`)}
                           </th>
                         ))}
                         {boxes.map((b) => (
                           <th
                             key={b.field}
-                            className={`min-w-[240px] border border-line px-2 py-2 ${b.tone}`}
+                            className={`relative min-w-[240px] border border-line px-2 py-2 ${b.tone}`}
+                            style={colStyle(`box:${b.field}`)}
                           >
                             <span className="flex items-center justify-between gap-2">
                               {b.label}
@@ -589,9 +693,15 @@ function StrategicMeetingsPage() {
                                 </button>
                               ) : null}
                             </span>
+                            {colGrip(`box:${b.field}`)}
                           </th>
                         ))}
-                        {canWrite ? <th className="w-10 border border-line" /> : null}
+                        {canWrite ? (
+                          <th
+                            className="w-10 border border-line"
+                            style={sizes.changed ? { width: 40 } : undefined}
+                          />
+                        ) : null}
                       </tr>
                     </thead>
                     <tbody>
@@ -611,7 +721,18 @@ function StrategicMeetingsPage() {
                         </tr>
                       ) : (
                         goals.map((g, i) => (
-                          <tr key={g.id} className="align-top odd:bg-white even:bg-cream/50">
+                          <tr
+                            key={g.id}
+                            className="ce-rowsize align-top odd:bg-white even:bg-cream/50"
+                            style={
+                              sizes.row(g.id)
+                                ? ({
+                                    height: sizes.row(g.id),
+                                    "--row-h": `${sizes.row(g.id)! - 8}px`,
+                                  } as CSSProperties)
+                                : undefined
+                            }
+                          >
                             <td className="border border-line p-0.5">
                               {canWrite ? (
                                 <select
@@ -634,8 +755,25 @@ function StrategicMeetingsPage() {
                                 </span>
                               )}
                             </td>
-                            <td className="border border-line px-2 py-2 text-center text-[13px] font-bold text-ink">
+                            <td className="relative border border-line px-2 py-2 text-center text-[13px] font-bold text-ink">
                               {i + 1}
+                              <span
+                                role="separator"
+                                aria-orientation="horizontal"
+                                aria-label="Drag to change the row height"
+                                title="Drag to change the row height"
+                                className="absolute right-0 bottom-0 left-0 z-10 h-2 cursor-row-resize hover:bg-gold/70"
+                                onPointerDown={(e) =>
+                                  startDrag(
+                                    e,
+                                    "y",
+                                    (
+                                      e.currentTarget.closest("tr") as HTMLElement
+                                    ).getBoundingClientRect().height,
+                                    (h) => sizes.setRow(g.id, h),
+                                  )
+                                }
+                              />
                             </td>
                             {canWrite ? (
                               <>
