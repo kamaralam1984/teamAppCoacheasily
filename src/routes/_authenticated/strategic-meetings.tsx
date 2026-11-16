@@ -468,18 +468,25 @@ function StrategicMeetingsPage() {
               </label>
               <label>
                 <span className="ce-label">Person</span>
-                <select
-                  className="ce-input"
-                  value={activePerson ?? ""}
-                  onChange={(e) => setPersonId(e.target.value)}
-                >
-                  {people.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.full_name}
-                      {p.id === viewer?.id ? " (you)" : ""}
-                    </option>
-                  ))}
-                </select>
+                {/* a member has only their own table: just their name, no picker */}
+                {people.length > 1 ? (
+                  <select
+                    className="ce-input"
+                    value={activePerson ?? ""}
+                    onChange={(e) => setPersonId(e.target.value)}
+                  >
+                    {people.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.full_name}
+                        {p.id === viewer?.id ? " (you)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="ce-input flex items-center">
+                    {person?.full_name ?? viewer?.full_name ?? ""}
+                  </div>
+                )}
               </label>
               {mode === "week" && weeks.length > 0 ? (
                 <label className="sm:col-span-2">
