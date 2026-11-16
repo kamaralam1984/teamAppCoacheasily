@@ -104,11 +104,16 @@ export function useMeetingWeekGoals(
         const all = await dev({ data: { meetingId: meetingId!, profileId: profileId! } });
         return (all.goals as unknown as MeetingGoal[])
           .filter((g) => g.scope === "week")
-          .map(({ title, outcome, week_start }) => ({ title, outcome, week_start }));
+          .map(({ title, outcome, week_start, goal_type }) => ({
+            title,
+            outcome,
+            week_start,
+            goal_type,
+          }));
       }
       const { data, error } = await supabase
         .from("meeting_goals")
-        .select("title, outcome, week_start")
+        .select("title, outcome, week_start, goal_type")
         .eq("meeting_id", meetingId!)
         .eq("profile_id", profileId!)
         .eq("scope", "week");

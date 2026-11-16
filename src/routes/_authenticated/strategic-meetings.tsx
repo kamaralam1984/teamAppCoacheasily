@@ -278,20 +278,33 @@ function StrategicMeetingsPage() {
     mode === "week",
     viaDev,
   );
-  const dashboard = useMemo(() => {
-    const rows = data?.goals ?? [];
+  // one set of charts for the Main Goals and one for the Sub Goals
+  const dashboards = useMemo(() => {
     const allWeeks = period?.weeks ?? [];
-    return mode === "week" && weekStart
-      ? {
-          charts: weekCharts(rows, weekGoals ?? [], allWeeks, weekStart, today),
-          weeks: weekProgress(weekGoals ?? [], allWeeks, weekStart, today),
-          note: "Goals with an outcome written, each week",
-        }
-      : {
-          charts: runCharts(rows, data?.updates ?? [], allWeeks, thisWeek, today),
-          weeks: runProgress(rows, data?.updates ?? [], allWeeks, today),
-          note: "Goals with an update written, each week",
-        };
+    const isSub = (g: { goal_type?: string | null }) => g.goal_type === "sub";
+    const build = (sub: boolean) => {
+      const rows = (data?.goals ?? []).filter((g) => isSub(g) === sub);
+      const weekRows = (weekGoals ?? []).filter((g) => isSub(g) === sub);
+      return {
+        rows,
+        ...(mode === "week" && weekStart
+          ? {
+              charts: weekCharts(rows, weekRows, allWeeks, weekStart, today),
+              weeks: weekProgress(weekRows, allWeeks, weekStart, today),
+              note: sub
+                ? "Sub goals with an outcome written, each week"
+                : "Main goals with an outcome written, each week",
+            }
+          : {
+              charts: runCharts(rows, data?.updates ?? [], allWeeks, thisWeek, today),
+              weeks: runProgress(rows, data?.updates ?? [], allWeeks, today),
+              note: sub
+                ? "Sub goals with an update written, each week"
+                : "Main goals with an update written, each week",
+            }),
+      };
+    };
+    return { main: build(false), sub: build(true) };
   }, [data, weekGoals, mode, weekStart, period, thisWeek, today]);
 
   // every cell's unsaved typing: saved by the Save button, and before the page is hidden or left
@@ -985,14 +998,26 @@ function StrategicMeetingsPage() {
               </section>
             </DraftsContext.Provider>
 
-            {goals.length > 0 ? (
-              <MeetingDashboard
-                data={dashboard.charts}
-                goals={goals}
-                weeks={dashboard.weeks}
-                overviewNote={dashboard.note}
-              />
-            ) : null}
+            {(["main", "sub"] as const).map((kind) => {
+              const d = dashboards[kind];
+              if (d.rows.length === 0) return null;
+              return (
+                <section key={kind} className="space-y-3">
+                  <h2 className="font-display text-2xl text-ink">
+                    {kind === "main" ? "Main Goals" : "Sub Goals"}
+                    <span className="ml-2 text-sm font-normal text-soft">
+                      {d.rows.length} {d.rows.length === 1 ? "goal" : "goals"}
+                    </span>
+                  </h2>
+                  <MeetingDashboard
+                    data={d.charts}
+                    goals={d.rows}
+                    weeks={d.weeks}
+                    overviewNote={d.note}
+                  />
+                </section>
+              );
+            })}
           </>
         )}
       </div>

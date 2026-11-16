@@ -21,6 +21,7 @@ export interface WeekGoalRow {
   title: string;
   outcome: string | null;
   week_start: string | null;
+  goal_type?: string | null;
 }
 
 export type MeetingChartData = GoalChartData & { barTicks: number[] };
