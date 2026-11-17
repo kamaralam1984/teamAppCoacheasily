@@ -4,6 +4,7 @@ import {
   asManagerExtra,
   averagePoints,
   canWriteManagerEval,
+  finalFromParts,
   canWriteReview,
   defaultYear,
   docxXmlToText,
@@ -236,4 +237,11 @@ describe("manager evaluation form", () => {
     deepEqual(asManagerExtra(null), {});
     equal(asManagerExtra({ discussion_date: "2026-12-20" }).discussion_date, "2026-12-20");
   });
+});
+
+test("final rating: A and B at 50% each", () => {
+  equal(finalFromParts("O", "EE"), "O");
+  equal(finalFromParts("FME", "PME"), "FME");
+  equal(finalFromParts("EE", "EE"), "EE");
+  equal(finalFromParts("EE", ""), null);
 });

@@ -595,12 +595,25 @@ interface RatingRemarks {
   rating?: string;
   remarks?: string;
 }
+interface SummaryRow extends RatingRemarks {
+  /** the team member's overall self-rating for the part, as the manager records it */
+  self_rating?: string;
+}
+
+/** The manager's view of potential, as on the form. */
+export const MANAGER_POTENTIAL_LEVELS = ["Low", "Moderate", "High"] as const;
+
+/** Part C: A and B weighted at 50% each, rounded to the nearest rating. Mirrors the sign-off. */
+export function finalFromParts(a: string | undefined, b: string | undefined): Rating | null {
+  if (!isRating(a) || !isRating(b)) return null;
+  return ratingForPoints((RATING_POINTS[a] + RATING_POINTS[b]) / 2);
+}
 /** The manager-form boxes kept in self_eval_reviews.extra (kind 'manager'). */
 export interface ManagerExtra {
   discussion_date?: string;
-  goals_summary?: RatingRemarks;
-  values_summary?: RatingRemarks;
-  overall?: { goals?: RatingRemarks; values?: RatingRemarks };
+  goals_summary?: SummaryRow;
+  values_summary?: SummaryRow;
+  overall?: { goals?: SummaryRow; values?: SummaryRow };
   potential?: Partial<Record<PotentialKey, RatingRemarks>>;
   feedback?: Partial<Record<ManagerFeedbackKey, string>>;
   recommendation?: { choice?: string; comments?: Partial<Record<RecommendationKey, string>> };

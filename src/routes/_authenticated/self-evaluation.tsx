@@ -542,7 +542,6 @@ function EvaluationSheet({
         receivedOn: row?.emp_submitted_at ?? null,
         completedOn: row?.finalized_at ?? null,
         form,
-        goalCount: goalRows,
         review: managerReview,
         extra: managerExtra,
         memberComment: row?.member_comment ?? "",
@@ -993,7 +992,6 @@ function EvaluationSheet({
           receivedOn={row?.emp_submitted_at ?? null}
           completedOn={row?.finalized_at ?? null}
           form={form}
-          goalCount={goalRows}
           review={managerReview}
           extra={managerExtra}
           canWrite={canManager}

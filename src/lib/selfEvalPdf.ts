@@ -11,11 +11,11 @@ import {
   REVIEW_LABEL,
   VALUES,
   isRating,
-  selfSummary,
   type FormLike,
   type ManagerExtra,
   type ReviewLike,
 } from "@/lib/selfEvaluation";
+import { MANAGER_FORM_TEXT, POTENTIAL_SCALE, SCALE } from "@/lib/managerFormText";
 
 export interface PdfInput {
   year: number;
@@ -344,7 +344,6 @@ export interface ManagerPdfInput {
   receivedOn: string | null;
   completedOn: string | null;
   form: FormLike;
-  goalCount: number;
   review: ReviewLike | null;
   extra: ManagerExtra;
   memberComment: string;
@@ -355,6 +354,7 @@ const day = (iso: string | null | undefined) =>
 
 /** The manager evaluation as a PDF in the "Annual Manager Evaluation Form" layout. */
 export async function buildManagerEvalPdf(input: ManagerPdfInput): Promise<Uint8Array> {
+  const T = MANAGER_FORM_TEXT;
   const { heading, para, table, finish } = await startDoc(
     "ANNUAL MANAGER EVALUATION FORM",
     input.year,
@@ -362,9 +362,9 @@ export async function buildManagerEvalPdf(input: ManagerPdfInput): Promise<Uint8
   );
   const { form, review, extra } = input;
   const r = (x: string | undefined | null) => x ?? "";
-  para(
-    "Use this form to review each team member's annual self-evaluation. For every goal and value, record the self-rating the team member shared, add your own rating, and give remarks or feedback that explain your rating. Complete one form per team member and discuss it with them before sign-off.",
-  );
+  const sr = `Self-rating\n${SCALE}`;
+  const mr = `Manager rating\n${SCALE}`;
+  para(T.intro);
 
   heading("About this review");
   table(
@@ -382,63 +382,58 @@ export async function buildManagerEvalPdf(input: ManagerPdfInput): Promise<Uint8
   );
 
   heading("How this form works");
-  para(
-    "The appraisal has two equal parts, matching the self-evaluation form. Rate on evidence and outcomes, not on effort or hours worked. Where your rating differs from the self-rating, your remarks must say why.",
-  );
+  para(T.works);
   table(
     ["Part", "Weight", "What it covers"],
     [0.3, 0.12, 0.58],
-    [
-      [
-        "A. Goals and Impact",
-        "50%",
-        "The 4-5 goals agreed with the team member and the outcomes delivered",
-      ],
-      [
-        "B. Competencies and Values",
-        "50%",
-        "How the team member delivered: the 12 values listed in Part B",
-      ],
-    ],
+    T.parts.map((x) => [...x]),
   );
+  heading("How to complete each section", 11);
+  table(
+    ["Column", "What to enter"],
+    [0.3, 0.7],
+    T.columns.map((x) => [...x]),
+  );
+  para("Use this rating scale for every rating.");
   table(
     ["Rating", "What it means"],
     [0.35, 0.65],
     RATINGS.map((x) => [RATING_LABEL[x], RATING_MEANING[x]]),
   );
 
-  const selfGoals = selfSummary(form.goals.map((g) => g.rating)) ?? "";
-  const selfValues = selfSummary(VALUES.map((v) => form.value_answers[v.key]?.rating)) ?? "";
+  heading("Example: how to fill in a goal");
+  para(T.exampleNote);
+  para("EXAMPLE  For guidance only. Do not fill in this table.", 8.5, true);
+  table(
+    ["#", "Goal (as listed by the team member)", sr, mr, "Manager remarks / feedback"],
+    [0.05, 0.27, 0.13, 0.13, 0.42],
+    [["1", T.exampleGoal.goal, T.exampleGoal.self, T.exampleGoal.manager, T.exampleGoal.remarks]],
+  );
 
   heading("Part A: Goals and Impact (50%)");
-  const goals = Array.from({ length: input.goalCount }, (_, i) => ({
-    i,
-    g: form.goals[i] ?? {},
-  })).filter(({ g }) => g.goal || g.rating);
+  para(T.partA);
+  const rows = Math.max(5, form.goals.filter((g) => g.goal || g.rating).length);
   table(
-    [
-      "#",
-      "Goal (as listed by the team member)",
-      "Self-rating",
-      "Manager rating",
-      "Manager remarks / feedback",
-    ],
-    [0.05, 0.33, 0.1, 0.1, 0.42],
-    goals.map(({ i, g }, n) => [
-      String(n + 1),
-      r(g.goal),
-      r(g.rating),
-      r(review?.goal_ratings[String(i)]?.rating),
-      r(review?.goal_ratings[String(i)]?.comment),
-    ]),
+    ["#", "Goal (as listed by the team member)", sr, mr, "Manager remarks / feedback"],
+    [0.05, 0.31, 0.13, 0.13, 0.38],
+    Array.from({ length: rows }, (_, i) => {
+      const g = form.goals[i] ?? {};
+      return [
+        String(i + 1),
+        r(g.goal),
+        r(g.rating),
+        r(review?.goal_ratings[String(i)]?.rating),
+        r(review?.goal_ratings[String(i)]?.comment),
+      ];
+    }),
   );
   table(
-    ["Part A summary", "Self-rating", "Manager rating", "Overall remarks on goals"],
-    [0.28, 0.12, 0.12, 0.48],
+    ["Part A summary", sr, mr, "Overall remarks on goals"],
+    [0.28, 0.13, 0.13, 0.46],
     [
       [
         "Overall Goals and Impact",
-        selfGoals,
+        r(extra.goals_summary?.self_rating),
         r(extra.goals_summary?.rating),
         r(extra.goals_summary?.remarks),
       ],
@@ -446,9 +441,16 @@ export async function buildManagerEvalPdf(input: ManagerPdfInput): Promise<Uint8
   );
 
   heading("Part B: Competencies and Values (50%)");
+  para(T.partB);
+  para("EXAMPLE  How to fill in one value. For guidance only.", 8.5, true);
   table(
-    ["Value", "Self-rating", "Manager rating", "Manager remarks / feedback (example observed)"],
-    [0.2, 0.12, 0.12, 0.56],
+    ["Value", sr, mr, "Manager remarks / feedback (example observed)"],
+    [0.18, 0.13, 0.13, 0.56],
+    [[T.exampleValue.value, T.exampleValue.self, T.exampleValue.manager, T.exampleValue.remarks]],
+  );
+  table(
+    ["Value", sr, mr, "Manager remarks / feedback (example observed)"],
+    [0.18, 0.13, 0.13, 0.56],
     VALUES.map((v) => [
       v.name,
       r(form.value_answers[v.key]?.rating),
@@ -457,12 +459,12 @@ export async function buildManagerEvalPdf(input: ManagerPdfInput): Promise<Uint8
     ]),
   );
   table(
-    ["Part B summary", "Self-rating", "Manager rating", "Overall remarks on values"],
-    [0.28, 0.12, 0.12, 0.48],
+    ["Part B summary", sr, mr, "Overall remarks on values"],
+    [0.28, 0.13, 0.13, 0.46],
     [
       [
         "Overall Competencies and Values",
-        selfValues,
+        r(extra.values_summary?.self_rating),
         r(extra.values_summary?.rating),
         r(extra.values_summary?.remarks),
       ],
@@ -470,43 +472,38 @@ export async function buildManagerEvalPdf(input: ManagerPdfInput): Promise<Uint8
   );
 
   heading("Part C: Overall Manager Ratings & Remarks");
-  para(
-    "Bring the two parts together. The final rating is your judgement across both parts, each weighted at 50%.",
-  );
+  para(T.partC);
   table(
-    ["Component", "Weight", "Self-rating", "Manager rating", "Remarks"],
-    [0.28, 0.09, 0.12, 0.12, 0.39],
+    ["Component", "Weight", sr, mr, "Remarks"],
+    [0.26, 0.09, 0.13, 0.13, 0.39],
     [
       [
         "A. Goals and Impact",
         "50%",
-        selfGoals,
+        r(extra.overall?.goals?.self_rating),
         r(extra.overall?.goals?.rating),
         r(extra.overall?.goals?.remarks),
       ],
       [
         "B. Competencies and Values",
         "50%",
-        selfValues,
+        r(extra.overall?.values?.self_rating),
         r(extra.overall?.values?.rating),
         r(extra.overall?.values?.remarks),
-      ],
-      [
-        "Final rating",
-        "",
-        "",
-        review?.overall_rating && isRating(review.overall_rating)
-          ? RATING_LABEL[review.overall_rating]
-          : "",
-        "",
       ],
     ],
   );
 
   heading("Part D: Readiness of Talent");
+  para(T.partD);
   table(
-    ["Potential question", "Self-rating", "Manager rating", "Manager remarks"],
-    [0.38, 0.14, 0.14, 0.34],
+    [
+      "Potential question",
+      `Self-rating\n${POTENTIAL_SCALE}`,
+      `Manager rating\n${POTENTIAL_SCALE}`,
+      "Manager remarks",
+    ],
+    [0.36, 0.15, 0.15, 0.34],
     POTENTIAL.map((q) => [
       MANAGER_POTENTIAL[q.key],
       r(form.potential[q.key]?.rating),
@@ -516,6 +513,7 @@ export async function buildManagerEvalPdf(input: ManagerPdfInput): Promise<Uint8
   );
 
   heading("Part E: Manager Feedback");
+  para(T.partE);
   table(
     ["Question", "Manager response"],
     [0.4, 0.6],
@@ -524,7 +522,7 @@ export async function buildManagerEvalPdf(input: ManagerPdfInput): Promise<Uint8
 
   heading("Recommendation");
   table(
-    ["Recommendation", "Tick one", "Comments"],
+    ["Recommendation", "Tick one\n(X)", "Comments"],
     [0.36, 0.12, 0.52],
     RECOMMENDATIONS.map((x) => [
       x.label,
@@ -534,11 +532,11 @@ export async function buildManagerEvalPdf(input: ManagerPdfInput): Promise<Uint8
   );
 
   heading("Internal or Customer Feedback for Team Member");
-  para("To be filled in by the team member after the review discussion (optional).", 8.5, true);
-  table(["", ""], [0.35, 0.65], [["Comments on this evaluation", input.memberComment]]);
+  para(T.member, 8.5, true);
+  table(["Comments on this evaluation", ""], [0.35, 0.65], [["", input.memberComment]]);
 
   heading("Sign-off");
-  para("By signing, the manager confirms that the ratings above are based on evidence.");
+  para(T.signoff);
   table(
     ["Field", "Manager"],
     [0.35, 0.65],

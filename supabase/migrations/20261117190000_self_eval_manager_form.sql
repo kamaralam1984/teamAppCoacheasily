@@ -6,7 +6,8 @@
 --   member's comments after the discussion, and the manager's sign-off.
 -- Only the manager the person reports to rates (HR / admin only when the person has no
 -- manager). HR and admin no longer rate; they see everything and can reopen a step.
--- The manager's sign-off completes the evaluation (final rating = the manager's Part C rating).
+-- The manager's sign-off completes the evaluation. The final rating is the manager's Part C
+-- ratings of A and B, each weighted at 50%, rounded to the nearest rating.
 -- Adds two columns (extra, member_comment) and replaces self-evaluation functions only.
 -- Nothing is deleted; no other feature (Probation included) is changed.
 
@@ -71,12 +72,16 @@ BEGIN
   IF v_n = 1 AND p_path[1] = 'discussion_date' THEN
     v_ok := coalesce(v_text, '') = '' OR v_text ~ '^\d{4}-\d{2}-\d{2}$';
   ELSIF v_n = 2 AND p_path[1] IN ('goals_summary', 'values_summary') THEN
-    v_ok := p_path[2] = 'remarks' OR (p_path[2] = 'rating' AND self_eval_rating_ok(p_value));
+    v_ok := p_path[2] = 'remarks'
+         OR (p_path[2] IN ('rating', 'self_rating') AND self_eval_rating_ok(p_value));
   ELSIF v_n = 3 AND p_path[1] = 'overall' AND p_path[2] IN ('goals', 'values') THEN
-    v_ok := p_path[3] = 'remarks' OR (p_path[3] = 'rating' AND self_eval_rating_ok(p_value));
+    v_ok := p_path[3] = 'remarks'
+         OR (p_path[3] IN ('rating', 'self_rating') AND self_eval_rating_ok(p_value));
   ELSIF v_n = 3 AND p_path[1] = 'potential'
         AND p_path[2] IN ('learn', 'bigger_role', 'help_others', 'stretch') THEN
-    v_ok := p_path[3] = 'remarks' OR (p_path[3] = 'rating' AND self_eval_potential_ok(p_value));
+    -- the manager's view of potential: Low / Moderate / High, as on the form
+    v_ok := p_path[3] = 'remarks'
+         OR (p_path[3] = 'rating' AND coalesce(v_text, '') IN ('', 'Low', 'Moderate', 'High'));
   ELSIF v_n = 2 AND p_path[1] = 'feedback' THEN
     v_ok := p_path[2] IN ('strengths', 'development', 'accuracy', 'support', 'goals_next', 'training');
   ELSIF v_n = 2 AND p_path[1] = 'recommendation' AND p_path[2] = 'choice' THEN
@@ -154,6 +159,10 @@ DECLARE
   v_p profiles%ROWTYPE;
   v_row self_evaluations%ROWTYPE;
   v_r self_eval_reviews%ROWTYPE;
+  v_a text;
+  v_b text;
+  v_pts numeric;
+  v_final text;
 BEGIN
   SELECT * INTO v_p FROM profiles WHERE id = p_profile_id AND org_id = my_org();
   IF NOT FOUND OR v_me IS NULL THEN RAISE EXCEPTION 'Not allowed'; END IF;
@@ -191,18 +200,27 @@ BEGIN
     IF v_row.emp_submitted_at IS NULL THEN RAISE EXCEPTION 'Waiting for the self-evaluation.'; END IF;
     SELECT * INTO v_r FROM self_eval_reviews
      WHERE profile_id = p_profile_id AND year = p_year AND kind = 'manager';
-    IF v_r.overall_rating IS NULL THEN RAISE EXCEPTION 'Choose the final rating in Part C first.'; END IF;
+    v_a := v_r.extra #>> '{overall,goals,rating}';
+    v_b := v_r.extra #>> '{overall,values,rating}';
+    IF coalesce(v_a, '') = '' OR coalesce(v_b, '') = '' THEN
+      RAISE EXCEPTION 'Give your Part C ratings for A and B first.';
+    END IF;
+    -- A and B weighted at 50% each: O 5, EE 4, FME 3, PME 2, DNME 1, nearest rating
+    v_pts := (array_position(ARRAY['DNME', 'PME', 'FME', 'EE', 'O'], v_a)
+              + array_position(ARRAY['DNME', 'PME', 'FME', 'EE', 'O'], v_b)) / 2.0;
+    v_final := CASE WHEN v_pts >= 4.5 THEN 'O' WHEN v_pts >= 3.5 THEN 'EE'
+                    WHEN v_pts >= 2.5 THEN 'FME' WHEN v_pts >= 1.5 THEN 'PME' ELSE 'DNME' END;
     IF length(trim(coalesce(p_signed_name, ''))) < 2 THEN
       RAISE EXCEPTION 'Type your name to sign off.';
     END IF;
     UPDATE self_eval_reviews
        SET extra = extra || jsonb_build_object('signed_name', trim(p_signed_name),
                                                'signed_at', to_jsonb(now())),
-           updated_at = now(), updated_by = v_me
+           overall_rating = v_final, updated_at = now(), updated_by = v_me
      WHERE profile_id = p_profile_id AND year = p_year AND kind = 'manager';
     UPDATE self_evaluations
        SET mgr_submitted_at = now(), mgr_submitted_by = v_me,
-           finalized_at = now(), finalized_by = v_me, final_rating = v_r.overall_rating,
+           finalized_at = now(), finalized_by = v_me, final_rating = v_final,
            updated_at = now()
      WHERE id = v_row.id;
     INSERT INTO notifications (org_id, profile_id, title, body, link)

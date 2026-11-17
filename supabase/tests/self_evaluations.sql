@@ -186,10 +186,15 @@ SELECT pg_temp.fails('an unknown recommendation is refused',
 SELECT pg_temp.fails('an unknown box is refused',
   format('SELECT self_eval_manager_save(%L, 2026, ARRAY[''salary''], to_jsonb(''x''::text))',
          (SELECT v FROM ids WHERE k = 'emp')), 'Unknown box');
-SELECT pg_temp.fails('the manager signs off only with the final rating',
+SELECT pg_temp.fails('the manager signs off only with the Part C ratings',
   format('SELECT self_eval_submit(%L, 2026, ''manager'', ''Test Manager'')', (SELECT v FROM ids WHERE k = 'emp')),
-  'final rating');
-SELECT self_eval_review_save((SELECT v FROM ids WHERE k = 'emp'), 2026, 'manager', ARRAY['overall_rating'], to_jsonb('EE'::text));
+  'Part C');
+SELECT pg_temp.fails('the manager rates potential Low / Moderate / High only',
+  format('SELECT self_eval_manager_save(%L, 2026, ARRAY[''potential'', ''learn'', ''rating''], to_jsonb(''Moderate–High''::text))',
+         (SELECT v FROM ids WHERE k = 'emp')), 'Unknown box');
+SELECT self_eval_manager_save((SELECT v FROM ids WHERE k = 'emp'), 2026, ARRAY['goals_summary', 'self_rating'], to_jsonb('EE'::text));
+SELECT self_eval_manager_save((SELECT v FROM ids WHERE k = 'emp'), 2026, ARRAY['overall', 'goals', 'rating'], to_jsonb('O'::text));
+SELECT self_eval_manager_save((SELECT v FROM ids WHERE k = 'emp'), 2026, ARRAY['overall', 'values', 'rating'], to_jsonb('EE'::text));
 SELECT pg_temp.fails('the sign-off needs the manager''s name',
   format('SELECT self_eval_submit(%L, 2026, ''manager'', '''')', (SELECT v FROM ids WHERE k = 'emp')),
   'Type your name');
@@ -218,9 +223,9 @@ SELECT pg_temp.fails('the person cannot comment before the sign-off',
 
 SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'mgr'));
 SELECT self_eval_submit((SELECT v FROM ids WHERE k = 'emp'), 2026, 'manager', 'Test Manager');
-SELECT pg_temp.eq('the sign-off completes it with the manager''s final rating',
+SELECT pg_temp.eq('the sign-off completes it: A (O) and B (EE) at 50% each give O',
   (SELECT final_rating || '/' || (finalized_at IS NOT NULL)::text FROM self_evaluations
-    WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp')), 'EE/true');
+    WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp')), 'O/true');
 SELECT pg_temp.fails('the manager evaluation locks once signed off',
   format('SELECT self_eval_manager_save(%L, 2026, ARRAY[''feedback'', ''training''], to_jsonb(''x''::text))',
          (SELECT v FROM ids WHERE k = 'emp')), 'cannot write');
@@ -310,10 +315,13 @@ SELECT pg_temp.eq('...nor open the files',
 SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'mgr'));
 SELECT pg_temp.eq('the direct manager sees their team''s forms',
   (SELECT count(*) FROM self_evaluations WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp3'))::int, 1);
-SELECT self_eval_review_save((SELECT v FROM ids WHERE k = 'emp3'), 2026, 'manager', ARRAY['overall_rating'], to_jsonb('EE'::text));
+SELECT self_eval_manager_save((SELECT v FROM ids WHERE k = 'emp3'), 2026, ARRAY['overall', 'goals', 'rating'], to_jsonb('FME'::text));
+SELECT self_eval_manager_save((SELECT v FROM ids WHERE k = 'emp3'), 2026, ARRAY['overall', 'values', 'rating'], to_jsonb('PME'::text));
 SELECT self_eval_submit((SELECT v FROM ids WHERE k = 'emp3'), 2026, 'manager', 'Test Manager');
 SELECT pg_temp.eq('the direct manager rates and signs off',
   (SELECT finalized_at IS NOT NULL FROM self_evaluations WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp3')), true);
+SELECT pg_temp.eq('FME and PME at 50% each give FME (2.5 rounds up)',
+  (SELECT final_rating FROM self_evaluations WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp3')), 'FME');
 
 SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'hr'));
 SELECT pg_temp.eq('HR still sees everyone',
