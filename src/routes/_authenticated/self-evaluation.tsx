@@ -33,6 +33,7 @@ import {
   canWriteManagerEval,
   defaultYear,
   errorText,
+  hasStarted,
   MAX_GOALS,
   mergeReadForm,
   POTENTIAL,
@@ -212,11 +213,11 @@ function SelfEvaluationPage() {
                       {p.id === viewer?.id ? " (you)" : ""}
                     </td>
                     <td className="px-4 py-2">
-                      {p.row ? STAGE_LABEL[stageOf(p.row)] : "Not started"}
+                      {p.row && hasStarted(p.row) ? STAGE_LABEL[stageOf(p.row)] : "Not started"}
                     </td>
                     <td className="px-4 py-2">{p.row?.final_rating ?? "—"}</td>
                     <td className="px-4 py-2 text-soft">
-                      {p.row ? niceDate(p.row.updated_at.slice(0, 10)) : "—"}
+                      {p.row && hasStarted(p.row) ? niceDate(p.row.updated_at.slice(0, 10)) : "—"}
                     </td>
                   </tr>
                 ))}

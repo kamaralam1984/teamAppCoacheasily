@@ -642,3 +642,21 @@ export function canWriteManagerEval(args: {
   const rater = args.directManager || (args.hrOrAdmin && !args.personHasManager);
   return rater && stageOf(args.steps) === "manager";
 }
+
+/** Has the person written anything yet? Opening the page makes an empty form; that is not a start. */
+export function hasStarted(row: {
+  emp_submitted_at: string | null;
+  goals: unknown;
+  value_answers: unknown;
+  reflection: unknown;
+  potential: unknown;
+}): boolean {
+  if (row.emp_submitted_at) return true;
+  const filled = (v: unknown): boolean => {
+    if (typeof v === "string") return v.trim() !== "";
+    if (Array.isArray(v)) return v.some(filled);
+    if (v && typeof v === "object") return Object.values(v).some(filled);
+    return false;
+  };
+  return [row.goals, row.value_answers, row.reflection, row.potential].some(filled);
+}

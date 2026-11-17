@@ -5,6 +5,7 @@ import {
   averagePoints,
   canWriteManagerEval,
   finalFromParts,
+  hasStarted,
   canWriteReview,
   defaultYear,
   docxXmlToText,
@@ -244,4 +245,18 @@ test("final rating: A and B at 50% each", () => {
   equal(finalFromParts("FME", "PME"), "FME");
   equal(finalFromParts("EE", "EE"), "EE");
   equal(finalFromParts("EE", ""), null);
+});
+
+test("an opened but empty form is not started", () => {
+  const empty = {
+    emp_submitted_at: null,
+    goals: [{}],
+    value_answers: {},
+    reflection: {},
+    potential: { learn: { rating: "" } },
+  };
+  equal(hasStarted(empty), false);
+  equal(hasStarted({ ...empty, reflection: { proud: "Shipped" } }), true);
+  equal(hasStarted({ ...empty, goals: [{ rating: "EE" }] }), true);
+  equal(hasStarted({ ...empty, emp_submitted_at: "x" }), true);
 });

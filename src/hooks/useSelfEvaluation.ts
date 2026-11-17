@@ -67,12 +67,16 @@ export function useSelfEvalList(year: number, enabled: boolean, viaDev = false) 
           | "finalized_at"
           | "final_rating"
           | "updated_at"
+          | "goals"
+          | "value_answers"
+          | "reflection"
+          | "potential"
         >[];
       }
       const { data, error } = await supabase
         .from("self_evaluations")
         .select(
-          "id, profile_id, year, emp_submitted_at, mgr_submitted_at, finalized_at, final_rating, updated_at",
+          "id, profile_id, year, emp_submitted_at, mgr_submitted_at, finalized_at, final_rating, updated_at, goals, value_answers, reflection, potential",
         )
         .eq("year", year);
       if (error) throw error;
