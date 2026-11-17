@@ -7,14 +7,12 @@ import {
   RATINGS,
   RECOMMENDATIONS,
   REFLECTION,
-  REVIEW_KINDS,
-  REVIEW_LABEL,
   VALUES,
-  isRating,
   type FormLike,
   type ManagerExtra,
   type ReviewLike,
 } from "@/lib/selfEvaluation";
+import { EMPLOYEE_FORM_TEXT } from "@/lib/employeeFormText";
 import { MANAGER_FORM_TEXT, POTENTIAL_SCALE, SCALE } from "@/lib/managerFormText";
 
 export interface PdfInput {
@@ -53,8 +51,6 @@ function clean(s: string | null | undefined): string {
     })
     .join("");
 }
-
-const rating = (r: string | null | undefined) => (isRating(r) ? RATING_LABEL[r] : clean(r));
 
 /** The filled form as a PDF in the company form's layout (A4, letterhead, tables). */
 /** An A4 page set in the company form's layout: letterhead, title, tables, page footer. */
@@ -179,14 +175,14 @@ async function startDoc(title: string, year: number, footerLabel: string) {
 }
 
 export async function buildSelfEvalPdf(input: PdfInput): Promise<Uint8Array> {
-  const { heading, para, table, newPage, finish } = await startDoc(
+  const E = EMPLOYEE_FORM_TEXT;
+  const { heading, para, table, finish } = await startDoc(
     "ANNUAL SELF-EVALUATION FORM",
     input.year,
     "Annual Self-Evaluation",
   );
-  para(
-    "Use this form for your annual self-evaluation. It shows your manager what you delivered and how you worked, and it is your starting point for next year's goals.",
-  );
+  const sr = `Self-rating\n${SCALE}`;
+  para(E.intro);
 
   heading("About you");
   table(
@@ -205,38 +201,43 @@ export async function buildSelfEvalPdf(input: PdfInput): Promise<Uint8Array> {
   );
 
   heading("How this form works");
-  para(
-    "Your appraisal has two equal parts. Rate yourself on evidence, not on effort or hours worked, and be specific: give a number, a date, or a client or learner outcome.",
-  );
+  para(E.works);
   table(
     ["Part", "Weight", "What it covers"],
     [0.3, 0.12, 0.58],
-    [
-      [
-        "A. Goals and Impact",
-        "50%",
-        "The 4-5 goals agreed with your manager and the outcomes you delivered",
-      ],
-      ["B. Competencies and Values", "50%", "How you delivered: the 12 values listed in Part B"],
-    ],
+    E.parts.map((x) => [...x]),
   );
+  para("Use this rating scale for every rating.");
   table(
     ["Rating", "What it means"],
     [0.35, 0.65],
     RATINGS.map((r) => [RATING_LABEL[r], RATING_MEANING[r]]),
   );
 
-  heading("Part A: Goals and Impact (50%)");
+  const goalHead = [
+    "#",
+    "Goal and the company priority it supports",
+    "Target / measure",
+    "Result achieved",
+    "Evidence (numbers, links, feedback)",
+    sr,
+  ];
+  const goalWidths = [0.05, 0.2, 0.15, 0.17, 0.29, 0.14];
+  heading("Example: how to fill in your goals");
+  para(E.exampleNote);
+  para(E.tip);
+  para("EXAMPLE  For guidance only. Do not fill in this table.", 8.5, true);
   table(
-    [
-      "#",
-      "Goal and the company priority it supports",
-      "Target / measure",
-      "Result achieved",
-      "Evidence (numbers, links, feedback)",
-      "Self-rating",
-    ],
-    [0.05, 0.22, 0.16, 0.2, 0.24, 0.13],
+    goalHead,
+    goalWidths,
+    E.exampleGoals.map((g, i) => [String(i + 1), g.goal, g.target, g.result, g.evidence, g.rating]),
+  );
+
+  heading("Part A: Goals and Impact (50%)");
+  para(E.partA(input.year));
+  table(
+    goalHead,
+    goalWidths,
     input.form.goals
       .filter((g) => g.goal || g.target || g.result || g.evidence || g.rating)
       .map((g, i) => [
@@ -249,10 +250,17 @@ export async function buildSelfEvalPdf(input: PdfInput): Promise<Uint8Array> {
       ]),
   );
 
+  const valueHead = ["Value", "What it looks like in practice", "Your example from this year", sr];
+  const valueWidths = [0.15, 0.24, 0.47, 0.14];
   heading("Part B: Competencies and Values (50%)");
+  para(E.partB);
+  para("EXAMPLE  How to fill in one value. For guidance only.", 8.5, true);
+  table(valueHead, valueWidths, [
+    [E.exampleValue.value, E.exampleValue.practice, E.exampleValue.example, E.exampleValue.rating],
+  ]);
   table(
-    ["Value", "What it looks like in practice", "Your example from this year", "Self-rating"],
-    [0.15, 0.25, 0.47, 0.13],
+    valueHead,
+    valueWidths,
     VALUES.map((v) => [
       v.name,
       v.practice,
@@ -262,6 +270,7 @@ export async function buildSelfEvalPdf(input: PdfInput): Promise<Uint8Array> {
   );
 
   heading("Part C: Reflection");
+  para(E.partC);
   table(
     ["Question", "Your response"],
     [0.35, 0.65],
@@ -270,7 +279,7 @@ export async function buildSelfEvalPdf(input: PdfInput): Promise<Uint8Array> {
 
   heading("Part D: Potential, Growth and Next Year");
   table(
-    ["Potential question", "Your rating (Low / Moderate / High)", "Why"],
+    ["Potential question", "Your rating\n(Low / Moderate / High)", "Why"],
     [0.35, 0.2, 0.45],
     POTENTIAL.map((q) => [
       q.question,
@@ -280,7 +289,7 @@ export async function buildSelfEvalPdf(input: PdfInput): Promise<Uint8Array> {
   );
 
   heading("Sign-off");
-  para("By signing, I confirm that the evidence above is accurate.");
+  para(E.signoff);
   table(
     ["Field", ""],
     [0.32, 0.68],
@@ -290,48 +299,6 @@ export async function buildSelfEvalPdf(input: PdfInput): Promise<Uint8Array> {
       ["Date", input.signedAt ? new Date(input.signedAt).toLocaleDateString("en-IN") : ""],
     ],
   );
-
-  const shown = REVIEW_KINDS.flatMap((k) => input.reviews.filter((r) => r.kind === k));
-  if (shown.length > 0) {
-    newPage();
-    heading("Ratings by Manager, HR and Admin");
-    const kinds = shown.map((r) => REVIEW_LABEL[r.kind as keyof typeof REVIEW_LABEL] ?? r.kind);
-    const w = 0.55 / kinds.length;
-    const goals = input.form.goals.filter(
-      (g) => g.goal || g.target || g.result || g.evidence || g.rating,
-    );
-    const cell = (x?: { rating?: string; comment?: string }) =>
-      [x?.rating ?? "", x?.comment ?? ""].filter(Boolean).join(" - ");
-    table(
-      ["Part A goal", "Self", ...kinds],
-      [0.33, 0.12, ...kinds.map(() => w)],
-      goals.map((g, i) => [
-        `${i + 1}. ${g.goal ?? ""}`.slice(0, 160),
-        g.rating ?? "",
-        ...shown.map((r) => cell(r.goal_ratings[String(i)])),
-      ]),
-    );
-    table(
-      ["Part B value", "Self", ...kinds],
-      [0.33, 0.12, ...kinds.map(() => w)],
-      VALUES.map((v) => [
-        v.name,
-        input.form.value_answers[v.key]?.rating ?? "",
-        ...shown.map((r) => cell(r.value_ratings[v.key])),
-      ]),
-    );
-    table(
-      ["Reviewer", "Overall rating", "Feedback"],
-      [0.18, 0.27, 0.55],
-      shown.map((r) => [
-        REVIEW_LABEL[r.kind as keyof typeof REVIEW_LABEL] ?? r.kind,
-        rating(r.overall_rating),
-        r.feedback ?? "",
-      ]),
-    );
-    if (input.finalRating) para(`Final rating: ${rating(input.finalRating)}`, 11);
-  }
-
   return finish();
 }
 

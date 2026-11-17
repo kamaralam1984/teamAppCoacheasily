@@ -24,6 +24,8 @@ import { useWarriors } from "@/hooks/useWarriors";
 import type { Json } from "@/integrations/supabase/types";
 import { niceDate } from "@/lib/calendar";
 import { downloadBytes, MIME, safeFileName } from "@/lib/exporters";
+import { EMPLOYEE_FORM_TEXT } from "@/lib/employeeFormText";
+import { SCALE } from "@/lib/managerFormText";
 import { buildManagerEvalPdf, buildSelfEvalPdf } from "@/lib/selfEvalPdf";
 import { prettySize } from "@/lib/shrinkFile";
 import {
@@ -76,9 +78,8 @@ export const Route = createFileRoute("/_authenticated/self-evaluation")({
 
 const STEPS: { stage: Stage; label: string }[] = [
   { stage: "self", label: "1 · Self-evaluation" },
-  { stage: "manager", label: "2 · Manager rating" },
-  { stage: "feedback", label: "3 · HR & admin rating" },
-  { stage: "final", label: "4 · Final" },
+  { stage: "manager", label: "2 · Manager evaluation" },
+  { stage: "final", label: "3 · Complete" },
 ];
 const STAGE_ORDER: Stage[] = ["self", "manager", "feedback", "final"];
 
@@ -604,9 +605,12 @@ function EvaluationSheet({
     <DraftsContext.Provider value={drafts}>
       <section className="ce-card overflow-hidden">
         <div className="bg-night px-4 py-3 text-center text-white">
-          <p className="font-display text-xl">Annual Self-Evaluation Form — {personName}</p>
-          <p className="text-[12px] font-bold tracking-[0.08em] text-goldL uppercase">
-            January {year} to December {year} · {STAGE_LABEL[stage]}
+          <p className="font-display text-xl">ANNUAL SELF-EVALUATION FORM</p>
+          <p className="text-[12px] font-bold tracking-[0.08em] text-goldL">
+            For the year January {year} to December {year}
+          </p>
+          <p className="mt-1 text-[12px] text-white/80">
+            {personName} · {STAGE_LABEL[stage]}
           </p>
         </div>
         <ol className="flex flex-wrap gap-2 border-b border-line bg-cream px-4 py-3">
@@ -680,11 +684,18 @@ function EvaluationSheet({
 
       {/* About you */}
       <section className="ce-card overflow-x-auto p-4">
+        <p className="mb-3 text-sm text-soft">{EMPLOYEE_FORM_TEXT.intro}</p>
         <h2 className="mb-2 font-display text-xl text-ink">About you</h2>
         <table className="w-full min-w-[480px] border-collapse text-left">
+          <thead>
+            <tr className="text-[11px] font-bold tracking-[0.04em] text-ink uppercase">
+              <th className={`${th} w-48`}>Field</th>
+              <th className={th}>Your response</th>
+            </tr>
+          </thead>
           <tbody className="text-[13px]">
             <tr>
-              <th className={`${th} w-48`}>Name</th>
+              <td className="border border-line px-2 py-1.5">Name</td>
               <td className="border border-line">{ro(personName)}</td>
             </tr>
             {(
@@ -695,7 +706,7 @@ function EvaluationSheet({
               ] as const
             ).map(([k, label]) => (
               <tr key={k}>
-                <th className={th}>{label}</th>
+                <td className="border border-line px-2 py-1.5">{label}</td>
                 <td className="border border-line">
                   {canFill ? (
                     <Cell value={form[k] ?? ""} onSave={(v) => save("about", [k], v)} />
@@ -706,7 +717,7 @@ function EvaluationSheet({
               </tr>
             ))}
             <tr>
-              <th className={th}>Date completed</th>
+              <td className="border border-line px-2 py-1.5">Date completed</td>
               <td className="border border-line">
                 {ro(row?.emp_submitted_at ? niceDate(row.emp_submitted_at.slice(0, 10)) : "")}
               </td>
@@ -716,37 +727,92 @@ function EvaluationSheet({
       </section>
 
       {/* How this form works */}
-      <details className="ce-card p-4">
-        <summary className="cursor-pointer font-display text-xl text-ink">
-          How this form works
-        </summary>
-        <p className="mt-2 text-sm text-soft">
-          Your appraisal has two equal parts: <b>A. Goals and Impact (50%)</b>, the 4–5 goals agreed
-          with your manager and the outcomes you delivered, and{" "}
-          <b>B. Competencies and Values (50%)</b>, how you delivered. Rate yourself on evidence, not
-          on effort or hours worked, and be specific: give a number, a date, or a client or learner
-          outcome. Make every target measurable, e.g. “Convert 15 leads a month”.
-        </p>
-        <table className="mt-3 w-full border-collapse text-left text-[13px]">
+      <section className="ce-card space-y-3 overflow-x-auto p-4">
+        <h2 className="font-display text-xl text-ink">How this form works</h2>
+        <p className="text-sm text-soft">{EMPLOYEE_FORM_TEXT.works}</p>
+        <table className="w-full min-w-[600px] border-collapse text-left text-[13px]">
+          <thead>
+            <tr className="text-[11px] font-bold tracking-[0.04em] text-ink uppercase">
+              <th className={`${th} w-64`}>Part</th>
+              <th className={`${th} w-20`}>Weight</th>
+              <th className={th}>What it covers</th>
+            </tr>
+          </thead>
+          <tbody>
+            {EMPLOYEE_FORM_TEXT.parts.map(([p, w, c]) => (
+              <tr key={p}>
+                <td className="border border-line px-2 py-1.5">{p}</td>
+                <td className="border border-line px-2 py-1.5">{w}</td>
+                <td className="border border-line px-2 py-1.5">{c}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="text-sm text-soft">Use this rating scale for every rating.</p>
+        <table className="w-full min-w-[600px] border-collapse text-left text-[13px]">
+          <thead>
+            <tr className="text-[11px] font-bold tracking-[0.04em] text-ink uppercase">
+              <th className={`${th} w-72`}>Rating</th>
+              <th className={th}>What it means</th>
+            </tr>
+          </thead>
           <tbody>
             {RATINGS.map((r) => (
               <tr key={r}>
-                <th className={`${th} w-72`}>{RATING_LABEL[r]}</th>
+                <td className="border border-line px-2 py-1.5">{RATING_LABEL[r]}</td>
                 <td className="border border-line px-2 py-1.5">{RATING_MEANING[r]}</td>
               </tr>
             ))}
           </tbody>
         </table>
-      </details>
+      </section>
+
+      {/* Example: how to fill in your goals */}
+      <section className="ce-card space-y-2 overflow-x-auto p-4">
+        <h2 className="font-display text-xl text-ink">Example: how to fill in your goals</h2>
+        <p className="text-sm text-soft">{EMPLOYEE_FORM_TEXT.exampleNote}</p>
+        <p className="text-sm text-soft">{EMPLOYEE_FORM_TEXT.tip}</p>
+        <p className="text-[12px] font-bold tracking-[0.06em] text-red uppercase">
+          Example{" "}
+          <span className="font-normal normal-case">
+            For guidance only. Do not fill in this table.
+          </span>
+        </p>
+        <table className="w-full min-w-[1000px] border-collapse text-left text-[13px] opacity-80">
+          <thead>
+            <tr className="text-[11px] font-bold tracking-[0.04em] text-ink uppercase">
+              <th className={`${th} w-10`}>#</th>
+              <th className={th}>Goal and the company priority it supports</th>
+              <th className={th}>Target / measure</th>
+              <th className={th}>Result achieved</th>
+              <th className={th}>Evidence (numbers, links, feedback)</th>
+              <th className={`${th} w-32`}>
+                Self-rating
+                <br />
+                <span className="font-normal normal-case">{SCALE}</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {EMPLOYEE_FORM_TEXT.exampleGoals.map((g, i) => (
+              <tr key={i} className="align-top">
+                <td className="border border-line px-2 py-1.5">{i + 1}</td>
+                <td className="border border-line px-2 py-1.5">{g.goal}</td>
+                <td className="border border-line px-2 py-1.5">{g.target}</td>
+                <td className="border border-line px-2 py-1.5">{g.result}</td>
+                <td className="border border-line px-2 py-1.5">{g.evidence}</td>
+                <td className="border border-line px-2 py-1.5">{g.rating}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
 
       {/* Part A */}
       <section className="ce-card overflow-hidden">
         <div className="p-4 pb-2">
           <h2 className="font-display text-xl text-ink">Part A: Goals and Impact (50%)</h2>
-          <p className="text-sm text-soft">
-            List the 4–5 goals you agreed with your manager and rate each on the outcome delivered,
-            not on the effort.
-          </p>
+          <p className="text-sm text-soft">{EMPLOYEE_FORM_TEXT.partA(year)}</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1100px] border-collapse text-left">
@@ -757,7 +823,11 @@ function EvaluationSheet({
                 <th className={`${th} min-w-[150px]`}>Target / measure</th>
                 <th className={`${th} min-w-[180px]`}>Result achieved</th>
                 <th className={`${th} min-w-[240px]`}>Evidence (numbers, links, feedback)</th>
-                <th className={`${th} w-28`}>Self-rating</th>
+                <th className={`${th} w-28`}>
+                  Self-rating
+                  <br />
+                  <span className="font-normal normal-case">{SCALE}</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -836,10 +906,45 @@ function EvaluationSheet({
       <section className="ce-card overflow-hidden">
         <div className="p-4 pb-2">
           <h2 className="font-display text-xl text-ink">Part B: Competencies and Values (50%)</h2>
-          <p className="text-sm text-soft">
-            For each value, read what it looks like in practice, rate yourself, and give one real
-            example from this year: what happened, what you did and what changed.
+          <p className="text-sm text-soft">{EMPLOYEE_FORM_TEXT.partB}</p>
+          <p className="mt-2 text-[12px] font-bold tracking-[0.06em] text-red uppercase">
+            Example{" "}
+            <span className="font-normal normal-case">
+              How to fill in one value. For guidance only.
+            </span>
           </p>
+          <div className="overflow-x-auto">
+            <table className="mt-1 w-full min-w-[900px] border-collapse text-left text-[13px] opacity-80">
+              <thead>
+                <tr className="text-[11px] font-bold tracking-[0.04em] text-ink uppercase">
+                  <th className={`${th} w-36`}>Value</th>
+                  <th className={`${th} w-64`}>What it looks like in practice</th>
+                  <th className={th}>Your example from this year</th>
+                  <th className={`${th} w-28`}>
+                    Self-rating
+                    <br />
+                    <span className="font-normal normal-case">{SCALE}</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="align-top">
+                  <td className="border border-line px-2 py-1.5">
+                    {EMPLOYEE_FORM_TEXT.exampleValue.value}
+                  </td>
+                  <td className="border border-line px-2 py-1.5">
+                    {EMPLOYEE_FORM_TEXT.exampleValue.practice}
+                  </td>
+                  <td className="border border-line px-2 py-1.5">
+                    {EMPLOYEE_FORM_TEXT.exampleValue.example}
+                  </td>
+                  <td className="border border-line px-2 py-1.5">
+                    {EMPLOYEE_FORM_TEXT.exampleValue.rating}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px] border-collapse text-left">
@@ -848,7 +953,11 @@ function EvaluationSheet({
                 <th className={`${th} w-36`}>Value</th>
                 <th className={`${th} w-64`}>What it looks like in practice</th>
                 <th className={`${th} min-w-[320px]`}>Your example from this year</th>
-                <th className={`${th} w-28`}>Self-rating</th>
+                <th className={`${th} w-28`}>
+                  Self-rating
+                  <br />
+                  <span className="font-normal normal-case">{SCALE}</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -1090,13 +1199,23 @@ function Steps({
   return (
     <section className="ce-card space-y-3 p-4">
       <h2 className="font-display text-xl text-ink">Sign-off</h2>
-      {signedName ? (
-        <p className="text-sm text-ink">
-          Signed by <b>{signedName}</b>
-          {signedAt ? ` on ${niceDate(signedAt.slice(0, 10))}` : ""}: “I confirm that the evidence
-          above is accurate.”
-        </p>
-      ) : null}
+      <p className="text-sm text-soft">{EMPLOYEE_FORM_TEXT.signoff}</p>
+      <table className="w-full max-w-2xl border-collapse text-left text-[13px]">
+        <tbody>
+          {(
+            [
+              ["Employee name", personName],
+              ["Signature", signedName ? `${signedName} (signed in the Team App)` : ""],
+              ["Date", signedAt ? niceDate(signedAt.slice(0, 10)) : ""],
+            ] as const
+          ).map(([k, v]) => (
+            <tr key={k}>
+              <td className="w-48 border border-line px-2 py-1.5">{k}</td>
+              <td className="border border-line px-2 py-1.5">{v}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
       {self && stage === "self" ? (
         cycleOpen ? (

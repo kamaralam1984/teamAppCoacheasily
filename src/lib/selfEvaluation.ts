@@ -184,9 +184,9 @@ export function stageOf(row: StepsLike | null | undefined): Stage {
 }
 export const STAGE_LABEL: Record<Stage, string> = {
   self: "Self-evaluation pending",
-  manager: "Manager rating pending",
-  feedback: "HR & admin rating pending",
-  final: "Final",
+  manager: "Manager evaluation pending",
+  feedback: "Manager evaluation pending",
+  final: "Complete",
 };
 
 /** The reviewer boxes the viewer writes: managers 'manager', HR 'hr', admin 'sir'. */
