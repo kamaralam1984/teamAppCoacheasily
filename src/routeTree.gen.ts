@@ -33,6 +33,7 @@ import { Route as AuthenticatedProbationReviewRouteImport } from './routes/_auth
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedReportCenterRouteImport } from './routes/_authenticated/report-center'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedSelfEvaluationRouteImport } from './routes/_authenticated/self-evaluation'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedStrategicMeetingsRouteImport } from './routes/_authenticated/strategic-meetings'
 import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/tasks'
@@ -165,6 +166,12 @@ const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSelfEvaluationRoute =
+  AuthenticatedSelfEvaluationRouteImport.update({
+    id: '/self-evaluation',
+    path: '/self-evaluation',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -237,6 +244,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/report-center': typeof AuthenticatedReportCenterRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/self-evaluation': typeof AuthenticatedSelfEvaluationRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/strategic-meetings': typeof AuthenticatedStrategicMeetingsRoute
   '/tasks': typeof AuthenticatedTasksRoute
@@ -271,6 +279,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/report-center': typeof AuthenticatedReportCenterRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/self-evaluation': typeof AuthenticatedSelfEvaluationRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/strategic-meetings': typeof AuthenticatedStrategicMeetingsRoute
   '/tasks': typeof AuthenticatedTasksRoute
@@ -307,6 +316,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/report-center': typeof AuthenticatedReportCenterRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/self-evaluation': typeof AuthenticatedSelfEvaluationRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/strategic-meetings': typeof AuthenticatedStrategicMeetingsRoute
   '/_authenticated/tasks': typeof AuthenticatedTasksRoute
@@ -343,6 +353,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/report-center'
     | '/reports'
+    | '/self-evaluation'
     | '/settings'
     | '/strategic-meetings'
     | '/tasks'
@@ -377,6 +388,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/report-center'
     | '/reports'
+    | '/self-evaluation'
     | '/settings'
     | '/strategic-meetings'
     | '/tasks'
@@ -412,6 +424,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/report-center'
     | '/_authenticated/reports'
+    | '/_authenticated/self-evaluation'
     | '/_authenticated/settings'
     | '/_authenticated/strategic-meetings'
     | '/_authenticated/tasks'
@@ -603,6 +616,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/self-evaluation': {
+      id: '/_authenticated/self-evaluation'
+      path: '/self-evaluation'
+      fullPath: '/self-evaluation'
+      preLoaderRoute: typeof AuthenticatedSelfEvaluationRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
@@ -689,6 +709,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedReportCenterRoute: typeof AuthenticatedReportCenterRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedSelfEvaluationRoute: typeof AuthenticatedSelfEvaluationRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStrategicMeetingsRoute: typeof AuthenticatedStrategicMeetingsRoute
   AuthenticatedTasksRoute: typeof AuthenticatedTasksRoute
@@ -718,6 +739,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedReportCenterRoute: AuthenticatedReportCenterRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedSelfEvaluationRoute: AuthenticatedSelfEvaluationRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStrategicMeetingsRoute: AuthenticatedStrategicMeetingsRoute,
   AuthenticatedTasksRoute: AuthenticatedTasksRoute,

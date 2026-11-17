@@ -14,6 +14,279 @@ export type Database = {
   }
   public: {
     Tables: {
+      self_eval_cycles: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          due_date: string | null
+          opened_at: string | null
+          opened_by: string | null
+          org_id: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          due_date?: string | null
+          opened_at?: string | null
+          opened_by?: string | null
+          org_id: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          due_date?: string | null
+          opened_at?: string | null
+          opened_by?: string | null
+          org_id?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      self_eval_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          goal_index: number | null
+          id: string
+          kind: string
+          encoding: string | null
+          mime: string
+          org_id: string
+          original_size: number | null
+          path: string
+          profile_id: string
+          removed_at: string | null
+          removed_by: string | null
+          size_bytes: number
+          uploaded_by: string | null
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          goal_index?: number | null
+          id?: string
+          kind: string
+          encoding?: string | null
+          mime?: string
+          org_id: string
+          original_size?: number | null
+          path: string
+          profile_id: string
+          removed_at?: string | null
+          removed_by?: string | null
+          size_bytes?: number
+          uploaded_by?: string | null
+          year: number
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          goal_index?: number | null
+          id?: string
+          kind?: string
+          encoding?: string | null
+          mime?: string
+          org_id?: string
+          original_size?: number | null
+          path?: string
+          profile_id?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          size_bytes?: number
+          uploaded_by?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
+      self_eval_log: {
+        Row: {
+          action: string
+          actor: string | null
+          changes: Json
+          created_at: string
+          entity: string
+          id: number
+          org_id: string
+          profile_id: string
+          year: number
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          changes?: Json
+          created_at?: string
+          entity: string
+          id?: number
+          org_id: string
+          profile_id: string
+          year: number
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          changes?: Json
+          created_at?: string
+          entity?: string
+          id?: number
+          org_id?: string
+          profile_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      self_eval_notes: {
+        Row: {
+          kind: string
+          note: string
+          org_id: string
+          profile_id: string
+          updated_at: string
+          updated_by: string | null
+          year: number
+        }
+        Insert: {
+          kind: string
+          note?: string
+          org_id: string
+          profile_id: string
+          updated_at?: string
+          updated_by?: string | null
+          year: number
+        }
+        Update: {
+          kind?: string
+          note?: string
+          org_id?: string
+          profile_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
+      self_eval_reviews: {
+        Row: {
+          feedback: string
+          goal_ratings: Json
+          kind: string
+          org_id: string
+          overall_rating: string | null
+          profile_id: string
+          updated_at: string
+          updated_by: string | null
+          value_ratings: Json
+          year: number
+        }
+        Insert: {
+          feedback?: string
+          goal_ratings?: Json
+          kind: string
+          org_id: string
+          overall_rating?: string | null
+          profile_id: string
+          updated_at?: string
+          updated_by?: string | null
+          value_ratings?: Json
+          year: number
+        }
+        Update: {
+          feedback?: string
+          goal_ratings?: Json
+          kind?: string
+          org_id?: string
+          overall_rating?: string | null
+          profile_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          value_ratings?: Json
+          year?: number
+        }
+        Relationships: []
+      }
+      self_evaluations: {
+        Row: {
+          created_at: string
+          emp_submitted_at: string | null
+          final_rating: string | null
+          finalized_at: string | null
+          finalized_by: string | null
+          goals: Json
+          id: string
+          manager_name: string
+          mgr_submitted_at: string | null
+          mgr_submitted_by: string | null
+          org_id: string
+          potential: Json
+          profile_id: string
+          reflection: Json
+          review_period: string
+          role_team: string
+          signed_at: string | null
+          signed_name: string | null
+          updated_at: string
+          updated_by: string | null
+          value_answers: Json
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          emp_submitted_at?: string | null
+          final_rating?: string | null
+          finalized_at?: string | null
+          finalized_by?: string | null
+          goals?: Json
+          id?: string
+          manager_name?: string
+          mgr_submitted_at?: string | null
+          mgr_submitted_by?: string | null
+          org_id: string
+          potential?: Json
+          profile_id: string
+          reflection?: Json
+          review_period?: string
+          role_team?: string
+          signed_at?: string | null
+          signed_name?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          value_answers?: Json
+          year: number
+        }
+        Update: {
+          created_at?: string
+          emp_submitted_at?: string | null
+          final_rating?: string | null
+          finalized_at?: string | null
+          finalized_by?: string | null
+          goals?: Json
+          id?: string
+          manager_name?: string
+          mgr_submitted_at?: string | null
+          mgr_submitted_by?: string | null
+          org_id?: string
+          potential?: Json
+          profile_id?: string
+          reflection?: Json
+          review_period?: string
+          role_team?: string
+          signed_at?: string | null
+          signed_name?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          value_answers?: Json
+          year?: number
+        }
+        Relationships: []
+      }
       attendance: {
         Row: {
           check_out_at: string | null
@@ -3971,6 +4244,61 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      self_eval_close_cycle: { Args: { p_year: number }; Returns: undefined }
+      self_eval_file_add: {
+        Args: {
+          p_goal_index: number | null
+          p_kind: string
+          p_encoding?: string
+          p_mime: string
+          p_name: string
+          p_original_size?: number
+          p_path: string
+          p_profile_id: string
+          p_size: number
+          p_year: number
+        }
+        Returns: string
+      }
+      self_eval_file_remove: { Args: { p_file_id: string }; Returns: undefined }
+      self_eval_finalize: {
+        Args: { p_profile_id: string; p_rating: string; p_year: number }
+        Returns: undefined
+      }
+      self_eval_note_save: {
+        Args: { p_kind: string; p_note: string; p_profile_id: string; p_year: number }
+        Returns: undefined
+      }
+      self_eval_open_cycle: { Args: { p_due?: string; p_year: number }; Returns: undefined }
+      self_eval_reopen: {
+        Args: { p_profile_id: string; p_stage: string; p_year: number }
+        Returns: undefined
+      }
+      self_eval_review_save: {
+        Args: {
+          p_kind: string
+          p_path: string[]
+          p_profile_id: string
+          p_value: Json
+          p_year: number
+        }
+        Returns: undefined
+      }
+      self_eval_save: {
+        Args: {
+          p_path: string[]
+          p_profile_id: string
+          p_section: string
+          p_value: Json
+          p_year: number
+        }
+        Returns: undefined
+      }
+      self_eval_start: { Args: { p_year: number }; Returns: undefined }
+      self_eval_submit: {
+        Args: { p_profile_id: string; p_signed_name?: string; p_stage: string; p_year: number }
+        Returns: undefined
+      }
       appraisal_matrix: { Args: never; Returns: Json }
       attendance_correct: {
         Args: {

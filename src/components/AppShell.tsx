@@ -21,6 +21,7 @@ import {
   LayoutDashboard,
   LifeBuoy,
   ClipboardCheck,
+  ClipboardPen,
   Flag,
   Lightbulb,
   ListChecks,
@@ -77,6 +78,7 @@ const BASE_TABS: readonly { label: string; to: string; icon: LucideIcon }[] = [
   { label: "Leave", to: "/leave", icon: CalendarOff },
   { label: "Attendance", to: "/attendance", icon: Clock },
   { label: "My report", to: "/my-report", icon: FileText },
+  { label: "Self-Evaluation", to: "/self-evaluation", icon: ClipboardPen },
   { label: "Warriors", to: "/warriors", icon: Swords },
   { label: "Ideas", to: "/ideas", icon: Lightbulb },
 ];
