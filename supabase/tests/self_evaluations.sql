@@ -217,4 +217,40 @@ SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'hr'));
 SELECT pg_temp.eq('HR reads the history',
   (SELECT count(*) > 10 FROM self_eval_log WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp')), true);
 
+-- ───────── developer (service role, after the server's allowlist check) ─────────
+RESET ROLE;
+SELECT set_config('request.jwt.claim.sub', '', true);
+CREATE TEMP TABLE dev_ids AS SELECT gen_random_uuid() AS p;
+INSERT INTO profiles (id, org_id, auth_user_id, full_name, role, status)
+SELECT (SELECT p FROM dev_ids), (SELECT v FROM ids WHERE k = 'org'), gen_random_uuid(), 'Test Dev', 'member', 'active';
+INSERT INTO ids VALUES ('dev', (SELECT p FROM dev_ids)), ('emp2', gen_random_uuid());
+INSERT INTO profiles (id, org_id, auth_user_id, full_name, role, manager_id, status)
+VALUES ((SELECT v FROM ids WHERE k = 'emp2'), (SELECT v FROM ids WHERE k = 'org'), gen_random_uuid(), 'Second Person', 'member',
+        (SELECT v FROM ids WHERE k = 'mgr'), 'active');
+SET LOCAL ROLE service_role;
+SELECT self_eval_dev_close_cycle((SELECT v FROM ids WHERE k = 'dev'), (SELECT v FROM ids WHERE k = 'org'), 2026);
+SELECT pg_temp.eq('developer closes the cycle',
+  (SELECT closed_at IS NOT NULL FROM self_eval_cycles WHERE year = 2026), true);
+SELECT self_eval_dev_open_cycle((SELECT v FROM ids WHERE k = 'dev'), (SELECT v FROM ids WHERE k = 'org'), 2026, DATE '2027-02-01');
+SELECT pg_temp.eq('developer opens it again with a new date',
+  (SELECT closed_at IS NULL AND due_date = DATE '2027-02-01' FROM self_eval_cycles WHERE year = 2026), true);
+SELECT self_eval_dev_save((SELECT v FROM ids WHERE k = 'dev'), (SELECT v FROM ids WHERE k = 'emp2'), 2026, 'goals', ARRAY['0', 'goal'], to_jsonb('Fixed by dev'::text));
+SELECT pg_temp.eq('developer fills anyone''s form',
+  (SELECT goals -> 0 ->> 'goal' FROM self_evaluations WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp2')), 'Fixed by dev');
+SELECT pg_temp.eq('the history names the developer',
+  (SELECT count(*) FROM self_eval_log WHERE action = 'dev_save' AND actor = (SELECT v FROM ids WHERE k = 'dev'))::int, 1);
+SELECT self_eval_dev_file_add((SELECT v FROM ids WHERE k = 'dev'), (SELECT v FROM ids WHERE k = 'emp2'), 2026, 'form', NULL,
+  (SELECT v FROM ids WHERE k = 'emp2')::text || '/2026/z-form.pdf', 'z-form.pdf', 'application/pdf', 1000);
+SELECT self_eval_dev_file_remove((SELECT v FROM ids WHERE k = 'dev'), (SELECT id FROM self_eval_files WHERE file_name = 'z-form.pdf'));
+SELECT pg_temp.eq('developer removes a file: hidden, kept',
+  (SELECT removed_by = (SELECT v FROM ids WHERE k = 'dev') FROM self_eval_files WHERE file_name = 'z-form.pdf'), true);
+SELECT pg_temp.fails('not even the developer changes a final form',
+  format('SELECT self_eval_dev_save(%L, %L, 2026, ''reflection'', ARRAY[''proud''], to_jsonb(''x''::text))',
+         (SELECT v FROM ids WHERE k = 'dev'), (SELECT v FROM ids WHERE k = 'emp')), 'final');
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'emp'));
+SELECT pg_temp.fails('a signed-in user cannot call the developer functions',
+  format('SELECT self_eval_dev_save(%L, %L, 2026, ''reflection'', ARRAY[''proud''], to_jsonb(''x''::text))',
+         (SELECT v FROM ids WHERE k = 'emp'), (SELECT v FROM ids WHERE k = 'emp2')), 'permission denied');
+
 ROLLBACK;

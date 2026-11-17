@@ -1,8 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Json, Tables } from "@/integrations/supabase/types";
 import { unshrink, shrinkForUpload } from "@/lib/shrinkFile";
+import {
+  devSelfEval,
+  devSelfEvalCycle,
+  devSelfEvalFileAdd,
+  devSelfEvalFileRemove,
+  devSelfEvalFileUrl,
+  devSelfEvalList,
+  devSelfEvalSave,
+  devSelfEvalUploadUrl,
+} from "@/lib/selfEvaluationDev.functions";
 import { uploadMime, uploadPath, UPLOAD_MAX_BYTES, type ReviewKind } from "@/lib/selfEvaluation";
 
 export type SelfEvalRow = Tables<"self_evaluations">;
@@ -39,11 +50,25 @@ export function useSelfEvalCycles(enabled: boolean) {
 }
 
 /** The step of every form of the year the viewer may see (the database limits who that is). */
-export function useSelfEvalList(year: number, enabled: boolean) {
+export function useSelfEvalList(year: number, enabled: boolean, viaDev = false) {
+  const dev = useServerFn(devSelfEvalList);
   return useQuery({
-    queryKey: ["self-eval-list", year],
+    queryKey: ["self-eval-list", year, viaDev],
     enabled,
     queryFn: async () => {
+      if (viaDev) {
+        return (await dev({ data: { year } })) as unknown as Pick<
+          SelfEvalRow,
+          | "id"
+          | "profile_id"
+          | "year"
+          | "emp_submitted_at"
+          | "mgr_submitted_at"
+          | "finalized_at"
+          | "final_rating"
+          | "updated_at"
+        >[];
+      }
       const { data, error } = await supabase
         .from("self_evaluations")
         .select(
@@ -57,12 +82,17 @@ export function useSelfEvalList(year: number, enabled: boolean) {
 }
 
 /** One person's form for one year, with ratings, notes, files and history (as allowed). */
-export function useSelfEval(profileId: string | null, year: number) {
+/** A developer who is not the person's manager / HR reads it through the gated server route. */
+export function useSelfEval(profileId: string | null, year: number, viaDev = false) {
+  const dev = useServerFn(devSelfEval);
   return useQuery({
-    queryKey: ["self-eval", profileId, year],
+    queryKey: ["self-eval", profileId, year, viaDev],
     enabled: Boolean(profileId),
     queryFn: async (): Promise<SelfEvalData> => {
       const id = profileId!;
+      if (viaDev) {
+        return (await dev({ data: { profileId: id, year } })) as unknown as SelfEvalData;
+      }
       const [form, reviews, notes, files, log] = await Promise.all([
         supabase
           .from("self_evaluations")
@@ -99,7 +129,6 @@ export function useSelfEval(profileId: string | null, year: number) {
   });
 }
 
-/** A short-lived link to an uploaded file — never a public URL. */
 /**
  * Opens an uploaded file in a new tab, as the original: a file stored compressed is unpacked
  * in the browser first. Links are short-lived, never public.
@@ -107,7 +136,23 @@ export function useSelfEval(profileId: string | null, year: number) {
 export async function openSelfEvalFile(
   f: Pick<SelfEvalFile, "path" | "encoding" | "mime">,
   tab: Window | null,
+  /** for a developer: a link made on the server (the person's folder is not theirs) */
+  devUrl?: (path: string) => Promise<string>,
 ): Promise<void> {
+  if (devUrl) {
+    const url = await devUrl(f.path);
+    if (!f.encoding) {
+      if (tab) tab.location.href = url;
+      return;
+    }
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("The file could not be opened.");
+    const blob = await unshrink(await res.blob(), f.encoding, f.mime);
+    const local = URL.createObjectURL(blob);
+    if (tab) tab.location.href = local;
+    setTimeout(() => URL.revokeObjectURL(local), 60_000);
+    return;
+  }
   if (f.encoding) {
     const { data, error } = await supabase.storage.from(BUCKET).download(f.path);
     if (error) throw error;
@@ -122,8 +167,22 @@ export async function openSelfEvalFile(
   if (tab && data?.signedUrl) tab.location.href = data.signedUrl;
 }
 
-export function useSelfEvalWrites(profileId: string | null, year: number) {
+/** A server-made link to any self-evaluation file, for developers. */
+export function useDevFileUrl() {
+  const fn = useServerFn(devSelfEvalFileUrl);
+  return async (path: string) => (await fn({ data: { path } })).url;
+}
+
+/**
+ * Every write on one form. With `devWrite` (a developer on someone else's form) the answers,
+ * uploads and file removals go through the gated developer route; ratings never do.
+ */
+export function useSelfEvalWrites(profileId: string | null, year: number, devWrite = false) {
   const qc = useQueryClient();
+  const devSave = useServerFn(devSelfEvalSave);
+  const devUploadUrl = useServerFn(devSelfEvalUploadUrl);
+  const devFileAdd = useServerFn(devSelfEvalFileAdd);
+  const devFileRemove = useServerFn(devSelfEvalFileRemove);
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: ["self-eval", profileId, year] });
     void qc.invalidateQueries({ queryKey: ["self-eval-list", year] });
@@ -139,6 +198,10 @@ export function useSelfEvalWrites(profileId: string | null, year: number) {
 
   const save = useMutation({
     mutationFn: async (args: { section: Section; path: string[]; value: Json }) => {
+      if (devWrite) {
+        await devSave({ data: { profileId: profileId!, year, ...args } });
+        return;
+      }
       const { error } = await supabase.rpc("self_eval_save", {
         p_profile_id: profileId!,
         p_year: year,
@@ -228,6 +291,31 @@ export function useSelfEvalWrites(profileId: string | null, year: number) {
       if (args.file.size > UPLOAD_MAX_BYTES) throw new Error("That file is over 20MB.");
       // smaller before it is stored: photos re-saved at high quality, documents gzip (lossless)
       const s = await shrinkForUpload(args.file, mime);
+      if (devWrite) {
+        const { path, token } = await devUploadUrl({
+          data: { profileId: profileId!, year, name: s.name, gzip: Boolean(s.encoding) },
+        });
+        const { error: upErr } = await supabase.storage
+          .from(BUCKET)
+          .uploadToSignedUrl(path, token, s.blob, { contentType: s.storedMime });
+        if (upErr) throw upErr;
+        return (
+          await devFileAdd({
+            data: {
+              profileId: profileId!,
+              year,
+              kind: args.kind,
+              goalIndex: args.goalIndex ?? null,
+              path,
+              name: s.name,
+              mime: s.mime,
+              size: s.blob.size,
+              originalSize: s.originalSize,
+              encoding: s.encoding,
+            },
+          })
+        ).id;
+      }
       const path =
         uploadPath(profileId!, year, s.name, crypto.randomUUID()) + (s.encoding ? ".gz" : "");
       const { error: upErr } = await supabase.storage
@@ -254,6 +342,10 @@ export function useSelfEvalWrites(profileId: string | null, year: number) {
 
   const removeFile = useMutation({
     mutationFn: async (fileId: string) => {
+      if (devWrite) {
+        await devFileRemove({ data: { fileId } });
+        return;
+      }
       const { error } = await supabase.rpc("self_eval_file_remove", { p_file_id: fileId });
       if (error) throw error;
     },
@@ -263,11 +355,17 @@ export function useSelfEvalWrites(profileId: string | null, year: number) {
   return { start, save, reviewSave, noteSave, submit, reopen, finalize, upload, removeFile };
 }
 
-export function useSelfEvalCycleWrites() {
+/** HR / admin open and close through their own rights; a developer through the gated route. */
+export function useSelfEvalCycleWrites(viaDev = false) {
   const qc = useQueryClient();
+  const dev = useServerFn(devSelfEvalCycle);
   const refresh = () => void qc.invalidateQueries({ queryKey: ["self-eval-cycles"] });
   const open = useMutation({
     mutationFn: async (args: { year: number; due: string | null }) => {
+      if (viaDev) {
+        await dev({ data: { action: "open", year: args.year, due: args.due } });
+        return;
+      }
       const { error } = await supabase.rpc("self_eval_open_cycle", {
         p_year: args.year,
         ...(args.due ? { p_due: args.due } : {}),
@@ -278,6 +376,10 @@ export function useSelfEvalCycleWrites() {
   });
   const close = useMutation({
     mutationFn: async (year: number) => {
+      if (viaDev) {
+        await dev({ data: { action: "close", year } });
+        return;
+      }
       const { error } = await supabase.rpc("self_eval_close_cycle", { p_year: year });
       if (error) throw error;
     },

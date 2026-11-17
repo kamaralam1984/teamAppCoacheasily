@@ -8,6 +8,7 @@ import { Cell, DraftsContext } from "@/components/selfeval/AutoSaveCell";
 import { FormUpload } from "@/components/selfeval/FormUpload";
 import {
   openSelfEvalFile,
+  useDevFileUrl,
   useSelfEval,
   useSelfEvalCycles,
   useSelfEvalCycleWrites,
@@ -16,6 +17,7 @@ import {
   type SelfEvalFile,
   type SelfEvalReview,
 } from "@/hooks/useSelfEvaluation";
+import { useDeveloperAccess } from "@/hooks/useDeveloper";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useWarriors } from "@/hooks/useWarriors";
 import type { Json } from "@/integrations/supabase/types";
@@ -94,12 +96,16 @@ function SelfEvaluationPage() {
   const viewer = me?.profile ?? null;
   const { data: warriors } = useWarriors();
   const isHrAdmin = viewer?.role === "hr" || viewer?.role === "admin";
+  // developers (email allowlist, re-checked on the server) open, edit, upload and delete for everyone
+  const { data: devAccess } = useDeveloperAccess(Boolean(viewer));
+  const isDev = Boolean(devAccess?.isDeveloper);
+  const devList = isDev && !isHrAdmin;
 
   const { data: cycles } = useSelfEvalCycles(Boolean(viewer));
   const year = search.year ?? defaultYear(cycles ?? [], new Date());
   const cycle = (cycles ?? []).find((c) => c.year === year) ?? null;
   const cycleOpen = Boolean(cycle?.opened_at && !cycle?.closed_at);
-  const { data: list } = useSelfEvalList(year, Boolean(viewer));
+  const { data: list } = useSelfEvalList(year, Boolean(viewer), devList);
 
   const team = useMemo(
     () => (viewer ? downlineIds(warriors ?? [], viewer.id) : new Set<string>()),
@@ -109,14 +115,15 @@ function SelfEvaluationPage() {
   const people = useMemo(() => {
     if (!viewer) return [];
     const active = (warriors ?? []).filter((w) => w.status === "active");
-    const mine = isHrAdmin ? active : active.filter((w) => w.id === viewer.id || team.has(w.id));
+    const mine =
+      isHrAdmin || isDev ? active : active.filter((w) => w.id === viewer.id || team.has(w.id));
     const byId = new Map((list ?? []).map((r) => [r.profile_id, r]));
     return mine
       .map((w) => ({ id: w.id, name: w.full_name, row: byId.get(w.id) ?? null }))
       .sort((a, b) =>
         a.id === viewer.id ? -1 : b.id === viewer.id ? 1 : a.name.localeCompare(b.name),
       );
-  }, [warriors, viewer, isHrAdmin, team, list]);
+  }, [warriors, viewer, isHrAdmin, isDev, team, list]);
 
   const selectedId =
     (search.person && people.some((p) => p.id === search.person) ? search.person : null) ??
@@ -166,9 +173,9 @@ function SelfEvaluationPage() {
           </label>
         </div>
 
-        {isHrAdmin ? <CyclePanel year={year} cycle={cycle} /> : null}
+        {isHrAdmin || isDev ? <CyclePanel year={year} cycle={cycle} viaDev={devList} /> : null}
 
-        {!cycle?.opened_at && !isHrAdmin ? (
+        {!cycle?.opened_at && !isHrAdmin && !isDev ? (
           <div className="ce-card p-4 text-sm text-soft">
             The self-evaluation for {year} is not open yet. HR opens it and you will get a
             notification.
@@ -224,6 +231,7 @@ function SelfEvaluationPage() {
             role={viewer.role}
             managesPerson={team.has(selected.id)}
             hrOrAdmin={isHrAdmin}
+            isDev={isDev}
             names={new Map((warriors ?? []).map((w) => [w.id, w.full_name]))}
           />
         ) : null}
@@ -235,11 +243,13 @@ function SelfEvaluationPage() {
 function CyclePanel({
   year,
   cycle,
+  viaDev,
 }: {
   year: number;
+  viaDev: boolean;
   cycle: { opened_at: string | null; closed_at: string | null; due_date: string | null } | null;
 }) {
-  const writes = useSelfEvalCycleWrites();
+  const writes = useSelfEvalCycleWrites(viaDev);
   const [due, setDue] = useState(cycle?.due_date ?? "");
   useEffect(() => setDue(cycle?.due_date ?? ""), [cycle?.due_date]);
   const open = Boolean(cycle?.opened_at && !cycle?.closed_at);
@@ -346,6 +356,7 @@ function EvaluationSheet({
   role,
   managesPerson,
   hrOrAdmin,
+  isDev,
   names,
 }: {
   personId: string;
@@ -356,17 +367,26 @@ function EvaluationSheet({
   role: string;
   managesPerson: boolean;
   hrOrAdmin: boolean;
+  isDev: boolean;
   names: Map<string, string>;
 }) {
-  const { data, isLoading, error } = useSelfEval(personId, year);
-  const writes = useSelfEvalWrites(personId, year);
+  // a developer on someone else's form: reads (when not their manager / HR) and every write of
+  // the answers and files go through the gated developer route
+  const viaDevRead = isDev && !self && !(hrOrAdmin || managesPerson);
+  const devWrite = isDev && !self;
+  const { data, isLoading, error } = useSelfEval(personId, year, viaDevRead);
+  const writes = useSelfEvalWrites(personId, year, devWrite);
+  const devUrl = useDevFileUrl();
+  const open = (f: SelfEvalFile) => openFile(f, devWrite ? devUrl : undefined);
   const row = data?.form ?? null;
   const stage = stageOf(row);
   const form = asForm(row);
   const firstName = personName.split(" ")[0] ?? personName;
   const reviewer = !self && (hrOrAdmin || managesPerson);
-  const canFill = stage === "self" && ((self && cycleOpen) || (!self && hrOrAdmin));
-  const canUpload = stage !== "final" && (self || hrOrAdmin);
+  const canFill =
+    (stage === "self" && ((self && cycleOpen) || (!self && hrOrAdmin))) ||
+    (devWrite && stage !== "final");
+  const canUpload = stage !== "final" && (self || hrOrAdmin || devWrite);
   const myKinds = reviewKindsFor(role, managesPerson, self).filter((k) =>
     canWriteReview(k, row, hrOrAdmin),
   );
@@ -606,6 +626,7 @@ function EvaluationSheet({
         files={files.filter((f) => f.kind !== "evidence")}
         canRemove={canUpload}
         onRemove={(id) => writes.removeFile.mutate(id, { onError: fail })}
+        onOpen={open}
         names={names}
       />
 
@@ -740,6 +761,7 @@ function EvaluationSheet({
                           )
                         }
                         onRemove={(id) => writes.removeFile.mutate(id, { onError: fail })}
+                        onOpen={open}
                       />
                     </td>
                     <td className="border border-line p-1">
@@ -1032,7 +1054,7 @@ function EvaluationSheet({
         </section>
       ) : null}
 
-      {hrOrAdmin && (data?.log.length ?? 0) > 0 ? (
+      {(hrOrAdmin || isDev) && (data?.log.length ?? 0) > 0 ? (
         <details className="ce-card p-4">
           <summary className="cursor-pointer font-display text-xl text-ink">
             History ({data?.log.length})
@@ -1416,10 +1438,10 @@ function Steps({
   );
 }
 
-function openFile(f: SelfEvalFile) {
+function openFile(f: SelfEvalFile, devUrl?: (path: string) => Promise<string>) {
   // open the tab first, so the browser does not block it as a pop-up
   const tab = window.open("", "_blank");
-  void openSelfEvalFile(f, tab).catch((e) => {
+  void openSelfEvalFile(f, tab, devUrl).catch((e) => {
     tab?.close();
     fail(e);
   });
@@ -1432,7 +1454,9 @@ function EvidenceFiles({
   uploading,
   onAdd,
   onRemove,
+  onOpen,
 }: {
+  onOpen: (f: SelfEvalFile) => void;
   files: SelfEvalFile[];
   canAdd: boolean;
   canRemove: boolean;
@@ -1450,14 +1474,14 @@ function EvidenceFiles({
           <button
             type="button"
             className="truncate text-left text-goldD underline"
-            onClick={() => openFile(f)}
+            onClick={() => onOpen(f)}
           >
             {f.file_name}
           </button>
           {canRemove ? (
             <button
               type="button"
-              title="Remove from the form (the file is kept in the history)"
+              title="Delete from the form (a copy is kept in the history)"
               className="text-soft hover:text-red"
               onClick={() => onRemove(f.id)}
             >
@@ -1499,8 +1523,10 @@ function FileList({
   files,
   canRemove,
   onRemove,
+  onOpen,
   names,
 }: {
+  onOpen: (f: SelfEvalFile) => void;
   title: string;
   files: SelfEvalFile[];
   canRemove: boolean;
@@ -1515,7 +1541,7 @@ function FileList({
         {files.map((f) => (
           <li key={f.id} className="flex flex-wrap items-center gap-2">
             <Paperclip className="h-4 w-4 text-soft" />
-            <button type="button" className="text-goldD underline" onClick={() => openFile(f)}>
+            <button type="button" className="text-goldD underline" onClick={() => onOpen(f)}>
               {f.file_name}
             </button>
             <span className="text-[12px] text-soft">
@@ -1531,7 +1557,7 @@ function FileList({
                 className="text-[12px] text-soft hover:text-red"
                 onClick={() => onRemove(f.id)}
               >
-                Remove
+                Delete
               </button>
             ) : null}
           </li>
