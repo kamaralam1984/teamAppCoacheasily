@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Download, Paperclip, X } from "lucide-react";
 import { toast } from "sonner";
@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Cell, DraftsContext } from "@/components/selfeval/AutoSaveCell";
 import { FormUpload } from "@/components/selfeval/FormUpload";
+import { ManagerEvaluation } from "@/components/selfeval/ManagerEvaluation";
 import {
   openSelfEvalFile,
   useDevFileUrl,
@@ -23,10 +24,11 @@ import { useWarriors } from "@/hooks/useWarriors";
 import type { Json } from "@/integrations/supabase/types";
 import { niceDate } from "@/lib/calendar";
 import { downloadBytes, MIME, safeFileName } from "@/lib/exporters";
-import { buildSelfEvalPdf } from "@/lib/selfEvalPdf";
+import { buildManagerEvalPdf, buildSelfEvalPdf } from "@/lib/selfEvalPdf";
 import { prettySize } from "@/lib/shrinkFile";
 import {
-  canWriteReview,
+  asManagerExtra,
+  canWriteManagerEval,
   defaultYear,
   errorText,
   MAX_GOALS,
@@ -38,11 +40,6 @@ import {
   RATING_MEANING,
   RATINGS,
   REFLECTION,
-  REVIEW_KINDS,
-  REVIEW_LABEL,
-  reviewKindsFor,
-  reviewScore,
-  selfScore,
   stageOf,
   STAGE_LABEL,
   UPLOAD_ACCEPT,
@@ -52,7 +49,6 @@ import {
   type ReadForm,
   type ReviewKind,
   type ReviewLike,
-  type Score,
   type Stage,
 } from "@/lib/selfEvaluation";
 
@@ -240,6 +236,7 @@ function SelfEvaluationPage() {
             managesPerson={team.has(selected.id)}
             hrOrAdmin={isHrAdmin}
             isDev={isDev}
+            personManagerId={(warriors ?? []).find((w) => w.id === selected.id)?.manager_id ?? null}
             names={new Map((warriors ?? []).map((w) => [w.id, w.full_name]))}
           />
         ) : null}
@@ -365,6 +362,7 @@ function EvaluationSheet({
   managesPerson,
   hrOrAdmin,
   isDev,
+  personManagerId,
   names,
 }: {
   personId: string;
@@ -376,6 +374,7 @@ function EvaluationSheet({
   managesPerson: boolean;
   hrOrAdmin: boolean;
   isDev: boolean;
+  personManagerId: string | null;
   names: Map<string, string>;
 }) {
   // a developer on someone else's form: reads (when not their manager / HR) and every write of
@@ -395,11 +394,21 @@ function EvaluationSheet({
     (stage === "self" && ((self && cycleOpen) || (!self && hrOrAdmin))) ||
     (devWrite && stage !== "final");
   const canUpload = stage !== "final" && (self || hrOrAdmin || devWrite);
-  const myKinds = reviewKindsFor(role, managesPerson, self).filter((k) =>
-    canWriteReview(k, row, hrOrAdmin),
-  );
-  const reviews = (data?.reviews ?? []).map(asReview);
-  const showReviews = reviewer || (self && stage === "final");
+  // the manager evaluation: written by the direct manager (HR / admin only for someone with no
+  // manager); seen by them, HR, admin and developers, and by the person once it is signed off
+  const reviewRow = (data?.reviews ?? []).find((r) => r.kind === "manager") ?? null;
+  const managerReview = reviewRow ? asReview(reviewRow) : null;
+  const managerExtra = asManagerExtra(reviewRow?.extra);
+  const canManager = canWriteManagerEval({
+    self,
+    directManager: managesPerson,
+    hrOrAdmin,
+    personHasManager: Boolean(personManagerId),
+    steps: row,
+  });
+  const showManager = stage !== "self" && (reviewer || viaDevRead || (self && stage === "final"));
+  const reviewerName =
+    (personManagerId ? names.get(personManagerId) : null) ?? form.manager_name ?? "";
   const [extraGoal, setExtraGoal] = useState(false);
   const goalRows = Math.min(10, Math.max(extraGoal ? MAX_GOALS : 4, form.goals.length));
 
@@ -436,7 +445,11 @@ function EvaluationSheet({
       document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [drafts]);
-  const saving = writes.save.isPending || writes.reviewSave.isPending || writes.noteSave.isPending;
+  const saving =
+    writes.save.isPending ||
+    writes.reviewSave.isPending ||
+    writes.managerSave.isPending ||
+    writes.memberComment.isPending;
   const unsaved = dirtyCount > 0 || saving;
 
   // the person's own form is made (About you from the profile) the first time they open it
@@ -503,11 +516,39 @@ function EvaluationSheet({
         signedName: row?.signed_name ?? null,
         signedAt: row?.signed_at ?? null,
         submittedAt: row?.emp_submitted_at ?? null,
-        reviews: showReviews ? reviews : [],
+        reviews: [],
         finalRating: row?.final_rating ?? null,
       });
       downloadBytes(
         safeFileName(`${personName} Annual Self-Evaluation ${year}`, "pdf"),
+        bytes,
+        MIME.pdf,
+      );
+      toast.success("PDF downloaded.");
+    } catch (e) {
+      fail(e);
+    }
+  }
+
+  async function downloadManagerPdf() {
+    drafts.flushAll();
+    try {
+      const bytes = await buildManagerEvalPdf({
+        year,
+        personName,
+        roleTeam: form.role_team ?? "",
+        reviewPeriod: form.review_period ?? "",
+        reviewerName,
+        receivedOn: row?.emp_submitted_at ?? null,
+        completedOn: row?.finalized_at ?? null,
+        form,
+        goalCount: goalRows,
+        review: managerReview,
+        extra: managerExtra,
+        memberComment: row?.member_comment ?? "",
+      });
+      downloadBytes(
+        safeFileName(`${personName} Annual Manager Evaluation ${year}`, "pdf"),
         bytes,
         MIME.pdf,
       );
@@ -792,23 +833,6 @@ function EvaluationSheet({
         ) : null}
       </section>
 
-      {showReviews ? (
-        <ReviewTable
-          title="Part A ratings: Manager, HR and Admin"
-          rows={Array.from({ length: goalRows }, (_, i) => ({
-            key: String(i),
-            label: `${i + 1}. ${form.goals[i]?.goal ?? ""}`,
-            self: form.goals[i]?.rating ?? "",
-          })).filter((r) => r.label.length > 3 || r.self)}
-          part="goals"
-          reviews={reviews}
-          myKinds={myKinds}
-          onSave={rate}
-          ratingSelect={ratingSelect}
-          ro={ro}
-        />
-      ) : null}
-
       {/* Part B */}
       <section className="ce-card overflow-hidden">
         <div className="p-4 pb-2">
@@ -863,23 +887,6 @@ function EvaluationSheet({
           </table>
         </div>
       </section>
-
-      {showReviews ? (
-        <ReviewTable
-          title="Part B ratings: Manager, HR and Admin"
-          rows={VALUES.map((v) => ({
-            key: v.key,
-            label: v.name,
-            self: form.value_answers[v.key]?.rating ?? "",
-          }))}
-          part="values"
-          reviews={reviews}
-          myKinds={myKinds}
-          onSave={rate}
-          ratingSelect={ratingSelect}
-          ro={ro}
-        />
-      ) : null}
 
       {/* Part C */}
       <section className="ce-card overflow-x-auto p-4">
@@ -957,8 +964,6 @@ function EvaluationSheet({
         </table>
       </section>
 
-      <Scores self={selfScore(form)} reviews={showReviews ? reviews : []} goalCount={goalRows} />
-
       {/* Sign-off and steps */}
       <Steps
         stage={stage}
@@ -977,88 +982,44 @@ function EvaluationSheet({
         flush={() => drafts.flushAll()}
       />
 
-      {/* overall rating and feedback */}
-      {showReviews || (self && stage !== "final") ? (
-        <section className="ce-card space-y-3 p-4">
-          <h2 className="font-display text-xl text-ink">Overall rating and feedback</h2>
-          {self && stage !== "final" ? (
-            <p className="text-sm text-soft">
-              The ratings and feedback from your manager, HR and admin appear here once your
-              self-evaluation is final.
-            </p>
-          ) : (
-            <div className="grid gap-3 md:grid-cols-3">
-              {REVIEW_KINDS.map((kind) => {
-                const r = reviews.find((x) => x.kind === kind);
-                const mine = myKinds.includes(kind);
-                if (self && !r) return null;
-                const note = data?.notes.find((n) => n.kind === kind)?.note ?? "";
-                return (
-                  <div key={kind} className="space-y-2 rounded-lg border border-line p-3">
-                    <p className="text-[12px] font-bold tracking-[0.06em] text-soft uppercase">
-                      {REVIEW_LABEL[kind]}
-                    </p>
-                    <label className="block">
-                      <span className="ce-label">Overall rating</span>
-                      {mine
-                        ? ratingSelect(r?.overall_rating ?? "", (v) =>
-                            rate(kind, ["overall_rating"], v),
-                          )
-                        : ro(
-                            r?.overall_rating
-                              ? RATING_LABEL[r.overall_rating as keyof typeof RATING_LABEL]
-                              : "",
-                          )}
-                    </label>
-                    <div>
-                      <span className="ce-label">
-                        Feedback{" "}
-                        {!self ? (
-                          <span className="font-normal normal-case">
-                            (shown to {firstName} once final)
-                          </span>
-                        ) : null}
-                      </span>
-                      {mine ? (
-                        <Cell
-                          value={r?.feedback ?? ""}
-                          multiline
-                          rows={4}
-                          placeholder={`${REVIEW_LABEL[kind]} feedback for ${firstName}`}
-                          onSave={(v) => rate(kind, ["feedback"], v)}
-                        />
-                      ) : (
-                        ro(r?.feedback)
-                      )}
-                    </div>
-                    {!self ? (
-                      <div>
-                        <span className="ce-label text-red">
-                          Internal note{" "}
-                          <span className="font-normal text-soft normal-case">
-                            (never shown to {firstName})
-                          </span>
-                        </span>
-                        {mine ? (
-                          <Cell
-                            value={note}
-                            multiline
-                            rows={2}
-                            placeholder="Only managers, HR and admin see this"
-                            onSave={(v) =>
-                              writes.noteSave.mutate({ kind, note: v }, { onError: fail })
-                            }
-                          />
-                        ) : (
-                          ro(note)
-                        )}
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+      {/* the manager evaluation, as the Annual Manager Evaluation Form */}
+      {showManager ? (
+        <ManagerEvaluation
+          year={year}
+          personName={personName}
+          roleTeam={form.role_team ?? ""}
+          reviewPeriod={form.review_period ?? ""}
+          reviewerName={reviewerName}
+          receivedOn={row?.emp_submitted_at ?? null}
+          completedOn={row?.finalized_at ?? null}
+          form={form}
+          goalCount={goalRows}
+          review={managerReview}
+          extra={managerExtra}
+          canWrite={canManager}
+          self={self}
+          complete={stage === "final"}
+          memberComment={row?.member_comment ?? ""}
+          onRate={(path, value) => rate("manager", path, value)}
+          onSave={(path, value) => writes.managerSave.mutate({ path, value }, { onError: fail })}
+          onMemberComment={(text) => writes.memberComment.mutate(text, { onError: fail })}
+          onSignOff={(name) => {
+            drafts.flushAll();
+            writes.submit.mutate(
+              { stage: "manager", signedName: name },
+              {
+                onError: fail,
+                onSuccess: () =>
+                  toast.success(`Signed off. ${firstName} can now see the manager evaluation.`),
+              },
+            );
+          }}
+          signingOff={writes.submit.isPending}
+          onPdf={() => void downloadManagerPdf()}
+        />
+      ) : self && stage !== "self" ? (
+        <section className="ce-card p-4 text-sm text-soft">
+          Your manager's evaluation appears here once they have signed it off.
         </section>
       ) : null}
 
@@ -1091,141 +1052,6 @@ function EvaluationSheet({
         </details>
       ) : null}
     </DraftsContext.Provider>
-  );
-}
-
-function ReviewTable({
-  title,
-  rows,
-  part,
-  reviews,
-  myKinds,
-  onSave,
-  ratingSelect,
-  ro,
-}: {
-  title: string;
-  rows: { key: string; label: string; self: string }[];
-  part: "goals" | "values";
-  reviews: ReviewLike[];
-  myKinds: ReviewKind[];
-  onSave: (kind: ReviewKind, path: string[], value: string) => void;
-  ratingSelect: (value: string | undefined, onChange: (v: string) => void) => ReactNode;
-  ro: (v: string | undefined | null) => ReactNode;
-}) {
-  const kinds = REVIEW_KINDS.filter(
-    (k) => myKinds.includes(k) || reviews.some((r) => r.kind === k),
-  );
-  if (kinds.length === 0 || rows.length === 0) return null;
-  const th = "border border-line bg-orange-300/60 px-2 py-2";
-  return (
-    <section className="ce-card overflow-hidden">
-      <h2 className="p-4 pb-2 font-display text-xl text-ink">{title}</h2>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px] border-collapse text-left">
-          <thead>
-            <tr className="text-[11px] font-bold tracking-[0.04em] text-ink uppercase">
-              <th className={`${th} min-w-[200px]`}>{part === "goals" ? "Goal" : "Value"}</th>
-              <th className={`${th} w-20`}>Self</th>
-              {kinds.map((k) => (
-                <th key={k} className={`${th} min-w-[220px]`}>
-                  {REVIEW_LABEL[k]} rating & comment
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.key} className="align-top">
-                <td className="border border-line px-2 py-1.5 text-[13px] text-ink">{r.label}</td>
-                <td className="border border-line px-2 py-1.5 text-[13px] font-bold">
-                  {r.self || "—"}
-                </td>
-                {kinds.map((k) => {
-                  const rev = reviews.find((x) => x.kind === k);
-                  const v =
-                    (part === "goals" ? rev?.goal_ratings : rev?.value_ratings)?.[r.key] ?? {};
-                  const mine = myKinds.includes(k);
-                  return (
-                    <td key={k} className="border border-line p-1">
-                      {mine ? (
-                        <>
-                          {ratingSelect(v.rating, (x) => onSave(k, [part, r.key, "rating"], x))}
-                          <Cell
-                            value={v.comment ?? ""}
-                            multiline
-                            rows={2}
-                            placeholder="Comment"
-                            onSave={(x) => onSave(k, [part, r.key, "comment"], x)}
-                          />
-                        </>
-                      ) : (
-                        <>
-                          <div className="px-2 pt-1 text-[13px] font-bold">{v.rating || "—"}</div>
-                          {v.comment ? ro(v.comment) : null}
-                        </>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
-  );
-}
-
-function Scores({
-  self,
-  reviews,
-  goalCount,
-}: {
-  self: Score;
-  reviews: ReviewLike[];
-  goalCount: number;
-}) {
-  const rows: { label: string; s: Score; overall?: string | null }[] = [{ label: "Self", s: self }];
-  for (const k of REVIEW_KINDS) {
-    const r = reviews.find((x) => x.kind === k);
-    if (r)
-      rows.push({
-        label: REVIEW_LABEL[k],
-        s: reviewScore(r, goalCount),
-        overall: r.overall_rating,
-      });
-  }
-  const f = (n: number | null) => (n === null ? "—" : `${n.toFixed(1)} / 5`);
-  return (
-    <section className="ce-card overflow-x-auto p-4">
-      <h2 className="font-display text-xl text-ink">Score</h2>
-      <p className="mb-2 text-sm text-soft">
-        O = 5, EE = 4, FME = 3, PME = 2, DNME = 1. Part A and Part B count 50% each.
-      </p>
-      <table className="w-full min-w-[480px] border-collapse text-left text-[13px]">
-        <thead>
-          <tr className="text-[11px] font-bold tracking-[0.04em] text-ink uppercase">
-            <th className="border border-line bg-cream px-2 py-2">By</th>
-            <th className="border border-line bg-cream px-2 py-2">A. Goals (50%)</th>
-            <th className="border border-line bg-cream px-2 py-2">B. Values (50%)</th>
-            <th className="border border-line bg-cream px-2 py-2">Score</th>
-            <th className="border border-line bg-cream px-2 py-2">Overall rating</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.label}>
-              <td className="border border-line px-2 py-1.5 font-bold">{r.label}</td>
-              <td className="border border-line px-2 py-1.5">{f(r.s.goals)}</td>
-              <td className="border border-line px-2 py-1.5">{f(r.s.values)}</td>
-              <td className="border border-line px-2 py-1.5 font-bold">{f(r.s.total)}</td>
-              <td className="border border-line px-2 py-1.5">{r.overall ?? "—"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </section>
   );
 }
 
@@ -1329,64 +1155,37 @@ function Steps({
         <p className="text-sm text-soft">Waiting for {firstName} to fill and submit the form.</p>
       ) : null}
       {stage === "manager" && self ? (
-        <p className="text-sm text-soft">Submitted. Waiting for your manager's rating.</p>
+        <p className="text-sm text-soft">Submitted. Waiting for your manager's evaluation.</p>
       ) : null}
       {stage === "manager" && reviewer ? (
-        <div className="flex flex-wrap items-center gap-3">
-          <p className="text-sm text-soft">
-            {firstName} has submitted. Rate each goal and value, give your overall rating and
-            feedback below, then submit. HR and admin are told.
-          </p>
-          {managesPerson || hrOrAdmin ? (
-            <button
-              type="button"
-              className="btn3d btn3d-gold"
-              disabled={writes.submit.isPending}
-              onClick={() => {
-                flush();
-                writes.submit.mutate(
-                  { stage: "manager" },
-                  { onError: fail, onSuccess: () => toast.success("Manager rating submitted.") },
-                );
-              }}
-            >
-              Submit manager rating
-            </button>
-          ) : null}
-        </div>
-      ) : null}
-      {stage === "feedback" ? (
         <p className="text-sm text-soft">
-          Manager rating submitted.{" "}
-          {self ? "Waiting for HR and admin." : "HR and admin add their ratings and make it final."}
+          {firstName} has submitted. The manager evaluation is below.
         </p>
       ) : null}
       {stage === "final" ? (
         <p className="text-sm font-bold text-ink">
           Final rating: {finalRating ? RATING_LABEL[finalRating as keyof typeof RATING_LABEL] : "—"}
-          {finalizedBy ? ` · by ${finalizedBy}` : ""}
+          {finalizedBy ? ` · signed off by ${finalizedBy}` : ""}
         </p>
       ) : null}
 
-      {hrOrAdmin && !self && stage !== "final" ? (
+      {hrOrAdmin && !self && stage !== "self" ? (
         <div className="space-y-3 border-t border-line pt-3">
           <div className="flex flex-wrap gap-2">
-            {stage !== "self" ? (
-              <button
-                type="button"
-                className="btn3d btn3d-ghost"
-                disabled={writes.reopen.isPending}
-                onClick={() =>
-                  writes.reopen.mutate("employee", {
-                    onError: fail,
-                    onSuccess: () => toast.success(`${firstName} can edit the form again.`),
-                  })
-                }
-              >
-                Reopen self-evaluation
-              </button>
-            ) : null}
-            {stage === "feedback" ? (
+            <button
+              type="button"
+              className="btn3d btn3d-ghost"
+              disabled={writes.reopen.isPending}
+              onClick={() =>
+                writes.reopen.mutate("employee", {
+                  onError: fail,
+                  onSuccess: () => toast.success(`${firstName} can edit the form again.`),
+                })
+              }
+            >
+              Reopen self-evaluation
+            </button>
+            {stage === "final" || stage === "feedback" ? (
               <button
                 type="button"
                 className="btn3d btn3d-ghost"
@@ -1394,51 +1193,17 @@ function Steps({
                 onClick={() =>
                   writes.reopen.mutate("manager", {
                     onError: fail,
-                    onSuccess: () => toast.success("The manager can edit their rating again."),
+                    onSuccess: () =>
+                      toast.success("The manager can edit and sign off their evaluation again."),
                   })
                 }
               >
-                Reopen manager rating
+                Reopen manager evaluation
               </button>
             ) : null}
           </div>
-          {stage !== "self" ? (
-            <div className="flex flex-wrap items-end gap-3">
-              <label>
-                <span className="ce-label">Final rating</span>
-                <select
-                  className="ce-input"
-                  value={final}
-                  onChange={(e) => setFinal(e.target.value)}
-                >
-                  <option value="">Choose…</option>
-                  {RATINGS.map((r) => (
-                    <option key={r} value={r}>
-                      {RATING_LABEL[r]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button
-                type="button"
-                className="btn3d btn3d-gold"
-                disabled={!final || writes.finalize.isPending}
-                onClick={() => {
-                  flush();
-                  writes.finalize.mutate(final, {
-                    onError: fail,
-                    onSuccess: () =>
-                      toast.success(`Final. ${firstName} can now see the ratings and feedback.`),
-                  });
-                }}
-              >
-                Make final
-              </button>
-            </div>
-          ) : null}
           <p className="text-[12px] text-soft">
-            Making it final locks the form and shows {firstName} the ratings and feedback from the
-            manager, HR and admin. Internal notes are never shown to them.
+            Reopening the self-evaluation also reopens the manager evaluation.
           </p>
         </div>
       ) : null}

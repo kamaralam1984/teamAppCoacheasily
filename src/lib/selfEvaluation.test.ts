@@ -1,7 +1,9 @@
 import { describe, it as test } from "node:test";
 import { deepEqual, equal, ok } from "node:assert/strict";
 import {
+  asManagerExtra,
   averagePoints,
+  canWriteManagerEval,
   canWriteReview,
   defaultYear,
   docxXmlToText,
@@ -15,6 +17,7 @@ import {
   reviewKindsFor,
   reviewScore,
   selfScore,
+  selfSummary,
   stageOf,
   uploadMime,
   uploadPath,
@@ -194,4 +197,43 @@ test("default year is the newest open cycle", () => {
     ),
     2025,
   );
+});
+
+describe("manager evaluation form", () => {
+  test("self summary is the nearest rating to the average", () => {
+    equal(selfSummary(["O", "EE", "EE"]), "EE");
+    equal(selfSummary([]), null);
+  });
+  test("only the direct manager writes, while it waits for them", () => {
+    const waiting = { emp_submitted_at: "x", mgr_submitted_at: null, finalized_at: null };
+    const base = { self: false, directManager: true, hrOrAdmin: false, personHasManager: true };
+    equal(canWriteManagerEval({ ...base, steps: waiting }), true);
+    equal(canWriteManagerEval({ ...base, steps: null }), false);
+    equal(
+      canWriteManagerEval({
+        ...base,
+        steps: { ...waiting, mgr_submitted_at: "y", finalized_at: "y" },
+      }),
+      false,
+    );
+    equal(
+      canWriteManagerEval({ ...base, directManager: false, hrOrAdmin: true, steps: waiting }),
+      false,
+    );
+    equal(
+      canWriteManagerEval({
+        ...base,
+        directManager: false,
+        hrOrAdmin: true,
+        personHasManager: false,
+        steps: waiting,
+      }),
+      true,
+    );
+    equal(canWriteManagerEval({ ...base, self: true, steps: waiting }), false);
+  });
+  test("extra is read safely", () => {
+    deepEqual(asManagerExtra(null), {});
+    equal(asManagerExtra({ discussion_date: "2026-12-20" }).discussion_date, "2026-12-20");
+  });
 });

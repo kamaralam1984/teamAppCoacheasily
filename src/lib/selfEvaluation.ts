@@ -554,3 +554,78 @@ export function errorText(e: unknown, fallback: string): string {
   }
   return fallback;
 }
+
+// ───────── the Annual Manager Evaluation Form ─────────
+
+export const MANAGER_POTENTIAL: Record<PotentialKey, string> = {
+  learn: "How quickly do they learn new skills and adapt to change?",
+  bigger_role: "How ready are they to take on a bigger role or scope?",
+  help_others: "How much do they help others succeed and lift the team?",
+  stretch: "How often do they take on stretch work beyond their goals?",
+};
+
+export const MANAGER_FEEDBACK = [
+  { key: "strengths", question: "What are the team member's key strengths this year?" },
+  {
+    key: "development",
+    question: "Which areas need development, and what should they do differently?",
+  },
+  {
+    key: "accuracy",
+    question: "How accurate was the self-evaluation overall? Note any ratings you changed and why.",
+  },
+  {
+    key: "support",
+    question: "What support or resources will you provide in response to their request?",
+  },
+  { key: "goals_next", question: "What goals or focus areas do you recommend for 2027?" },
+  { key: "training", question: "What training or development actions do you recommend?" },
+] as const;
+export type ManagerFeedbackKey = (typeof MANAGER_FEEDBACK)[number]["key"];
+
+export const RECOMMENDATIONS = [
+  { key: "promotion", label: "Promotion / role elevation" },
+  { key: "scope", label: "Increased scope or responsibility" },
+  { key: "continue", label: "Continue in current role" },
+  { key: "pip", label: "Performance improvement plan" },
+] as const;
+export type RecommendationKey = (typeof RECOMMENDATIONS)[number]["key"];
+
+interface RatingRemarks {
+  rating?: string;
+  remarks?: string;
+}
+/** The manager-form boxes kept in self_eval_reviews.extra (kind 'manager'). */
+export interface ManagerExtra {
+  discussion_date?: string;
+  goals_summary?: RatingRemarks;
+  values_summary?: RatingRemarks;
+  overall?: { goals?: RatingRemarks; values?: RatingRemarks };
+  potential?: Partial<Record<PotentialKey, RatingRemarks>>;
+  feedback?: Partial<Record<ManagerFeedbackKey, string>>;
+  recommendation?: { choice?: string; comments?: Partial<Record<RecommendationKey, string>> };
+  signed_name?: string;
+  signed_at?: string;
+}
+
+export function asManagerExtra(raw: unknown): ManagerExtra {
+  return raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as ManagerExtra) : {};
+}
+
+/** The team member's overall self-rating for a part: the nearest rating to their average. */
+export function selfSummary(ratings: (string | null | undefined)[]): Rating | null {
+  return ratingForPoints(averagePoints(ratings));
+}
+
+/** May the viewer write the manager evaluation? Mirrors self_eval_is_rater() + the steps. */
+export function canWriteManagerEval(args: {
+  self: boolean;
+  directManager: boolean;
+  hrOrAdmin: boolean;
+  personHasManager: boolean;
+  steps: StepsLike | null | undefined;
+}): boolean {
+  if (args.self) return false;
+  const rater = args.directManager || (args.hrOrAdmin && !args.personHasManager);
+  return rater && stageOf(args.steps) === "manager";
+}

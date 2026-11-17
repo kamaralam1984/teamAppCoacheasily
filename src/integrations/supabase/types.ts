@@ -175,6 +175,7 @@ export type Database = {
       }
       self_eval_reviews: {
         Row: {
+          extra: Json
           feedback: string
           goal_ratings: Json
           kind: string
@@ -187,6 +188,7 @@ export type Database = {
           year: number
         }
         Insert: {
+          extra?: Json
           feedback?: string
           goal_ratings?: Json
           kind: string
@@ -199,6 +201,7 @@ export type Database = {
           year: number
         }
         Update: {
+          extra?: Json
           feedback?: string
           goal_ratings?: Json
           kind?: string
@@ -222,6 +225,8 @@ export type Database = {
           goals: Json
           id: string
           manager_name: string
+          member_comment: string | null
+          member_comment_at: string | null
           mgr_submitted_at: string | null
           mgr_submitted_by: string | null
           org_id: string
@@ -246,6 +251,8 @@ export type Database = {
           goals?: Json
           id?: string
           manager_name?: string
+          member_comment?: string | null
+          member_comment_at?: string | null
           mgr_submitted_at?: string | null
           mgr_submitted_by?: string | null
           org_id: string
@@ -270,6 +277,8 @@ export type Database = {
           goals?: Json
           id?: string
           manager_name?: string
+          member_comment?: string | null
+          member_comment_at?: string | null
           mgr_submitted_at?: string | null
           mgr_submitted_by?: string | null
           org_id?: string
@@ -4263,6 +4272,14 @@ export type Database = {
       self_eval_file_remove: { Args: { p_file_id: string }; Returns: undefined }
       self_eval_finalize: {
         Args: { p_profile_id: string; p_rating: string; p_year: number }
+        Returns: undefined
+      }
+      self_eval_manager_save: {
+        Args: { p_path: string[]; p_profile_id: string; p_value: Json; p_year: number }
+        Returns: undefined
+      }
+      self_eval_member_comment: {
+        Args: { p_comment: string; p_year: number }
         Returns: undefined
       }
       self_eval_note_save: {

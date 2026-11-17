@@ -1,14 +1,19 @@
 import {
+  MANAGER_FEEDBACK,
+  MANAGER_POTENTIAL,
   POTENTIAL,
   RATING_LABEL,
   RATING_MEANING,
   RATINGS,
+  RECOMMENDATIONS,
   REFLECTION,
   REVIEW_KINDS,
   REVIEW_LABEL,
   VALUES,
   isRating,
+  selfSummary,
   type FormLike,
+  type ManagerExtra,
   type ReviewLike,
 } from "@/lib/selfEvaluation";
 
@@ -52,14 +57,15 @@ function clean(s: string | null | undefined): string {
 const rating = (r: string | null | undefined) => (isRating(r) ? RATING_LABEL[r] : clean(r));
 
 /** The filled form as a PDF in the company form's layout (A4, letterhead, tables). */
-export async function buildSelfEvalPdf(input: PdfInput): Promise<Uint8Array> {
+/** An A4 page set in the company form's layout: letterhead, title, tables, page footer. */
+async function startDoc(title: string, year: number, footerLabel: string) {
   const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
   const W = 595;
   const H = 842;
   const M = 40;
   const usable = W - M * 2;
-  const footer = `SWARAJYA · CoachEasily | Annual Self-Evaluation ${input.year}`;
+  const footer = `SWARAJYA · CoachEasily | ${footerLabel} ${year}`;
   let y = 0;
 
   const letterhead = () => {
@@ -80,7 +86,8 @@ export async function buildSelfEvalPdf(input: PdfInput): Promise<Uint8Array> {
   };
 
   const heading = (text: string, size = 13) => {
-    room(size + 18);
+    // keep a heading with the start of what follows it
+    room(size + 90);
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(size);
     pdf.setTextColor(20);
@@ -144,18 +151,39 @@ export async function buildSelfEvalPdf(input: PdfInput): Promise<Uint8Array> {
     y += 12;
   };
 
-  // ── page 1 ──
   letterhead();
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(18);
   pdf.setTextColor(20);
-  pdf.text("ANNUAL SELF-EVALUATION FORM", W / 2, y + 14, { align: "center" });
+  pdf.text(title, W / 2, y + 14, { align: "center" });
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(10);
-  pdf.text(`For the year January ${input.year} to December ${input.year}`, W / 2, y + 30, {
+  pdf.text(`For the year January ${year} to December ${year}`, W / 2, y + 30, {
     align: "center",
   });
   y += 48;
+
+  const finish = () => {
+    const pages = pdf.getNumberOfPages();
+    for (let i = 1; i <= pages; i++) {
+      pdf.setPage(i);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(8);
+      pdf.setTextColor(110);
+      pdf.text(clean(footer), M, H - 24);
+      pdf.text(`Page ${i} of ${pages}`, W - M, H - 24, { align: "right" });
+    }
+    return new Uint8Array(pdf.output("arraybuffer"));
+  };
+  return { heading, para, table, newPage, finish };
+}
+
+export async function buildSelfEvalPdf(input: PdfInput): Promise<Uint8Array> {
+  const { heading, para, table, newPage, finish } = await startDoc(
+    "ANNUAL SELF-EVALUATION FORM",
+    input.year,
+    "Annual Self-Evaluation",
+  );
   para(
     "Use this form for your annual self-evaluation. It shows your manager what you delivered and how you worked, and it is your starting point for next year's goals.",
   );
@@ -304,14 +332,221 @@ export async function buildSelfEvalPdf(input: PdfInput): Promise<Uint8Array> {
     if (input.finalRating) para(`Final rating: ${rating(input.finalRating)}`, 11);
   }
 
-  const pages = pdf.getNumberOfPages();
-  for (let i = 1; i <= pages; i++) {
-    pdf.setPage(i);
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(8);
-    pdf.setTextColor(110);
-    pdf.text(clean(footer), M, H - 24);
-    pdf.text(`Page ${i} of ${pages}`, W - M, H - 24, { align: "right" });
-  }
-  return new Uint8Array(pdf.output("arraybuffer"));
+  return finish();
+}
+
+export interface ManagerPdfInput {
+  year: number;
+  personName: string;
+  roleTeam: string;
+  reviewPeriod: string;
+  reviewerName: string;
+  receivedOn: string | null;
+  completedOn: string | null;
+  form: FormLike;
+  goalCount: number;
+  review: ReviewLike | null;
+  extra: ManagerExtra;
+  memberComment: string;
+}
+
+const day = (iso: string | null | undefined) =>
+  iso ? new Date(iso.length === 10 ? `${iso}T00:00:00` : iso).toLocaleDateString("en-IN") : "";
+
+/** The manager evaluation as a PDF in the "Annual Manager Evaluation Form" layout. */
+export async function buildManagerEvalPdf(input: ManagerPdfInput): Promise<Uint8Array> {
+  const { heading, para, table, finish } = await startDoc(
+    "ANNUAL MANAGER EVALUATION FORM",
+    input.year,
+    "Annual Manager Evaluation",
+  );
+  const { form, review, extra } = input;
+  const r = (x: string | undefined | null) => x ?? "";
+  para(
+    "Use this form to review each team member's annual self-evaluation. For every goal and value, record the self-rating the team member shared, add your own rating, and give remarks or feedback that explain your rating. Complete one form per team member and discuss it with them before sign-off.",
+  );
+
+  heading("About this review");
+  table(
+    ["Field", "Details"],
+    [0.35, 0.65],
+    [
+      ["Team member name", input.personName],
+      ["Role / team", input.roleTeam],
+      ["Manager (reviewer)", input.reviewerName],
+      ["Review period", input.reviewPeriod],
+      ["Self-evaluation received on", day(input.receivedOn)],
+      ["Review discussion date", day(extra.discussion_date)],
+      ["Date completed", day(input.completedOn)],
+    ],
+  );
+
+  heading("How this form works");
+  para(
+    "The appraisal has two equal parts, matching the self-evaluation form. Rate on evidence and outcomes, not on effort or hours worked. Where your rating differs from the self-rating, your remarks must say why.",
+  );
+  table(
+    ["Part", "Weight", "What it covers"],
+    [0.3, 0.12, 0.58],
+    [
+      [
+        "A. Goals and Impact",
+        "50%",
+        "The 4-5 goals agreed with the team member and the outcomes delivered",
+      ],
+      [
+        "B. Competencies and Values",
+        "50%",
+        "How the team member delivered: the 12 values listed in Part B",
+      ],
+    ],
+  );
+  table(
+    ["Rating", "What it means"],
+    [0.35, 0.65],
+    RATINGS.map((x) => [RATING_LABEL[x], RATING_MEANING[x]]),
+  );
+
+  const selfGoals = selfSummary(form.goals.map((g) => g.rating)) ?? "";
+  const selfValues = selfSummary(VALUES.map((v) => form.value_answers[v.key]?.rating)) ?? "";
+
+  heading("Part A: Goals and Impact (50%)");
+  const goals = Array.from({ length: input.goalCount }, (_, i) => ({
+    i,
+    g: form.goals[i] ?? {},
+  })).filter(({ g }) => g.goal || g.rating);
+  table(
+    [
+      "#",
+      "Goal (as listed by the team member)",
+      "Self-rating",
+      "Manager rating",
+      "Manager remarks / feedback",
+    ],
+    [0.05, 0.33, 0.1, 0.1, 0.42],
+    goals.map(({ i, g }, n) => [
+      String(n + 1),
+      r(g.goal),
+      r(g.rating),
+      r(review?.goal_ratings[String(i)]?.rating),
+      r(review?.goal_ratings[String(i)]?.comment),
+    ]),
+  );
+  table(
+    ["Part A summary", "Self-rating", "Manager rating", "Overall remarks on goals"],
+    [0.28, 0.12, 0.12, 0.48],
+    [
+      [
+        "Overall Goals and Impact",
+        selfGoals,
+        r(extra.goals_summary?.rating),
+        r(extra.goals_summary?.remarks),
+      ],
+    ],
+  );
+
+  heading("Part B: Competencies and Values (50%)");
+  table(
+    ["Value", "Self-rating", "Manager rating", "Manager remarks / feedback (example observed)"],
+    [0.2, 0.12, 0.12, 0.56],
+    VALUES.map((v) => [
+      v.name,
+      r(form.value_answers[v.key]?.rating),
+      r(review?.value_ratings[v.key]?.rating),
+      r(review?.value_ratings[v.key]?.comment),
+    ]),
+  );
+  table(
+    ["Part B summary", "Self-rating", "Manager rating", "Overall remarks on values"],
+    [0.28, 0.12, 0.12, 0.48],
+    [
+      [
+        "Overall Competencies and Values",
+        selfValues,
+        r(extra.values_summary?.rating),
+        r(extra.values_summary?.remarks),
+      ],
+    ],
+  );
+
+  heading("Part C: Overall Manager Ratings & Remarks");
+  para(
+    "Bring the two parts together. The final rating is your judgement across both parts, each weighted at 50%.",
+  );
+  table(
+    ["Component", "Weight", "Self-rating", "Manager rating", "Remarks"],
+    [0.28, 0.09, 0.12, 0.12, 0.39],
+    [
+      [
+        "A. Goals and Impact",
+        "50%",
+        selfGoals,
+        r(extra.overall?.goals?.rating),
+        r(extra.overall?.goals?.remarks),
+      ],
+      [
+        "B. Competencies and Values",
+        "50%",
+        selfValues,
+        r(extra.overall?.values?.rating),
+        r(extra.overall?.values?.remarks),
+      ],
+      [
+        "Final rating",
+        "",
+        "",
+        review?.overall_rating && isRating(review.overall_rating)
+          ? RATING_LABEL[review.overall_rating]
+          : "",
+        "",
+      ],
+    ],
+  );
+
+  heading("Part D: Readiness of Talent");
+  table(
+    ["Potential question", "Self-rating", "Manager rating", "Manager remarks"],
+    [0.38, 0.14, 0.14, 0.34],
+    POTENTIAL.map((q) => [
+      MANAGER_POTENTIAL[q.key],
+      r(form.potential[q.key]?.rating),
+      r(extra.potential?.[q.key]?.rating),
+      r(extra.potential?.[q.key]?.remarks),
+    ]),
+  );
+
+  heading("Part E: Manager Feedback");
+  table(
+    ["Question", "Manager response"],
+    [0.4, 0.6],
+    MANAGER_FEEDBACK.map((q) => [q.question, r(extra.feedback?.[q.key])]),
+  );
+
+  heading("Recommendation");
+  table(
+    ["Recommendation", "Tick one", "Comments"],
+    [0.36, 0.12, 0.52],
+    RECOMMENDATIONS.map((x) => [
+      x.label,
+      extra.recommendation?.choice === x.key ? "X" : "",
+      r(extra.recommendation?.comments?.[x.key]),
+    ]),
+  );
+
+  heading("Internal or Customer Feedback for Team Member");
+  para("To be filled in by the team member after the review discussion (optional).", 8.5, true);
+  table(["", ""], [0.35, 0.65], [["Comments on this evaluation", input.memberComment]]);
+
+  heading("Sign-off");
+  para("By signing, the manager confirms that the ratings above are based on evidence.");
+  table(
+    ["Field", "Manager"],
+    [0.35, 0.65],
+    [
+      ["Name", extra.signed_name ? input.reviewerName : ""],
+      ["Signature", extra.signed_name ? `${extra.signed_name} (signed in the Team App)` : ""],
+      ["Date", day(extra.signed_at)],
+    ],
+  );
+  return finish();
 }

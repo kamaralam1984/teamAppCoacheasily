@@ -164,53 +164,79 @@ SELECT pg_temp.fails('no changes after submitting',
   format('SELECT self_eval_save(%L, 2026, ''reflection'', ARRAY[''proud''], to_jsonb(''x''::text))',
          (SELECT v FROM ids WHERE k = 'emp')), 'submitted');
 
--- ───────── ratings by manager, HR and admin ─────────
+-- ───────── the manager evaluation (only the direct manager; sign-off completes it) ─────────
 SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'mgr'));
 SELECT self_eval_review_save((SELECT v FROM ids WHERE k = 'emp'), 2026, 'manager', ARRAY['goals', '0', 'rating'], to_jsonb('EE'::text));
-SELECT self_eval_review_save((SELECT v FROM ids WHERE k = 'emp'), 2026, 'manager', ARRAY['values', 'ownership', 'comment'], to_jsonb('Agreed'::text));
-SELECT self_eval_review_save((SELECT v FROM ids WHERE k = 'emp'), 2026, 'manager', ARRAY['feedback'], to_jsonb('Good year'::text));
-SELECT self_eval_note_save((SELECT v FROM ids WHERE k = 'emp'), 2026, 'manager', 'Promote next year');
-SELECT pg_temp.fails('the manager cannot write HR''s ratings',
-  format('SELECT self_eval_review_save(%L, 2026, ''hr'', ARRAY[''feedback''], to_jsonb(''x''::text))',
-         (SELECT v FROM ids WHERE k = 'emp')), 'cannot rate');
-SELECT pg_temp.fails('the manager submits only with an overall rating',
-  format('SELECT self_eval_submit(%L, 2026, ''manager'')', (SELECT v FROM ids WHERE k = 'emp')),
-  'overall rating');
+SELECT self_eval_review_save((SELECT v FROM ids WHERE k = 'emp'), 2026, 'manager', ARRAY['goals', '0', 'comment'], to_jsonb('Strong result'::text));
+SELECT self_eval_review_save((SELECT v FROM ids WHERE k = 'emp'), 2026, 'manager', ARRAY['values', 'ownership', 'rating'], to_jsonb('O'::text));
+SELECT self_eval_manager_save((SELECT v FROM ids WHERE k = 'emp'), 2026, ARRAY['discussion_date'], to_jsonb('2026-12-20'::text));
+SELECT self_eval_manager_save((SELECT v FROM ids WHERE k = 'emp'), 2026, ARRAY['goals_summary', 'rating'], to_jsonb('EE'::text));
+SELECT self_eval_manager_save((SELECT v FROM ids WHERE k = 'emp'), 2026, ARRAY['overall', 'values', 'remarks'], to_jsonb('Lived the values'::text));
+SELECT self_eval_manager_save((SELECT v FROM ids WHERE k = 'emp'), 2026, ARRAY['potential', 'learn', 'rating'], to_jsonb('High'::text));
+SELECT self_eval_manager_save((SELECT v FROM ids WHERE k = 'emp'), 2026, ARRAY['feedback', 'strengths'], to_jsonb('Ownership'::text));
+SELECT self_eval_manager_save((SELECT v FROM ids WHERE k = 'emp'), 2026, ARRAY['recommendation', 'choice'], to_jsonb('scope'::text));
+SELECT self_eval_manager_save((SELECT v FROM ids WHERE k = 'emp'), 2026, ARRAY['recommendation', 'comments', 'scope'], to_jsonb('Lead the CRM'::text));
+SELECT pg_temp.eq('the manager form is kept box by box',
+  (SELECT (extra #>> '{potential,learn,rating}') || '/' || (extra #>> '{recommendation,choice}') || '/' || (extra ->> 'discussion_date')
+     FROM self_eval_reviews WHERE kind = 'manager' AND profile_id = (SELECT v FROM ids WHERE k = 'emp')),
+  'High/scope/2026-12-20');
+SELECT pg_temp.fails('an unknown recommendation is refused',
+  format('SELECT self_eval_manager_save(%L, 2026, ARRAY[''recommendation'', ''choice''], to_jsonb(''fire''::text))',
+         (SELECT v FROM ids WHERE k = 'emp')), 'Unknown box');
+SELECT pg_temp.fails('an unknown box is refused',
+  format('SELECT self_eval_manager_save(%L, 2026, ARRAY[''salary''], to_jsonb(''x''::text))',
+         (SELECT v FROM ids WHERE k = 'emp')), 'Unknown box');
+SELECT pg_temp.fails('the manager signs off only with the final rating',
+  format('SELECT self_eval_submit(%L, 2026, ''manager'', ''Test Manager'')', (SELECT v FROM ids WHERE k = 'emp')),
+  'final rating');
 SELECT self_eval_review_save((SELECT v FROM ids WHERE k = 'emp'), 2026, 'manager', ARRAY['overall_rating'], to_jsonb('EE'::text));
-SELECT self_eval_submit((SELECT v FROM ids WHERE k = 'emp'), 2026, 'manager');
-SELECT pg_temp.fails('the manager''s ratings lock once submitted',
-  format('SELECT self_eval_review_save(%L, 2026, ''manager'', ARRAY[''feedback''], to_jsonb(''x''::text))',
-         (SELECT v FROM ids WHERE k = 'emp')), 'cannot rate');
+SELECT pg_temp.fails('the sign-off needs the manager''s name',
+  format('SELECT self_eval_submit(%L, 2026, ''manager'', '''')', (SELECT v FROM ids WHERE k = 'emp')),
+  'Type your name');
 
 SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'hr'));
-SELECT self_eval_review_save((SELECT v FROM ids WHERE k = 'emp'), 2026, 'hr', ARRAY['goals', '1', 'rating'], to_jsonb('FME'::text));
-SELECT self_eval_review_save((SELECT v FROM ids WHERE k = 'emp'), 2026, 'hr', ARRAY['feedback'], to_jsonb('Keep it up'::text));
-SELECT pg_temp.fails('HR cannot write admin''s ratings',
-  format('SELECT self_eval_review_save(%L, 2026, ''sir'', ARRAY[''feedback''], to_jsonb(''x''::text))',
+SELECT pg_temp.fails('HR does not rate any more',
+  format('SELECT self_eval_review_save(%L, 2026, ''hr'', ARRAY[''feedback''], to_jsonb(''x''::text))',
+         (SELECT v FROM ids WHERE k = 'emp')), 'cannot rate');
+SELECT pg_temp.fails('HR does not write the manager evaluation for someone who has a manager',
+  format('SELECT self_eval_review_save(%L, 2026, ''manager'', ARRAY[''feedback''], to_jsonb(''x''::text))',
          (SELECT v FROM ids WHERE k = 'emp')), 'cannot rate');
 SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'admin'));
-SELECT self_eval_review_save((SELECT v FROM ids WHERE k = 'emp'), 2026, 'sir', ARRAY['overall_rating'], to_jsonb('O'::text));
-SELECT self_eval_note_save((SELECT v FROM ids WHERE k = 'emp'), 2026, 'sir', 'Raise');
+SELECT pg_temp.fails('admin does not rate any more',
+  format('SELECT self_eval_review_save(%L, 2026, ''sir'', ARRAY[''overall_rating''], to_jsonb(''O''::text))',
+         (SELECT v FROM ids WHERE k = 'emp')), 'cannot rate');
+SELECT pg_temp.fails('admin cannot sign off for the manager',
+  format('SELECT self_eval_submit(%L, 2026, ''manager'', ''Admin'')', (SELECT v FROM ids WHERE k = 'emp')),
+  'Only the manager');
 
--- the person sees nothing of it before final
+-- the person sees nothing of it before the sign-off
 SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'emp'));
-SELECT pg_temp.eq('ratings hidden from the person before final',
+SELECT pg_temp.eq('the manager evaluation is hidden from the person until signed off',
   (SELECT count(*) FROM self_eval_reviews)::int, 0);
-SELECT pg_temp.fails('the person cannot finalize',
-  format('SELECT self_eval_finalize(%L, 2026, ''O'')', (SELECT v FROM ids WHERE k = 'emp')), 'Only HR or admin');
+SELECT pg_temp.fails('the person cannot comment before the sign-off',
+  'SELECT self_eval_member_comment(2026, ''x'')', 'once your manager');
 
-SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'admin'));
-SELECT self_eval_finalize((SELECT v FROM ids WHERE k = 'emp'), 2026, 'EE');
+SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'mgr'));
+SELECT self_eval_submit((SELECT v FROM ids WHERE k = 'emp'), 2026, 'manager', 'Test Manager');
+SELECT pg_temp.eq('the sign-off completes it with the manager''s final rating',
+  (SELECT final_rating || '/' || (finalized_at IS NOT NULL)::text FROM self_evaluations
+    WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp')), 'EE/true');
+SELECT pg_temp.fails('the manager evaluation locks once signed off',
+  format('SELECT self_eval_manager_save(%L, 2026, ARRAY[''feedback'', ''training''], to_jsonb(''x''::text))',
+         (SELECT v FROM ids WHERE k = 'emp')), 'cannot write');
 
 SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'emp'));
-SELECT pg_temp.eq('ratings shown to the person once final',
-  (SELECT count(*) FROM self_eval_reviews)::int, 3);
+SELECT pg_temp.eq('the manager evaluation is shown to the person once signed off',
+  (SELECT extra ->> 'signed_name' FROM self_eval_reviews WHERE kind = 'manager'), 'Test Manager');
 SELECT pg_temp.eq('internal notes never shown to the person',
   (SELECT count(*) FROM self_eval_notes)::int, 0);
-SELECT pg_temp.eq('the person is told it is final',
+SELECT pg_temp.eq('the person is told it is complete',
   (SELECT count(*) FROM notifications WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp')
-      AND title LIKE '%is final')::int, 1);
-SELECT pg_temp.eq('no uploads once final',
+      AND title LIKE '%is complete')::int, 1);
+SELECT self_eval_member_comment(2026, 'Thanks, agreed');
+SELECT pg_temp.eq('the person adds their comments after the discussion',
+  (SELECT member_comment FROM self_evaluations WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp')), 'Thanks, agreed');
+SELECT pg_temp.eq('no uploads once complete',
   self_eval_storage_ok((SELECT v FROM ids WHERE k = 'emp')::text || '/2026/b.pdf', true), false);
 
 SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'hr'));
@@ -285,12 +311,17 @@ SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'mgr'));
 SELECT pg_temp.eq('the direct manager sees their team''s forms',
   (SELECT count(*) FROM self_evaluations WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp3'))::int, 1);
 SELECT self_eval_review_save((SELECT v FROM ids WHERE k = 'emp3'), 2026, 'manager', ARRAY['overall_rating'], to_jsonb('EE'::text));
-SELECT self_eval_submit((SELECT v FROM ids WHERE k = 'emp3'), 2026, 'manager');
-SELECT pg_temp.eq('the direct manager rates and submits',
-  (SELECT mgr_submitted_at IS NOT NULL FROM self_evaluations WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp3')), true);
+SELECT self_eval_submit((SELECT v FROM ids WHERE k = 'emp3'), 2026, 'manager', 'Test Manager');
+SELECT pg_temp.eq('the direct manager rates and signs off',
+  (SELECT finalized_at IS NOT NULL FROM self_evaluations WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp3')), true);
 
 SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'hr'));
 SELECT pg_temp.eq('HR still sees everyone',
   (SELECT count(DISTINCT profile_id) FROM self_evaluations)::int >= 3, true);
+
+SELECT self_eval_reopen((SELECT v FROM ids WHERE k = 'emp3'), 2026, 'manager');
+SELECT pg_temp.eq('HR reopens a completed manager evaluation',
+  (SELECT (finalized_at IS NULL AND mgr_submitted_at IS NULL AND emp_submitted_at IS NOT NULL)
+     FROM self_evaluations WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp3')), true);
 
 ROLLBACK;

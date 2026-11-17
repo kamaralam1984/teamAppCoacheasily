@@ -228,6 +228,32 @@ export function useSelfEvalWrites(profileId: string | null, year: number, devWri
     onSettled: refresh,
   });
 
+  /** One box of the manager evaluation form (the direct manager). */
+  const managerSave = useMutation({
+    mutationFn: async (args: { path: string[]; value: string }) => {
+      const { error } = await supabase.rpc("self_eval_manager_save", {
+        p_profile_id: profileId!,
+        p_year: year,
+        p_path: args.path,
+        p_value: args.value,
+      });
+      if (error) throw error;
+    },
+    onSettled: refresh,
+  });
+
+  /** The team member's comments on their completed evaluation. */
+  const memberComment = useMutation({
+    mutationFn: async (comment: string) => {
+      const { error } = await supabase.rpc("self_eval_member_comment", {
+        p_year: year,
+        p_comment: comment,
+      });
+      if (error) throw error;
+    },
+    onSettled: refresh,
+  });
+
   const noteSave = useMutation({
     mutationFn: async (args: { kind: ReviewKind; note: string }) => {
       const { error } = await supabase.rpc("self_eval_note_save", {
@@ -352,7 +378,19 @@ export function useSelfEvalWrites(profileId: string | null, year: number, devWri
     onSettled: refresh,
   });
 
-  return { start, save, reviewSave, noteSave, submit, reopen, finalize, upload, removeFile };
+  return {
+    start,
+    save,
+    reviewSave,
+    managerSave,
+    memberComment,
+    noteSave,
+    submit,
+    reopen,
+    finalize,
+    upload,
+    removeFile,
+  };
 }
 
 /** HR / admin open and close through their own rights; a developer through the gated route. */
