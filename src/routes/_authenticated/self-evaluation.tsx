@@ -55,7 +55,6 @@ import {
   type Score,
   type Stage,
 } from "@/lib/selfEvaluation";
-import { downlineIds } from "@/lib/warriors";
 
 export const Route = createFileRoute("/_authenticated/self-evaluation")({
   head: () => ({
@@ -107,11 +106,20 @@ function SelfEvaluationPage() {
   const cycleOpen = Boolean(cycle?.opened_at && !cycle?.closed_at);
   const { data: list } = useSelfEvalList(year, Boolean(viewer), devList);
 
+  // the team: only the people who report to the viewer directly (they see and rate those)
   const team = useMemo(
-    () => (viewer ? downlineIds(warriors ?? [], viewer.id) : new Set<string>()),
+    () =>
+      new Set(
+        viewer
+          ? (warriors ?? [])
+              .filter((w) => w.manager_id === viewer.id && w.id !== viewer.id)
+              .map((w) => w.id)
+          : [],
+      ),
     [warriors, viewer],
   );
-  // the people whose form the viewer may open: themselves, their team, or everyone for HR / admin
+  // the people whose form the viewer may open: themselves, their direct team, or everyone for
+  // HR / admin (and developers)
   const people = useMemo(() => {
     if (!viewer) return [];
     const active = (warriors ?? []).filter((w) => w.status === "active");

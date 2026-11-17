@@ -253,4 +253,44 @@ SELECT pg_temp.fails('a signed-in user cannot call the developer functions',
   format('SELECT self_eval_dev_save(%L, %L, 2026, ''reflection'', ARRAY[''proud''], to_jsonb(''x''::text))',
          (SELECT v FROM ids WHERE k = 'emp'), (SELECT v FROM ids WHERE k = 'emp2')), 'permission denied');
 
+-- ───────── only the direct manager (migration 20261117170000) ─────────
+RESET ROLE;
+INSERT INTO ids VALUES ('boss', gen_random_uuid()), ('emp3', gen_random_uuid());
+INSERT INTO profiles (id, org_id, auth_user_id, full_name, role, manager_id, status)
+VALUES ((SELECT v FROM ids WHERE k = 'boss'), (SELECT v FROM ids WHERE k = 'org'), gen_random_uuid(), 'Senior Manager', 'manager', NULL, 'active');
+UPDATE profiles SET manager_id = (SELECT v FROM ids WHERE k = 'boss') WHERE id = (SELECT v FROM ids WHERE k = 'mgr');
+INSERT INTO profiles (id, org_id, auth_user_id, full_name, role, manager_id, status)
+VALUES ((SELECT v FROM ids WHERE k = 'emp3'), (SELECT v FROM ids WHERE k = 'org'), gen_random_uuid(), 'Third Person', 'member',
+        (SELECT v FROM ids WHERE k = 'mgr'), 'active');
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'emp3'));
+SELECT self_eval_start(2026);
+SELECT self_eval_save((SELECT v FROM ids WHERE k = 'emp3'), 2026, 'reflection', ARRAY['proud'], to_jsonb('Mine'::text));
+SELECT self_eval_submit((SELECT v FROM ids WHERE k = 'emp3'), 2026, 'employee', 'Third Person');
+SELECT pg_temp.eq('a member sees only their own form',
+  (SELECT count(*) FROM self_evaluations WHERE profile_id <> (SELECT v FROM ids WHERE k = 'emp3'))::int, 0);
+SELECT pg_temp.eq('a member cannot upload to a teammate''s folder',
+  self_eval_storage_ok((SELECT v FROM ids WHERE k = 'emp2')::text || '/2026/a.pdf', true), false);
+
+SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'boss'));
+SELECT pg_temp.eq('the manager above the manager does not see the form',
+  (SELECT count(*) FROM self_evaluations WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp3'))::int, 0);
+SELECT pg_temp.fails('the manager above the manager cannot rate',
+  format('SELECT self_eval_review_save(%L, 2026, ''manager'', ARRAY[''overall_rating''], to_jsonb(''EE''::text))',
+         (SELECT v FROM ids WHERE k = 'emp3')), 'cannot rate');
+SELECT pg_temp.eq('...nor open the files',
+  self_eval_storage_ok((SELECT v FROM ids WHERE k = 'emp3')::text || '/2026/a.pdf', false), false);
+
+SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'mgr'));
+SELECT pg_temp.eq('the direct manager sees their team''s forms',
+  (SELECT count(*) FROM self_evaluations WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp3'))::int, 1);
+SELECT self_eval_review_save((SELECT v FROM ids WHERE k = 'emp3'), 2026, 'manager', ARRAY['overall_rating'], to_jsonb('EE'::text));
+SELECT self_eval_submit((SELECT v FROM ids WHERE k = 'emp3'), 2026, 'manager');
+SELECT pg_temp.eq('the direct manager rates and submits',
+  (SELECT mgr_submitted_at IS NOT NULL FROM self_evaluations WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp3')), true);
+
+SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'hr'));
+SELECT pg_temp.eq('HR still sees everyone',
+  (SELECT count(DISTINCT profile_id) FROM self_evaluations)::int >= 3, true);
+
 ROLLBACK;
