@@ -227,11 +227,17 @@ export async function buildSelfEvalPdf(input: PdfInput): Promise<Uint8Array> {
   para(E.exampleNote);
   para(E.tip);
   para("EXAMPLE  For guidance only. Do not fill in this table.", 8.5, true);
-  table(
-    goalHead,
-    goalWidths,
-    E.exampleGoals.map((g, i) => [String(i + 1), g.goal, g.target, g.result, g.evidence, g.rating]),
-  );
+  table(goalHead, goalWidths, [
+    ...E.exampleGoals.map((g, i) => [
+      String(i + 1),
+      g.goal,
+      g.target,
+      g.result,
+      g.evidence,
+      g.rating,
+    ]),
+    [String(E.exampleGoals.length + 1), "", "", "", "", ""],
+  ]);
 
   heading("Part A: Goals and Impact (50%)");
   para(E.partA(input.year));
@@ -263,7 +269,7 @@ export async function buildSelfEvalPdf(input: PdfInput): Promise<Uint8Array> {
     valueWidths,
     VALUES.map((v) => [
       v.name,
-      v.practice,
+      "",
       input.form.value_answers[v.key]?.example ?? "",
       input.form.value_answers[v.key]?.rating ?? "",
     ]),

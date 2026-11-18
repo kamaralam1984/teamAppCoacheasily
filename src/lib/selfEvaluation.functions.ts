@@ -19,7 +19,7 @@ const SCHEMA = `{
   },
   "reflection": {"proud": "", "missed": "", "challenge": "", "feedback": "", "development": "", "support": ""},
   "potential": {
-    "learn": {"rating": "Low|Low–Moderate|Moderate|Moderate–High|High", "why": ""},
+    "learn": {"rating": "Low|Moderate|High", "why": ""},
     "bigger_role": {...}, "help_others": {...}, "stretch": {...}
   }
 }`;
@@ -41,7 +41,7 @@ const ASK =
   `- potential: Part D: learn new skills → learn; bigger role → bigger_role; help others → help_others; ` +
   `stretch work → stretch.\n` +
   `- Ratings: O, EE, FME, PME or DNME (e.g. "Outstanding (o)" → "O", "Exceeds Expectations ( EE)" → "EE"); ` +
-  `potential ratings as written (e.g. "Moderate–High").\n` +
+  `potential ratings Low, Moderate or High as written.\n` +
   `- Words split by the PDF ("f rom", "ef f ort", "lef t") should be joined back ("from", "effort", "left").\n` +
   `- Anything blank or missing: "". Never invent an answer.`;
 

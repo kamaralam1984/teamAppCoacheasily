@@ -593,6 +593,8 @@ function EvaluationSheet({
       onChange={(e) => onChange(e.target.value)}
     >
       <option value="">—</option>
+      {/* a value saved before the list changed still shows */}
+      {value && !options.includes(value) ? <option value={value}>{value}</option> : null}
       {options.map((r) => (
         <option key={r} value={r}>
           {r}
@@ -805,6 +807,15 @@ function EvaluationSheet({
                 <td className="border border-line px-2 py-1.5">{g.rating}</td>
               </tr>
             ))}
+            {/* the form's example table ends with an empty row */}
+            <tr>
+              <td className="border border-line px-2 py-1.5">
+                {EMPLOYEE_FORM_TEXT.exampleGoals.length + 1}
+              </td>
+              {[0, 1, 2, 3, 4].map((c) => (
+                <td key={c} className="border border-line px-2 py-1.5" />
+              ))}
+            </tr>
           </tbody>
         </table>
       </section>
@@ -969,9 +980,7 @@ function EvaluationSheet({
                     <td className="border border-line px-2 py-1.5 text-[13px] font-bold text-ink">
                       {v.name}
                     </td>
-                    <td className="border border-line px-2 py-1.5 text-[13px] text-soft">
-                      {v.practice}
-                    </td>
+                    <td className="border border-line px-2 py-1.5" />
                     <td className="border border-line">
                       {canFill ? (
                         <Cell

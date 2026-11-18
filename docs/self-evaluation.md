@@ -123,6 +123,9 @@ copy, then live) → `team-deploy`.
 - Signature is the typed name ("signed in the Team App").
 - The employee's per-goal / per-value self-ratings are copied into the manager form
   automatically; the summary and Part C self-ratings are entered by the manager, as on the form.
-- Employee Part D offers Low, Low–Moderate, Moderate, Moderate–High, High (people wrote
-  "Moderate–High" on paper); the manager's Part D is Low / Moderate / High, as on the form.
+- Employee and manager Part D both offer Low / Moderate / High, as on the forms. A level saved
+  earlier ("Moderate–High") still shows until changed; an upload with an in-between level leaves it blank.
+- The employee form follows `Annual_Self-Evaluation_Form_Jan-Dec_2026_ Format.docx`: one worked goal
+  example (plus its empty row 2), and Part B's "What it looks like in practice" column is blank for the
+  12 values (only the Ownership example row has it).
 - The PDF shows the recommendation tick as **X** (the PDF font has no ✓).

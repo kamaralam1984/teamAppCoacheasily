@@ -26,76 +26,23 @@ export const RATING_MEANING: Record<Rating, string> = {
 /** 5 for Outstanding down to 1 for Does Not Meet. */
 export const RATING_POINTS: Record<Rating, number> = { O: 5, EE: 4, FME: 3, PME: 2, DNME: 1 };
 
-export const POTENTIAL_LEVELS = [
-  "Low",
-  "Low–Moderate",
-  "Moderate",
-  "Moderate–High",
-  "High",
-] as const;
+/** As on the form: Low / Moderate / High. */
+export const POTENTIAL_LEVELS = ["Low", "Moderate", "High"] as const;
 export type PotentialLevel = (typeof POTENTIAL_LEVELS)[number];
 
 export const VALUES = [
-  {
-    key: "ownership",
-    name: "Ownership",
-    practice: "I take responsibility for outcomes and follow through without being chased",
-  },
-  {
-    key: "collaboration",
-    name: "Collaboration",
-    practice: "I share information, help teammates and work well across teams",
-  },
-  {
-    key: "problem_solving",
-    name: "Problem-solving",
-    practice: "I find root causes and propose practical solutions, not just raise problems",
-  },
-  {
-    key: "growth_mindset",
-    name: "Growth mindset",
-    practice: "I seek feedback, learn from mistakes and keep building new skills",
-  },
-  {
-    key: "communication",
-    name: "Communication",
-    practice: "I am clear, timely and respectful in writing and in conversation",
-  },
-  {
-    key: "optimism",
-    name: "Optimism",
-    practice: "I stay positive and solution-focused when things get hard",
-  },
-  {
-    key: "courage",
-    name: "Courage",
-    practice: "I speak up, try new ideas and make hard calls when needed",
-  },
-  {
-    key: "integrity",
-    name: "Integrity",
-    practice: "I am honest, keep my word and do the right thing when no one is watching",
-  },
-  {
-    key: "responsibility",
-    name: "Responsibility",
-    practice: "I meet commitments and deadlines and follow agreed processes",
-  },
-  {
-    key: "leadership",
-    name: "Leadership",
-    practice: "I guide, support and inspire others, whatever my role",
-  },
-  {
-    key: "efficiency",
-    name: "Efficiency",
-    practice: "I use time and resources well and keep improving how work gets done",
-  },
-  {
-    key: "strategic_thinking",
-    name: "Strategic thinking",
-    practice: "I connect my work to company goals and think about the bigger picture",
-  },
+  { key: "ownership", name: "Ownership" },
+  { key: "collaboration", name: "Collaboration" },
+  { key: "problem_solving", name: "Problem-solving" },
+  { key: "growth_mindset", name: "Growth mindset" },
+  { key: "communication", name: "Communication" },
+  { key: "optimism", name: "Optimism" },
+  { key: "courage", name: "Courage" },
+  { key: "integrity", name: "Integrity" },
+  { key: "responsibility", name: "Responsibility" },
+  { key: "leadership", name: "Leadership" },
+  { key: "efficiency", name: "Efficiency" },
+  { key: "strategic_thinking", name: "Strategic thinking" },
 ] as const;
 export type ValueKey = (typeof VALUES)[number]["key"];
 
@@ -304,7 +251,7 @@ export function normalizeRating(text: unknown): Rating | "" {
   return "";
 }
 
-/** "moderate-high", "Moderate – High", "HIGH" → the level; else "". */
+/** "moderate", "Medium", "HIGH" → the level; an in-between ("Moderate–High") or anything else → "". */
 export function normalizePotential(text: unknown): PotentialLevel | "" {
   const t = String(text ?? "")
     .toLowerCase()
@@ -312,10 +259,8 @@ export function normalizePotential(text: unknown): PotentialLevel | "" {
     .replace(/[^a-z-]/g, "");
   const map: Record<string, PotentialLevel> = {
     low: "Low",
-    "low-moderate": "Low–Moderate",
     moderate: "Moderate",
     medium: "Moderate",
-    "moderate-high": "Moderate–High",
     high: "High",
   };
   return map[t] ?? "";

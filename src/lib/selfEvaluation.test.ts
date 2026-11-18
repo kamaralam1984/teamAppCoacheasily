@@ -49,8 +49,8 @@ describe("ratings as written on the form", () => {
     equal(normalizeRating("great"), "");
   });
   test("potential levels", () => {
-    equal(normalizePotential("Moderate–High"), "Moderate–High");
-    equal(normalizePotential("moderate - high"), "Moderate–High");
+    equal(normalizePotential("Moderate"), "Moderate");
+    equal(normalizePotential("moderate - high"), "");
     equal(normalizePotential("HIGH"), "High");
     equal(normalizePotential("Medium"), "Moderate");
     equal(normalizePotential("very"), "");
@@ -130,13 +130,13 @@ describe("reading an uploaded form", () => {
       ],
       values: { ownership: { example: "0 pending", rating: "O" }, bravery: { example: "x" } },
       reflection: { proud: "Shipped", unknown: "x" },
-      potential: { learn: { rating: "High", why: "Fast" }, stretch: { rating: "Moderate - High" } },
+      potential: { learn: { rating: "High", why: "Fast" }, stretch: { rating: "moderate" } },
     });
     equal(read.goals.length, 2);
     equal(read.goals[1]!.rating, "O");
     deepEqual(Object.keys(read.value_answers), ["ownership"]);
     deepEqual(read.reflection, { proud: "Shipped" });
-    equal(read.potential.stretch?.rating, "Moderate–High");
+    equal(read.potential.stretch?.rating, "Moderate");
     equal(read.manager_name, "PH");
     equal(readCount(read), 5 + 2 + 2 + 1 + 2 + 1);
   });

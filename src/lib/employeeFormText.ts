@@ -27,14 +27,6 @@ export const EMPLOYEE_FORM_TEXT = {
         "As soon as a new member onboarded with us, I did the customer check and gave the induction within 24 hours. After 20 days, I made a sanity-check call to confirm things were going well on the customer’s side, and ended by asking for feedback. This raised the ratings. Evidence: customer experience rating report and customer feedback received.",
       rating: "Outstanding (O)",
     },
-    {
-      goal: "Reduce refund cases. Company priority: customer retention and revenue protection.",
-      target: "Reduce refund cases from 5 to 1",
-      result: "Refund cases reduced from 5 to 1",
-      evidence:
-        "I listened to each unhappy customer’s challenges and asked for 15 days to set the service right. This made things smoother, turned unhappy customers into happy ones, and we retained them. Evidence: feedback received from the customers, who are still with us and progressing well.",
-      rating: "Exceeds Expectations (EE)",
-    },
   ],
   partA: (year: number) =>
     `List the 4–5 goals you agreed with your manager in January ${year} and rate each on the outcome delivered, not on the effort.`,
