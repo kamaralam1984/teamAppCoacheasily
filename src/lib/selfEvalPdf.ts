@@ -142,7 +142,7 @@ async function startDoc(title: string, year: number, footerLabel: string) {
       }
     };
     room(40);
-    drawRow(head, true);
+    if (head.length) drawRow(head, true); // no head: the form's table has none
     for (const r of rows) drawRow(r, false);
     y += 12;
   };
@@ -297,7 +297,7 @@ export async function buildSelfEvalPdf(input: PdfInput): Promise<Uint8Array> {
   heading("Sign-off");
   para(E.signoff);
   table(
-    ["Field", ""],
+    [],
     [0.32, 0.68],
     [
       ["Employee name", input.name],
