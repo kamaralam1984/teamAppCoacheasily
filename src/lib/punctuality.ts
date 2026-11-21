@@ -30,6 +30,8 @@ export interface PunctualityRow {
 export interface OrgSettings {
   /** Festive decorations: "diwali" or "christmas" shows them, "off" hides them, absent follows the calendar. */
   festive_decor?: "diwali" | "christmas" | "off";
+  /** Christmas extras in the free space on the right, switched on by the developer. Absent = none. */
+  xmas_extras?: ("tree" | "snowman" | "countdown" | "hanging")[];
   daily_meeting_url?: string;
   daily_meeting_time?: string;
   timezone?: string;

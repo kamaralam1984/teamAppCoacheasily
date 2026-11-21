@@ -1450,6 +1450,10 @@ html[data-xmas] main {
   animation: xm-santa 6s ease-in-out infinite;
   filter: drop-shadow(0 0 30px rgba(10, 20, 50, 0.6));
 }
+/* big screens (2K, 4K): he grows with them, up to 1.4× the picture's own size so his face stays sharp */
+@media (min-width: 2200px) and (min-height: 1100px) {
+  .xm-santa { width: min(26vw, 616px, calc((100vh - 170px) * 0.546)); }
+}
 
 /* fairy lights */
 .xm-bulb {
@@ -1786,6 +1790,39 @@ html[data-xmas] main {
   animation: xm-topstar 2.2s ease-in-out infinite;
 }
 
+/* Christmas extras on the right (ChristmasSide): swinging decorations, waving snowman */
+html[data-xm-floor] .xm-corner { display: none !important; }
+@keyframes xm-swing {
+  0%, 100% { transform: rotate(-7deg); }
+  50% { transform: rotate(7deg); }
+}
+.xm-swing {
+  transform-origin: 50% 0;
+  animation: xm-swing 3.6s ease-in-out infinite;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+}
+.xm-hstar { filter: drop-shadow(0 0 6px #ffd66b); }
+@keyframes xm-wave {
+  0%, 55%, 100% { transform: rotate(0deg); }
+  62%, 76% { transform: rotate(-22deg); }
+  69%, 83% { transform: rotate(6deg); }
+}
+.xm-wave { animation: xm-wave 4s ease-in-out infinite; }
+@keyframes xm-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+.xm-blink {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: xm-blink 4.6s ease-in-out infinite;
+}
+@keyframes xm-scarf {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-9deg); }
+}
+.xm-scarf { animation: xm-scarf 2.8s ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
   .xm-fog { display: none; }
   .xm-lights .xm-sbulb { animation: xm-l-steady 4s ease-in-out infinite !important; }
@@ -1794,5 +1831,14 @@ html[data-xmas] main {
   .xm-frame::after { animation-duration: 16s; }
   .xm-line-gold, .xm-line-silver { animation-duration: 16s; }
   .xm-santa { animation: none; }
+  .xm-swing, .xm-wave, .xm-scarf { animation-duration: 9s; }
   .xm-bulb, .xm-dot { animation-duration: 3.5s; }
 }
+
+/* Big screens (2K/4K at 100% scaling): the top bar, sidebar and page grow with the screen instead
+   of sitting small in the middle. Only these zoom; the fixed snow, sleigh and decoration layers do
+   not, and code that writes measured sizes back into the page divides by --ce-zoom (ceZoom()). */
+:root { --ce-zoom: 1; }
+@media (min-width: 2400px) and (min-height: 1250px) { :root { --ce-zoom: 1.35; } }
+@media (min-width: 3200px) and (min-height: 1700px) { :root { --ce-zoom: 1.8; } }
+.ce-zoom { zoom: var(--ce-zoom); }

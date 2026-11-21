@@ -17,6 +17,13 @@ export { SleighFlight } from "@/components/festive/SleighFlight";
  * Local preview only (the dev server, never a build): open any page with ?christmas=1 to see
  * the decorations without changing the company setting, ?christmas=0 to stop.
  */
+/** How much the page is zoomed up on big screens (see .ce-zoom in styles.css); 1 elsewhere. */
+export function ceZoom(): number {
+  if (typeof window === "undefined") return 1;
+  const z = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ce-zoom"));
+  return z > 0 ? z : 1;
+}
+
 export function christmasPreview(): boolean | null {
   if (!import.meta.env.DEV || typeof window === "undefined") return null;
   try {
@@ -486,7 +493,7 @@ function SantaHat({ size = 64, className = "" }: { size?: number; className?: st
 }
 
 /** A wrapped present with a gold ribbon. */
-function Gift({
+export function Gift({
   w = 60,
   red = true,
   className = "",
@@ -604,7 +611,11 @@ function useSantaRoom(santa: boolean) {
         }
         // the page starts where the picture fades out, never over his arm, gift or face
         const limit = sr.right - sr.width * 0.1;
-        const pad = Math.max(16, Math.round(limit - main.getBoundingClientRect().left));
+        // measured on screen, written into the (zoomed) page: back to the page's own pixels
+        const pad = Math.max(
+          16,
+          Math.round((limit - main.getBoundingClientRect().left) / ceZoom()),
+        );
         root.style.setProperty("--xm-pad", `${pad}px`);
       });
     };
@@ -624,7 +635,7 @@ function useSantaRoom(santa: boolean) {
 const TREE_BULBS = ["#ffd66b", "#ff4b53", "#47dc84", "#6fb6ff", "#f2f5fa", "#ffb347"];
 
 /** A full-size Christmas tree: snowy tiers, gold garland, baubles, twinkling lights, a star. */
-function BigTree({ h = 300, className = "" }: { h?: number; className?: string }) {
+export function BigTree({ h = 300, className = "" }: { h?: number; className?: string }) {
   const tiers = [
     { y: 34, half: 26, depth: 36 },
     { y: 58, half: 38, depth: 40 },
@@ -795,7 +806,7 @@ export function ChristmasPageDecor({ dark, santa }: { dark: boolean; santa: bool
         />
       </svg>
       {/* right-hand corner: a lantern, presents and snowy pines */}
-      <div className="absolute right-0 bottom-0 hidden items-end lg:flex">
+      <div className="xm-corner absolute right-0 bottom-0 hidden items-end lg:flex">
         <Lantern h={130} className="mb-6" />
         <Gift w={52} className="mb-3" />
         <Gift w={40} red={false} className="mb-3 -ml-2" />
@@ -851,8 +862,9 @@ function useTreeRoom(
     const measure = () => {
       const rr = root.getBoundingClientRect();
       const wr = wish.getBoundingClientRect();
-      const free = rr.bottom - wr.bottom - 28 - 14; // the mound under it, a little air above
-      const byWidth = ((area.getBoundingClientRect().width - 96) / 200) * 240;
+      const z = ceZoom(); // rects are on-screen pixels; the tree is drawn in the page's own
+      const free = (rr.bottom - wr.bottom) / z - 28 - 14; // the mound under it, a little air above
+      const byWidth = ((area.getBoundingClientRect().width / z - 96) / 200) * 240;
       const next = Math.round(Math.max(110, Math.min(300, free, byWidth)));
       setH((prev) => (Math.abs(prev - next) > 2 ? next : prev));
     };

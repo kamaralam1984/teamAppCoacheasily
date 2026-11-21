@@ -49,6 +49,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useMyProfile } from "@/hooks/useMyProfile";
+import { ChristmasSideDecor } from "@/components/festive/ChristmasSide";
 import { useOrgSettings } from "@/hooks/useOrg";
 import { BirthdayTakeover } from "@/components/birthday/BirthdayTakeover";
 import {
@@ -275,6 +276,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {christmas ? (
         <>
           <ChristmasPageDecor dark santa />
+          <ChristmasSideDecor />
           <SnowScene />
           <SleighFlight />
         </>
@@ -283,7 +285,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {profile && (role === "hr" || role === "admin") ? (
         <ProbationAlert viewerId={profile.id} />
       ) : null}
-      <header ref={headerRef} className="sticky top-0 z-40 bg-night">
+      <header ref={headerRef} className="ce-zoom sticky top-0 z-40 bg-night">
         {diwali ? <DiwaliHeaderDecor /> : null}
         {christmas ? <ChristmasHeaderDecor /> : null}
         <div
@@ -518,10 +520,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         />
       ) : null}
 
-      <div className="lg:flex">
+      <div className="ce-zoom lg:flex">
         <aside
           aria-label="Personal"
-          style={{ top: headerH, height: `calc(100dvh - ${headerH}px)` }}
+          style={{ top: headerH, height: `calc(100dvh / var(--ce-zoom, 1) - ${headerH}px)` }}
           className={cn(
             "fixed left-0 z-50 flex w-64 flex-col border-r border-night2 bg-night transition-[transform,width] duration-200 ease-out",
             "lg:sticky lg:z-30 lg:shrink-0 lg:self-start lg:translate-x-0",
