@@ -346,7 +346,7 @@ export function SnowScene() {
       ctx.save();
       if (cap.clipEl) {
         // a tab in the sidebar list: keep the snow inside the list as it scrolls
-        const c = cap.clipEl.getBoundingClientRect();
+        const c = clipRects.get(cap.clipEl) ?? cap.clipEl.getBoundingClientRect();
         ctx.beginPath();
         ctx.rect(c.left - 8, c.top - 6, c.width + 16, c.height + 6);
         ctx.clip();
@@ -357,13 +357,9 @@ export function SnowScene() {
       grad.addColorStop(0, "#ffffff");
       grad.addColorStop(0.55, "#f4f8fd");
       grad.addColorStop(1, "#c9d8ea");
-      ctx.save();
-      ctx.shadowColor = "rgba(8, 18, 45, 0.45)";
-      ctx.shadowBlur = 5;
-      ctx.shadowOffsetY = 2;
+      // no blurred shadow under it: a canvas blur on every cap, every frame, is very costly
       ctx.fillStyle = grad;
       ctx.fill(path);
-      ctx.restore();
       ctx.strokeStyle = "rgba(255,255,255,0.9)";
       ctx.lineWidth = 1;
       ctx.stroke(new Path2D(rimPathD(cap, r.width, r.left, r.top)));
@@ -430,6 +426,7 @@ export function SnowScene() {
       hovered = el;
     };
 
+    const clipRects = new Map<Element, DOMRect>();
     let raf = 0;
     let last = performance.now();
     let sinceRefresh = 1;
@@ -476,10 +473,19 @@ export function SnowScene() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
 
+      // read every position first, then write: reading after a write makes the browser lay
+      // the whole page out again, once per element, which is what made pages slow
       const layerRect = layer.getBoundingClientRect();
-      const live: { cap: Cap; r: DOMRect }[] = [];
+      const rects = elements.map((el) => el.getBoundingClientRect());
+      clipRects.clear();
       for (const el of elements) {
-        const r = el.getBoundingClientRect();
+        const c = caps.get(el)?.clipEl;
+        if (c && !clipRects.has(c)) clipRects.set(c, c.getBoundingClientRect());
+      }
+      const live: { cap: Cap; r: DOMRect }[] = [];
+      for (let i = 0; i < elements.length; i++) {
+        const el = elements[i]!;
+        const r = rects[i]!;
         const cap = capFor(el);
         // snow builds up by itself too, slowly, so a cleared button is white again in ~40s
         cap.snow = Math.min(1, cap.snow + dt / 40);
@@ -583,8 +589,6 @@ export function SnowScene() {
           g.addColorStop(0, "#ffffff");
           g.addColorStop(1, "#c8d6e8");
           ctx.fillStyle = g;
-          ctx.shadowColor = "rgba(8,18,45,0.35)";
-          ctx.shadowBlur = 3;
           ctx.fill();
           ctx.restore();
         }

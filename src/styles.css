@@ -1102,8 +1102,8 @@
 @keyframes xm-run { from { background-position: 0% 0; } to { background-position: 200% 0; } }
 @keyframes xm-run-back { from { background-position: 200% 0; } to { background-position: 0% 0; } }
 @keyframes xm-twinkle {
-  0%, 100% { opacity: 0.55; filter: brightness(0.8); }
-  50% { opacity: 1; filter: brightness(1.25); }
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
 }
 @keyframes xm-star { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
 @keyframes xm-flicker {
@@ -1159,15 +1159,13 @@ html[data-xmas] aside[aria-label="Personal"] a.font-bold {
 html[data-xmas] main :is(.btn3d, a.rounded-full, button.rounded-full, [data-tour="attendance"] > div) {
   outline: 1.5px solid rgba(246, 215, 122, 0.95);
   outline-offset: 2px;
-  filter: drop-shadow(0 0 5px rgba(246, 215, 122, 0.45));
 }
 html[data-xmas] main :is(.btn3d, a.rounded-full, button.rounded-full):hover {
   outline-color: #fff3c4;
-  filter: drop-shadow(0 0 9px rgba(246, 215, 122, 0.8));
 }
 html[data-xmas] main .ce-card {
   border: 1.5px solid #c9962a;
-  box-shadow: 0 0 0 1px rgba(246, 215, 122, 0.25), 0 0 14px rgba(246, 215, 122, 0.18), var(--shadow-card);
+  box-shadow: 0 0 0 1px rgba(246, 215, 122, 0.25), var(--shadow-card);
 }
 html[data-xmas] header nav a {
   outline: 1px solid rgba(246, 215, 122, 0.45);
@@ -1176,7 +1174,6 @@ html[data-xmas] header nav a {
 }
 html[data-xmas] header nav a:hover {
   outline-color: #f6d77a;
-  box-shadow: 0 0 10px rgba(246, 215, 122, 0.45);
 }
 html[data-xmas] header nav a[data-active="true"] { outline: 1.5px solid #f6d77a; }
 html[data-xmas] header.sticky nav { border-top: 1px solid rgba(246, 215, 122, 0.55); }
@@ -1196,7 +1193,6 @@ html[data-xmas] aside[aria-label="Personal"] a.font-bold {
 .xm-line-gold {
   background: linear-gradient(90deg, #7a5408, #f6d77a 20%, #fff6cf 25%, #c9962a 35%, #7a5408 50%, #f6d77a 70%, #fff6cf 75%, #c9962a 85%, #7a5408);
   background-size: 200% 100%;
-  box-shadow: 0 0 8px rgba(246, 215, 122, 0.7);
   animation: xm-run 6s linear infinite;
 }
 .xm-line-silver {
@@ -1233,7 +1229,6 @@ html[data-xmas] aside[aria-label="Personal"] a.font-bold {
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-  filter: drop-shadow(0 0 4px rgba(246, 215, 122, 0.6));
   animation: xm-spin 7s linear infinite;
 }
 
@@ -1243,7 +1238,7 @@ html[data-xmas] aside[aria-label="Personal"] a.font-bold {
     radial-gradient(55% 70% at 82% 40%, rgba(255, 190, 90, 0.16), transparent 70%),
     radial-gradient(90% 120% at 10% 0%, rgba(255, 80, 80, 0.18), transparent 60%),
     linear-gradient(160deg, #8e0f19 0%, #6b0a13 45%, #4b060d 100%) !important;
-  box-shadow: 0 0 0 1px rgba(255, 230, 170, 0.25) inset, 0 18px 40px rgba(60, 4, 10, 0.45), 0 0 30px rgba(246, 215, 122, 0.25) !important;
+  box-shadow: 0 0 0 1px rgba(255, 230, 170, 0.25) inset, 0 18px 40px rgba(60, 4, 10, 0.45) !important;
 }
 .xm-hero .text-mist { color: #f3d9d9; }
 @media (min-width: 640px) {
@@ -1270,7 +1265,7 @@ html[data-xmas] aside[aria-label="Personal"] a.font-bold {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 2px 1px rgba(40, 0, 0, 0.7)) drop-shadow(0 0 10px rgba(246, 215, 122, 0.45));
+  filter: drop-shadow(0 2px 1px rgba(40, 0, 0, 0.7));
 }
 .xm-happy .xm-happy-white {
   background: linear-gradient(180deg, #ffffff 0%, #f2f4f8 55%, #b9c1ce 100%);
@@ -1280,7 +1275,6 @@ html[data-xmas] aside[aria-label="Personal"] a.font-bold {
 }
 .xm-swoosh {
   stroke-dasharray: 260;
-  filter: drop-shadow(0 0 4px rgba(246, 215, 122, 0.8));
   animation: xm-swoosh 4.5s ease-in-out infinite alternate;
 }
 
@@ -1397,7 +1391,7 @@ html[data-xmas] main :is(
 .xm-santa-face {
   object-position: 30% 6%;
   border: 2px solid #f6d77a;
-  box-shadow: 0 0 0 3px rgba(233, 237, 243, 0.35), 0 0 14px rgba(246, 215, 122, 0.55);
+  box-shadow: 0 0 0 3px rgba(233, 237, 243, 0.35);
 }
 /* snow falling inside the Happy Christmas boxes */
 .xm-inflake {
@@ -1424,7 +1418,6 @@ html[data-xmas] main {
   top: 0;
   overflow: visible;
   will-change: transform;
-  filter: drop-shadow(0 2px 2px rgba(8, 18, 45, 0.4));
   transition: opacity 200ms ease;
 }
 .xm-glint {
@@ -1432,7 +1425,6 @@ html[data-xmas] main {
   stroke-width: 0.7;
   stroke-linecap: round;
   opacity: 0;
-  filter: drop-shadow(0 0 2px #fff);
   animation: xm-glint 3.4s ease-in-out infinite;
 }
 @keyframes xm-glint {
@@ -1448,7 +1440,6 @@ html[data-xmas] main {
   mask-image: linear-gradient(to right, #000 84%, transparent), linear-gradient(to bottom, transparent, #000 6%);
   mask-composite: intersect;
   animation: xm-santa 6s ease-in-out infinite;
-  filter: drop-shadow(0 0 30px rgba(10, 20, 50, 0.6));
 }
 /* big screens (2K, 4K): he grows with them, up to 1.4× the picture's own size so his face stays sharp */
 @media (min-width: 2200px) and (min-height: 1100px) {
@@ -1466,11 +1457,12 @@ html[data-xmas] main {
 .xm-bulb-red { background: radial-gradient(circle at 40% 35%, #ffd0d0, #ff4048 55%, #a50f18); box-shadow: 0 0 6px 2px rgba(255, 70, 80, 0.75); }
 .xm-bulb-green { background: radial-gradient(circle at 40% 35%, #d8ffe4, #3fd17a 55%, #13703a); box-shadow: 0 0 6px 2px rgba(63, 209, 122, 0.7); }
 .xm-bulb-silver { background: radial-gradient(circle at 40% 35%, #ffffff, #dde3ec 55%, #8e98a8); box-shadow: 0 0 6px 2px rgba(230, 236, 245, 0.85); }
-.xm-dot { fill: #ffd66b; filter: drop-shadow(0 0 2px #ffc94a); animation: xm-twinkle 1.6s ease-in-out infinite; }
-.xm-dot-red { fill: #ff5a5f; filter: drop-shadow(0 0 2px #ff3b42); }
+.xm-dot { fill: #ffd66b; animation: xm-twinkle 1.6s ease-in-out infinite; }
+.xm-dot-red { fill: #ff5a5f; }
 .xm-dot-blink { animation: xm-twinkle 1.4s ease-in-out infinite; }
 .xm-flame { transform-box: fill-box; transform-origin: 50% 100%; animation: xm-flicker 0.8s ease-in-out infinite; }
-.xm-glow, .xm-window { animation: xm-glow 2.4s ease-in-out infinite; }
+.xm-window { animation: xm-glow 2.4s ease-in-out infinite; }
+.xm-glow { display: none; }
 
 /* crystal string lights in the top bar: a cut-glass drop on a green cap, glowing; the
    container's data-mode picks how they play (ChristmasDecor.tsx StringLights) */
@@ -1626,7 +1618,6 @@ html[data-xmas] main {
   left: 0;
   top: 0;
   will-change: transform;
-  filter: drop-shadow(0 0 1.5px rgba(255, 226, 140, 1)) drop-shadow(0 0 5px rgba(246, 215, 122, 0.75)) drop-shadow(0 0 12px rgba(246, 215, 122, 0.4));
 }
 @keyframes xm-gallop {
   0%, 100% { transform: translateY(0) rotate(0deg); }
@@ -1643,13 +1634,13 @@ html[data-xmas] main {
 .xm-gallop { transform-box: fill-box; transform-origin: center; animation: xm-gallop 0.42s ease-in-out infinite; }
 .xm-legs-f { transform-box: fill-box; transform-origin: 50% 0; animation: xm-legs-f 0.42s ease-in-out infinite; }
 .xm-legs-b { transform-box: fill-box; transform-origin: 50% 0; animation: xm-legs-b 0.42s ease-in-out infinite; }
-.xm-nose { filter: drop-shadow(0 0 2px #ff3b3b) drop-shadow(0 0 4px #ff3b3b); animation: xm-twinkle 0.9s ease-in-out infinite; }
+.xm-nose { animation: xm-twinkle 0.9s ease-in-out infinite; }
 .xm-gift-fall {
   position: absolute;
   left: 0;
   top: 0;
   will-change: transform;
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 5px rgba(246, 215, 122, 0.35));
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45));
 }
 .xm-gift-fall.is-landed {
   cursor: pointer;
@@ -1659,7 +1650,7 @@ html[data-xmas] main {
 .xm-gift-fall.is-landed:hover,
 .xm-gift-fall.is-landed:focus-visible {
   outline: none;
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 10px rgba(255, 220, 120, 0.95));
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45)) brightness(1.15);
 }
 @keyframes xm-gift-wiggle {
   0%, 82%, 100% { translate: 0 0; }
@@ -1716,7 +1707,7 @@ html[data-xmas] main {
    Marathi falls back to Rozha One, which has Devanagari), no plate behind it */
 .xm-wish {
   /* exactly the glow of the "Happy Christmas" lettering, a touch brighter */
-  --xm-wish-glow: drop-shadow(0 0 0.6px rgba(110, 60, 0, 0.95)) drop-shadow(0 1.5px 0.5px rgba(95, 50, 0, 0.85)) drop-shadow(0 0 10px rgba(255, 214, 110, 0.75)) drop-shadow(0 0 24px rgba(255, 200, 90, 0.4));
+  --xm-wish-glow: drop-shadow(0 0 0.6px rgba(110, 60, 0, 0.95)) drop-shadow(0 1.5px 0.5px rgba(95, 50, 0, 0.85));
   position: absolute;
   /* always one line, exactly the size its clear lane was found for (SleighFlight findLane
      shrinks the words when no lane is wide enough) */
@@ -1775,10 +1766,8 @@ html[data-xmas] main {
   50% { opacity: 0.55; }
 }
 .xm-tbulb {
-  filter: drop-shadow(0 0 1.5px currentColor) drop-shadow(0 0 3.5px currentColor);
   animation: xm-tbulb 1.8s ease-in-out infinite;
 }
-.xm-tinsel { filter: drop-shadow(0 0 2px rgba(246, 215, 122, 0.8)); }
 @keyframes xm-topstar {
   0%, 100% { opacity: 0.85; transform: scale(1); }
   50% { opacity: 1; transform: scale(1.12); }
@@ -1786,7 +1775,6 @@ html[data-xmas] main {
 .xm-topstar {
   transform-box: fill-box;
   transform-origin: center;
-  filter: drop-shadow(0 0 6px #ffd66b);
   animation: xm-topstar 2.2s ease-in-out infinite;
 }
 
@@ -1799,9 +1787,7 @@ html[data-xm-floor] .xm-corner { display: none !important; }
 .xm-swing {
   transform-origin: 50% 0;
   animation: xm-swing 3.6s ease-in-out infinite;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
 }
-.xm-hstar { filter: drop-shadow(0 0 6px #ffd66b); }
 @keyframes xm-wave {
   0%, 55%, 100% { transform: rotate(0deg); }
   62%, 76% { transform: rotate(-22deg); }

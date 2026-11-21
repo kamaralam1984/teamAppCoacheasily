@@ -844,28 +844,25 @@ export function ChristmasPageDecor({ dark, santa }: { dark: boolean; santa: bool
   );
 }
 
+/** Over the dashboard greeting: garland with a bow, Happy Christmas, holly, a snowy cabin. */
 /**
- * How tall the greeting's tree can be: the free height between the wish and the bottom of the
- * card (less the snowy mound), and no wider than its corner allows. Follows every resize.
+ * How tall the snowman under the wish can be: from the bottom of the card up to just under
+ * "Happy Christmas". Follows every resize.
  */
-function useTreeRoom(
+function useSnowmanRoom(
   rootRef: React.RefObject<HTMLDivElement | null>,
   wishRef: React.RefObject<HTMLDivElement | null>,
-  areaRef: React.RefObject<HTMLDivElement | null>,
+  on: boolean,
 ): number {
-  const [h, setH] = useState(180);
+  const [h, setH] = useState(150);
   useEffect(() => {
     const root = rootRef.current;
     const wish = wishRef.current;
-    const area = areaRef.current;
-    if (!root || !wish || !area) return;
+    if (!on || !root || !wish) return;
     const measure = () => {
-      const rr = root.getBoundingClientRect();
-      const wr = wish.getBoundingClientRect();
-      const z = ceZoom(); // rects are on-screen pixels; the tree is drawn in the page's own
-      const free = (rr.bottom - wr.bottom) / z - 28 - 14; // the mound under it, a little air above
-      const byWidth = ((area.getBoundingClientRect().width / z - 96) / 200) * 240;
-      const next = Math.round(Math.max(110, Math.min(300, free, byWidth)));
+      const z = ceZoom(); // rects are on-screen pixels; the snowman is drawn in the page's own
+      const free = (root.getBoundingClientRect().bottom - wish.getBoundingClientRect().bottom) / z;
+      const next = Math.round(Math.max(90, Math.min(380, free - 4)));
       setH((prev) => (Math.abs(prev - next) > 2 ? next : prev));
     };
     measure();
@@ -873,16 +870,14 @@ function useTreeRoom(
     ro.observe(root);
     ro.observe(wish);
     return () => ro.disconnect();
-  }, [rootRef, wishRef, areaRef]);
+  }, [rootRef, wishRef, on]);
   return h;
 }
 
-/** Over the dashboard greeting: garland with a bow, Happy Christmas, holly, a snowy cabin. */
-export function ChristmasHeroDecor() {
+export function ChristmasHeroDecor({ snowman = false }: { snowman?: boolean }) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const wishRef = useRef<HTMLDivElement | null>(null);
-  const treeAreaRef = useRef<HTMLDivElement | null>(null);
-  const treeH = useTreeRoom(rootRef, wishRef, treeAreaRef);
+  const manH = useSnowmanRoom(rootRef, wishRef, snowman);
   return (
     <div
       ref={rootRef}
@@ -898,7 +893,7 @@ export function ChristmasHeroDecor() {
       <Bow size={78} className="absolute -top-2 left-1/2 -translate-x-1/2" />
       {/* silver divider between the greeting and the wish */}
       <div className="xm-divider absolute top-[22%] bottom-[38%] left-[59%] hidden w-px md:block" />
-      <div className="absolute inset-x-0 bottom-[190px] flex flex-col items-center md:inset-x-auto md:right-[2%] md:bottom-auto md:top-[12%] md:w-[38%]">
+      <div className="absolute inset-x-0 bottom-[132px] flex flex-col items-center md:inset-x-auto md:right-[2%] md:bottom-auto md:top-[12%] md:w-[38%]">
         <div ref={wishRef} className="relative">
           <SantaHat size={58} className="absolute -top-7 -left-5 -rotate-12" />
           <Holly size={48} className="absolute -top-6 -right-8" />
@@ -918,36 +913,21 @@ export function ChristmasHeroDecor() {
           </svg>
         </div>
       </div>
-      {/* the Christmas tree, lit, standing under the wish with a cabin and pines beside it */}
-      <div
-        ref={treeAreaRef}
-        className="absolute inset-x-0 bottom-0 flex items-end justify-center md:inset-x-auto md:right-[2%] md:w-[38%] md:justify-center"
-      >
-        <Pine h={66} className="-mr-3 mb-1" />
-        <Cabin w={96} className="-mr-3" />
-        {/* on a snowy mound, right under the wish */}
-        <div className="relative z-0 mb-[28px]">
-          <BigTree h={treeH} />
-          <div className="absolute bottom-1 left-1/2 flex -translate-x-1/2 items-end">
-            <Gift w={32} />
-            <Gift w={40} red={false} />
-            <Gift w={28} />
-          </div>
-          <svg
-            className="absolute -bottom-[44px] left-1/2 h-[52px] w-[260px] -translate-x-1/2"
-            viewBox="0 0 260 52"
-          >
-            <path d="M0 52 Q40 14 130 8 Q220 14 260 52 Z" fill="url(#xm-snow)" />
-            <path
-              d="M40 30 Q130 4 220 30"
-              fill="none"
-              stroke="#fff"
-              strokeWidth="2"
-              opacity="0.8"
-            />
-          </svg>
+      {/* under the wish: a tall snowman reaching up to "Happy Christmas", the cabin among
+          snowy pines a little to his left (the tree stands on the right of the page) */}
+      <div className="absolute inset-x-0 bottom-0 md:inset-x-auto md:right-[2%] md:w-[38%]">
+        <div
+          className={`absolute bottom-0 flex items-end ${snowman ? "right-1/2 mr-[18%] md:mr-[26%]" : "right-1/2 mr-[-30px] md:mr-[8%]"}`}
+        >
+          <Pine h={66} className="-mr-3 mb-1" />
+          <Cabin w={96} className="mb-1" />
+          <Pine h={84} className="-ml-3 mb-1" tone="#145233" />
         </div>
-        <Pine h={84} className="-ml-4 mb-1 md:hidden" tone="#145233" />
+        {snowman ? (
+          <div className="absolute bottom-0 left-1/2 z-10 -translate-x-1/2">
+            <Snowman h={manH} />
+          </div>
+        ) : null}
       </div>
       <svg
         className="absolute inset-x-0 bottom-0 h-[34px] w-full"
@@ -994,7 +974,7 @@ function InnerSnow({ count }: { count: number }) {
  * On screens too small for the standing Santa, PH Sir's picture is here instead, cropped to
  * his face and never altered.
  */
-export function ChristmasBanner() {
+export function ChristmasBanner({ snowman = false }: { snowman?: boolean }) {
   return (
     <div
       aria-hidden
@@ -1044,11 +1024,97 @@ export function ChristmasBanner() {
         </div>
         <div className="ml-auto hidden shrink-0 items-end gap-1 md:flex">
           <Holly size={40} className="mb-8" />
-          <BigTree h={96} />
-          <Gift w={30} className="-ml-3" />
+          {snowman ? <Snowman h={92} /> : null}
+          <Gift w={30} className={snowman ? "-ml-2" : ""} />
         </div>
       </div>
     </div>
+  );
+}
+
+/** A snowman in a top hat and red muffler: waves now and then, blinks, his scarf flutters. */
+export function Snowman({ h }: { h: number }) {
+  return (
+    <svg aria-hidden viewBox="0 0 130 200" width={h * 0.65} height={h} className="overflow-visible">
+      <defs>
+        <radialGradient id="xm-sm-body" cx="38%" cy="32%" r="75%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="65%" stopColor="#eef3fb" />
+          <stop offset="100%" stopColor="#b9c8de" />
+        </radialGradient>
+        <linearGradient id="xm-sm-scarf" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#e2343c" />
+          <stop offset="100%" stopColor="#99121a" />
+        </linearGradient>
+      </defs>
+      <ellipse cx="65" cy="194" rx="50" ry="6" fill="#0b1a30" opacity="0.35" />
+      {/* left arm, still */}
+      <path
+        d="M40 104 L8 84 M18 90 L10 78 M18 90 L6 94"
+        stroke="#5a3a1e"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+        fill="none"
+      />
+      {/* right arm, waving */}
+      <g className="xm-wave" style={{ transformOrigin: "90px 102px" }}>
+        <path
+          d="M90 102 L122 74 M112 82 L114 68 M112 82 L126 86"
+          stroke="#5a3a1e"
+          strokeWidth="3.2"
+          strokeLinecap="round"
+          fill="none"
+        />
+      </g>
+      <circle cx="65" cy="152" r="41" fill="url(#xm-sm-body)" />
+      <circle cx="65" cy="100" r="30" fill="url(#xm-sm-body)" />
+      {[88, 101, 114].map((y) => (
+        <circle key={y} cx="65" cy={y} r="3" fill="#1d2430" />
+      ))}
+      <circle cx="65" cy="54" r="22" fill="url(#xm-sm-body)" />
+      {/* face */}
+      <g className="xm-blink">
+        <ellipse cx="57" cy="49" rx="2.6" ry="2.9" fill="#1d2430" />
+        <ellipse cx="73" cy="49" rx="2.6" ry="2.9" fill="#1d2430" />
+      </g>
+      <path
+        d="M65 55 L88 60 L65 60 Z"
+        fill="#f07b1d"
+        stroke="#c45a0c"
+        strokeWidth="0.8"
+        strokeLinejoin="round"
+      />
+      {[0, 1, 2, 3, 4].map((i) => (
+        <circle
+          key={i}
+          cx={56 + i * 4.5}
+          cy={66 + Math.sin((i / 4) * Math.PI) * 2.6}
+          r="1.4"
+          fill="#1d2430"
+        />
+      ))}
+      <circle cx="51" cy="58" r="3.5" fill="#ff7a8a" opacity="0.35" />
+      <circle cx="79" cy="58" r="3.5" fill="#ff7a8a" opacity="0.35" />
+      {/* muffler */}
+      <path d="M43 72 Q65 82 87 72 L88 80 Q65 90 42 80 Z" fill="url(#xm-sm-scarf)" />
+      <g className="xm-scarf" style={{ transformOrigin: "78px 80px" }}>
+        <path d="M74 78 L84 78 L88 110 L76 110 Z" fill="url(#xm-sm-scarf)" />
+        <path
+          d="M76 110 L77 116 M80 110 L81 117 M84 110 L86 116"
+          stroke="#e2343c"
+          strokeWidth="1.6"
+        />
+      </g>
+      <path d="M46 76 Q65 84 84 76" stroke="#f6d77a" strokeWidth="1.4" fill="none" opacity="0.8" />
+      {/* top hat */}
+      <rect x="40" y="32" width="50" height="6" rx="2" fill="#151a24" />
+      <rect x="47" y="4" width="36" height="30" rx="2" fill="#1d2430" />
+      <rect x="47" y="24" width="36" height="6" fill="#c0171f" />
+      <circle cx="78" cy="27" r="4" fill="#2e7d3c" />
+      <circle cx="80" cy="24" r="2" fill="#c0171f" />
+      {/* a little snow on the hat */}
+      <path d="M47 5 Q65 -1 83 5 Q65 9 47 5 Z" fill="url(#xm-snow)" />
+    </svg>
   );
 }
 

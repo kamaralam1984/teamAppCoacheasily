@@ -265,6 +265,8 @@ export function SleighFlight() {
       sparkle: number;
     } | null = null;
 
+    let face: Box | null = null;
+    let rescan = 0;
     const moon = () => document.querySelector(".xm-moon-header")?.getBoundingClientRect() ?? null;
 
     const start = () => {
@@ -560,12 +562,19 @@ export function SleighFlight() {
 
       // presents falling to the floor (the bottom of the screen), with a bounce or two
       const floor = window.innerHeight - 4;
-      const face = gifts.length ? santaFace() : null;
       // the page scrolls under the resting presents: every so often move any that now sit
-      // on a button or words to a free spot (or hide it until there is one)
+      // on a button or words to a free spot (or hide it until there is one). Measuring the page
+      // is costly, so it happens only on these checks, never every frame.
       recheck -= dt;
       const doRecheck = recheck <= 0;
-      if (doRecheck) recheck = 0.35;
+      if (doRecheck) {
+        recheck = 0.35;
+        face = gifts.length ? santaFace() : null;
+      }
+      // a hidden present looks across the whole floor for room: much rarer
+      rescan -= dt;
+      const doRescan = doRecheck && rescan <= 0;
+      if (doRescan) rescan = 2;
       for (const g of gifts) {
         if (g.state === "landed") {
           // stay on the floor if the window changes size
@@ -589,7 +598,7 @@ export function SleighFlight() {
           }
           if (doRecheck) {
             const hidden = g.el.classList.contains("is-hidden");
-            if (hidden || !spotIsFree(g, g.x, floor)) {
+            if (hidden ? doRescan : !spotIsFree(g, g.x, floor)) {
               const x = freeSpot(g, floor);
               if (x === null) g.el.classList.add("is-hidden");
               else {

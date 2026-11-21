@@ -49,7 +49,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useMyProfile } from "@/hooks/useMyProfile";
-import { ChristmasSideDecor } from "@/components/festive/ChristmasSide";
+import { ChristmasSideDecor, useXmasExtras } from "@/components/festive/ChristmasSide";
 import { useOrgSettings } from "@/hooks/useOrg";
 import { BirthdayTakeover } from "@/components/birthday/BirthdayTakeover";
 import {
@@ -266,6 +266,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const label = roleLabel(profile?.role);
   const testingActive = isTestingActive(orgSettings?.testing_until);
   const christmas = useChristmasDecor();
+  const xmasExtras = useXmasExtras();
   const diwali = useDiwaliDecor() && !christmas;
   const testingLabel = prettyTestingDate(orgSettings?.testing_until);
 
@@ -625,7 +626,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="ce-card p-6 text-sm text-soft">Loading your workspace…</div>
           ) : profile ? (
             <>
-              {christmas && pathname !== "/dashboard" ? <ChristmasBanner /> : null}
+              {christmas && pathname !== "/dashboard" ? (
+                <ChristmasBanner snowman={xmasExtras.includes("snowman")} />
+              ) : null}
               {children}
             </>
           ) : (

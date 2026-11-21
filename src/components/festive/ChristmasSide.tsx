@@ -19,7 +19,11 @@ export const XMAS_EXTRAS: { value: XmasExtra; label: string; help: string }[] = 
     label: "Big Christmas tree",
     help: "Tall tree with swaying bulbs and a pile of presents.",
   },
-  { value: "snowman", label: "Snowman", help: "Hat and muffler, waves and blinks now and then." },
+  {
+    value: "snowman",
+    label: "Snowman",
+    help: "Under Happy Christmas: hat and muffler, waves and blinks now and then.",
+  },
   {
     value: "countdown",
     label: "Christmas countdown",
@@ -149,91 +153,6 @@ function countdownText(now: Date): { top: string; big: string; bottom: string } 
 }
 
 /* ── pieces ─────────────────────────────────────────────── */
-
-function Snowman({ h }: { h: number }) {
-  return (
-    <svg aria-hidden viewBox="0 0 130 200" width={h * 0.65} height={h} className="overflow-visible">
-      <defs>
-        <radialGradient id="xm-sm-body" cx="38%" cy="32%" r="75%">
-          <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="65%" stopColor="#eef3fb" />
-          <stop offset="100%" stopColor="#b9c8de" />
-        </radialGradient>
-        <linearGradient id="xm-sm-scarf" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#e2343c" />
-          <stop offset="100%" stopColor="#99121a" />
-        </linearGradient>
-      </defs>
-      <ellipse cx="65" cy="194" rx="50" ry="6" fill="#0b1a30" opacity="0.35" />
-      {/* left arm, still */}
-      <path
-        d="M40 104 L8 84 M18 90 L10 78 M18 90 L6 94"
-        stroke="#5a3a1e"
-        strokeWidth="3.2"
-        strokeLinecap="round"
-        fill="none"
-      />
-      {/* right arm, waving */}
-      <g className="xm-wave" style={{ transformOrigin: "90px 102px" }}>
-        <path
-          d="M90 102 L122 74 M112 82 L114 68 M112 82 L126 86"
-          stroke="#5a3a1e"
-          strokeWidth="3.2"
-          strokeLinecap="round"
-          fill="none"
-        />
-      </g>
-      <circle cx="65" cy="152" r="41" fill="url(#xm-sm-body)" />
-      <circle cx="65" cy="100" r="30" fill="url(#xm-sm-body)" />
-      {[88, 101, 114].map((y) => (
-        <circle key={y} cx="65" cy={y} r="3" fill="#1d2430" />
-      ))}
-      <circle cx="65" cy="54" r="22" fill="url(#xm-sm-body)" />
-      {/* face */}
-      <g className="xm-blink">
-        <ellipse cx="57" cy="49" rx="2.6" ry="2.9" fill="#1d2430" />
-        <ellipse cx="73" cy="49" rx="2.6" ry="2.9" fill="#1d2430" />
-      </g>
-      <path
-        d="M65 55 L88 60 L65 60 Z"
-        fill="#f07b1d"
-        stroke="#c45a0c"
-        strokeWidth="0.8"
-        strokeLinejoin="round"
-      />
-      {[0, 1, 2, 3, 4].map((i) => (
-        <circle
-          key={i}
-          cx={56 + i * 4.5}
-          cy={66 + Math.sin((i / 4) * Math.PI) * 2.6}
-          r="1.4"
-          fill="#1d2430"
-        />
-      ))}
-      <circle cx="51" cy="58" r="3.5" fill="#ff7a8a" opacity="0.35" />
-      <circle cx="79" cy="58" r="3.5" fill="#ff7a8a" opacity="0.35" />
-      {/* muffler */}
-      <path d="M43 72 Q65 82 87 72 L88 80 Q65 90 42 80 Z" fill="url(#xm-sm-scarf)" />
-      <g className="xm-scarf" style={{ transformOrigin: "78px 80px" }}>
-        <path d="M74 78 L84 78 L88 110 L76 110 Z" fill="url(#xm-sm-scarf)" />
-        <path
-          d="M76 110 L77 116 M80 110 L81 117 M84 110 L86 116"
-          stroke="#e2343c"
-          strokeWidth="1.6"
-        />
-      </g>
-      <path d="M46 76 Q65 84 84 76" stroke="#f6d77a" strokeWidth="1.4" fill="none" opacity="0.8" />
-      {/* top hat */}
-      <rect x="40" y="32" width="50" height="6" rx="2" fill="#151a24" />
-      <rect x="47" y="4" width="36" height="30" rx="2" fill="#1d2430" />
-      <rect x="47" y="24" width="36" height="6" fill="#c0171f" />
-      <circle cx="78" cy="27" r="4" fill="#2e7d3c" />
-      <circle cx="80" cy="24" r="2" fill="#c0171f" />
-      {/* a little snow on the hat */}
-      <path d="M47 5 Q65 -1 83 5 Q65 9 47 5 Z" fill="url(#xm-snow)" />
-    </svg>
-  );
-}
 
 function Hanging({
   x,
@@ -371,7 +290,7 @@ export function ChristmasSideDecor() {
   const has = (e: XmasExtra) => extras.includes(e);
 
   // with something standing on the right of the floor, the corner lantern and pines step aside
-  const floor = Boolean(room) && (has("tree") || has("snowman"));
+  const floor = Boolean(room) && has("tree");
   useEffect(() => {
     const root = document.documentElement;
     if (floor) root.dataset["xmFloor"] = "1";
@@ -396,20 +315,10 @@ export function ChristmasSideDecor() {
       : top + 30;
   const floorH = bottom - 18 - floorTop;
 
-  let treeH = 0;
-  let manH = 0;
-  if (has("tree") && has("snowman")) {
-    treeH = Math.min(floorH, 470 * s, (W * 0.92) / 0.833);
-    manH = Math.min(treeH * 0.5, 200 * s, (W * 0.48) / 0.65);
-  } else if (has("tree")) {
-    treeH = Math.min(floorH, 480 * s, (W * 0.92) / 0.833);
-  } else if (has("snowman")) {
-    manH = Math.min(floorH, 250 * s, (W * 0.9) / 0.65);
-  }
+  // the tree stands on the right, as big as the floor allows; it may reach a little behind the
+  // page's edge (it is drawn under the page), so it can be taller than the strip is wide
+  let treeH = has("tree") ? Math.min(floorH, 620 * s, (W * 1.2) / 0.833) : 0;
   if (treeH < 100) treeH = 0;
-  if (manH < 70) manH = 0;
-  // side by side when both fit, otherwise the snowman stands in front of the tree, to its left
-  const sideBySide = treeH > 0 && manH > 0 && treeH * 0.833 + manH * 0.65 - 12 <= W;
 
   const n = Math.max(3, Math.min(12, Math.floor(W / (50 * s))));
   const gift = Math.max(24, treeH * 0.14);
@@ -434,30 +343,19 @@ export function ChristmasSideDecor() {
           <Countdown width={W} s={s} />
         </div>
       ) : null}
-      {treeH || manH ? (
+      {treeH ? (
         <div
-          className={`absolute flex items-end ${treeH && manH && !sideBySide ? "justify-end" : "justify-center"}`}
-          style={{ left, width: W, bottom: 14 }}
+          className="absolute flex items-end justify-center"
+          style={{ left: left - 12 * s, width: W + 12 * s, bottom: 14 }}
         >
-          {manH ? (
-            <div
-              className={
-                !treeH ? "" : sideBySide ? "relative z-10 -mr-3" : "absolute bottom-0 left-0 z-10"
-              }
-            >
-              <Snowman h={manH} />
+          <div className="relative">
+            <BigTree h={treeH} />
+            <div className="absolute inset-x-0 bottom-0 flex items-end justify-center">
+              <Gift w={gift} className="-mr-1" />
+              <Gift w={gift * 1.25} red={false} />
+              <Gift w={gift * 0.9} className="-ml-1" />
             </div>
-          ) : null}
-          {treeH ? (
-            <div className="relative">
-              <BigTree h={treeH} />
-              <div className="absolute inset-x-0 bottom-0 flex items-end justify-center">
-                <Gift w={gift} className="-mr-1" />
-                <Gift w={gift * 1.25} red={false} />
-                <Gift w={gift * 0.9} className="-ml-1" />
-              </div>
-            </div>
-          ) : null}
+          </div>
         </div>
       ) : null}
     </div>

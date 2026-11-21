@@ -64,6 +64,7 @@ import {
   XmasTree,
   useChristmasDecor,
 } from "@/components/festive/ChristmasDecor";
+import { useXmasExtras } from "@/components/festive/ChristmasSide";
 
 
 
@@ -158,6 +159,7 @@ function Dashboard() {
   // a shifted weekly off moves the "why are you working today?" question with it
   const { data: myShifts } = useMyShifts(Boolean(profile?.weekly_off));
   const christmas = useChristmasDecor();
+  const xmasExtras = useXmasExtras();
   const diwali = useDiwaliDecor() && !christmas;
   const { data: strategicMeetings } = useStrategicMeetings(Boolean(profile));
   const upcomingMeeting = nextMeeting(strategicMeetings, istToday());
@@ -244,10 +246,10 @@ function Dashboard() {
         <section
           className={`ce-rise relative overflow-hidden rounded-[14px] bg-night p-6 text-white shadow-[0_10px_30px_rgba(23,17,38,0.18)] sm:p-8 ${
             diwali ? "dw-hero pt-10 pb-[310px] sm:pt-12 sm:pb-12" : ""
-          } ${christmas ? "xm-hero xm-frame pt-12 pb-[350px] sm:pt-12 sm:pb-[350px] md:pt-14 md:pb-14" : ""}`}
+          } ${christmas ? "xm-hero xm-frame pt-12 pb-[290px] sm:pt-12 sm:pb-[290px] md:pt-14 md:pb-14" : ""}`}
         >
           {diwali ? <DiwaliHeroDecor /> : null}
-          {christmas ? <ChristmasHeroDecor /> : null}
+          {christmas ? <ChristmasHeroDecor snowman={xmasExtras.includes("snowman")} /> : null}
           {myBirthday ? (
             <span
               aria-hidden
