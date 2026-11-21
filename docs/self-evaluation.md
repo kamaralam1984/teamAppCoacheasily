@@ -126,6 +126,7 @@ copy, then live) → `team-deploy`.
 - Employee and manager Part D both offer Low / Moderate / High, as on the forms. A level saved
   earlier ("Moderate–High") still shows until changed; an upload with an in-between level leaves it blank.
 - The employee form follows `Annual_Self-Evaluation_Form_Jan-Dec_2026_ Format.docx`: one worked goal
-  example (plus its empty row 2), and Part B's "What it looks like in practice" column is blank for the
-  12 values (only the Ownership example row has it).
+  example (plus its empty row 2). Part B's "What it looks like in practice" column shows a fixed
+  company line for each of the 12 values (`practice` in `VALUES`, page and PDF). It was blank from
+  18 Nov and was put back on 21 Nov 2026 at the user's request; it is not an input and saves no data.
 - The PDF shows the recommendation tick as **X** (the PDF font has no ✓).

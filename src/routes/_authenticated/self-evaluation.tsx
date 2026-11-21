@@ -980,7 +980,9 @@ function EvaluationSheet({
                     <td className="border border-line px-2 py-1.5 text-[13px] font-bold text-ink">
                       {v.name}
                     </td>
-                    <td className="border border-line px-2 py-1.5" />
+                    <td className="border border-line px-2 py-1.5 text-[13px] text-ink">
+                      {v.practice}
+                    </td>
                     <td className="border border-line">
                       {canFill ? (
                         <Cell

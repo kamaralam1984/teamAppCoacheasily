@@ -269,7 +269,7 @@ export async function buildSelfEvalPdf(input: PdfInput): Promise<Uint8Array> {
     valueWidths,
     VALUES.map((v) => [
       v.name,
-      "",
+      v.practice,
       input.form.value_answers[v.key]?.example ?? "",
       input.form.value_answers[v.key]?.rating ?? "",
     ]),
