@@ -894,6 +894,13 @@ export function ChristmasHeroDecor({ snowman = false }: { snowman?: boolean }) {
       {/* silver divider between the greeting and the wish */}
       <div className="xm-divider absolute top-[22%] bottom-[38%] left-[59%] hidden w-px md:block" />
       <div className="absolute inset-x-0 bottom-[132px] flex flex-col items-center md:inset-x-auto md:right-[2%] md:bottom-auto md:top-[12%] md:w-[38%]">
+        {/* PH Sir's face as Santa, on screens too small for his standing picture beside the sidebar */}
+        <img
+          src="/festive/santa-ph.webp"
+          alt=""
+          draggable={false}
+          className="xm-santa-face mb-7 h-16 w-16 shrink-0 rounded-full object-cover select-none md:h-14 md:w-14 xl:hidden"
+        />
         <div ref={wishRef} className="relative">
           <SantaHat size={58} className="absolute -top-7 -left-5 -rotate-12" />
           <Holly size={48} className="absolute -top-6 -right-8" />
