@@ -73,6 +73,7 @@ Migrations (in order; never edit an applied one — add a new migration instead)
 | `20261117150000_self_eval_developer.sql` | Service-role-only `self_eval_dev_*` functions for developers |
 | `20261117170000_self_eval_direct_manager.sql` | `is_direct_manager_of()`; only the direct manager sees/rates |
 | `20261117190000_self_eval_manager_form.sql` | Manager form: `self_eval_reviews.extra`, `self_evaluations.member_comment`, `self_eval_manager_save`, `self_eval_member_comment`, sign-off completes it, HR/admin no longer rate |
+| `20261121090000_self_eval_value_practice.sql` | Part B practice box: `self_eval_save`, `self_eval_dev_save` and `self_eval_section_ok` accept `practice` |
 
 Tables:
 
@@ -126,7 +127,9 @@ copy, then live) → `team-deploy`.
 - Employee and manager Part D both offer Low / Moderate / High, as on the forms. A level saved
   earlier ("Moderate–High") still shows until changed; an upload with an in-between level leaves it blank.
 - The employee form follows `Annual_Self-Evaluation_Form_Jan-Dec_2026_ Format.docx`: one worked goal
-  example (plus its empty row 2). Part B's "What it looks like in practice" column shows a fixed
-  company line for each of the 12 values (`practice` in `VALUES`, page and PDF). It was blank from
-  18 Nov and was put back on 21 Nov 2026 at the user's request; it is not an input and saves no data.
+  example (plus its empty row 2). Part B's "What it looks like in practice" column is a box the person
+  can type in (`value_answers.<value>.practice`, migration `20261121090000_self_eval_value_practice.sql`).
+  It starts with the company's standard line for that value (`practice` in `VALUES`); an empty box
+  shows that line again, on the page and in the PDF. It is not counted in "boxes filled", and an
+  upload never overwrites it.
 - The PDF shows the recommendation tick as **X** (the PDF font has no ✓).

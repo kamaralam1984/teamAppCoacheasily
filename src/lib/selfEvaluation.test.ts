@@ -162,6 +162,21 @@ describe("reading an uploaded form", () => {
     equal(replaced.goals[0]!.goal, "Upload");
     equal(replaced.reflection.proud, "From file");
   });
+  test("an upload keeps the practice line the person typed", () => {
+    const cur = empty();
+    cur.value_answers = { ownership: { practice: "My own line", example: "Old" } };
+    const read = normalizeReadForm({ values: { ownership: { example: "New", rating: "O" } } });
+    const replaced = mergeReadForm(cur, read, "replace");
+    deepEqual(replaced.value_answers.ownership, {
+      practice: "My own line",
+      example: "New",
+      rating: "O",
+    });
+    deepEqual(mergeReadForm(empty(), read, "replace").value_answers.ownership, {
+      example: "New",
+      rating: "O",
+    });
+  });
 });
 
 describe("uploads", () => {

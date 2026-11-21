@@ -980,8 +980,17 @@ function EvaluationSheet({
                     <td className="border border-line px-2 py-1.5 text-[13px] font-bold text-ink">
                       {v.name}
                     </td>
-                    <td className="border border-line px-2 py-1.5 text-[13px] text-ink">
-                      {v.practice}
+                    <td className="border border-line">
+                      {canFill ? (
+                        <Cell
+                          value={a.practice?.trim() ? a.practice : v.practice}
+                          multiline
+                          rows={3}
+                          onSave={(x) => save("values", [v.key, "practice"], x)}
+                        />
+                      ) : (
+                        ro(a.practice?.trim() ? a.practice : v.practice)
+                      )}
                     </td>
                     <td className="border border-line">
                       {canFill ? (

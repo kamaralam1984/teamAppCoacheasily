@@ -130,7 +130,10 @@ export interface GoalAnswer {
   evidence?: string;
   rating?: string;
 }
-export type ValueAnswers = Partial<Record<ValueKey, { example?: string; rating?: string }>>;
+/** practice: the person's own "What it looks like in practice"; empty → the value's standard line. */
+export type ValueAnswers = Partial<
+  Record<ValueKey, { practice?: string; example?: string; rating?: string }>
+>;
 export type ReflectionAnswers = Partial<Record<ReflectionKey, string>>;
 export type PotentialAnswers = Partial<Record<PotentialKey, { rating?: string; why?: string }>>;
 
@@ -431,7 +434,10 @@ export function mergeReadForm(current: FormLike, read: ReadForm, mode: "empty" |
     const g = read.value_answers[v.key] ?? {};
     const example = pick(c.example, g.example);
     const rating = pick(c.rating, g.rating);
-    if (example || rating) value_answers[v.key] = { example, rating };
+    // an upload never carries this box, so what the person typed is kept
+    const practice = c.practice?.trim() ? c.practice : undefined;
+    if (example || rating || practice)
+      value_answers[v.key] = practice ? { practice, example, rating } : { example, rating };
   }
 
   const reflection: ReflectionAnswers = {};
