@@ -28,8 +28,8 @@ export interface PunctualityRow {
 }
 
 export interface OrgSettings {
-  /** Festive decorations: "diwali" shows them, "off" hides them, absent follows the calendar. */
-  festive_decor?: "diwali" | "off";
+  /** Festive decorations: "diwali" or "christmas" shows them, "off" hides them, absent follows the calendar. */
+  festive_decor?: "diwali" | "christmas" | "off";
   daily_meeting_url?: string;
   daily_meeting_time?: string;
   timezone?: string;

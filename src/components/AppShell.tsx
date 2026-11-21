@@ -56,6 +56,15 @@ import {
   DiwaliPageDecor,
   useDiwaliDecor,
 } from "@/components/festive/DiwaliDecor";
+import {
+  ChristmasBanner,
+  ChristmasHeaderDecor,
+  ChristmasNavLines,
+  ChristmasPageDecor,
+  SleighFlight,
+  SnowScene,
+  useChristmasDecor,
+} from "@/components/festive/ChristmasDecor";
 import { ProbationAlert } from "@/components/probation/ProbationAlert";
 import { useProbationOverview } from "@/hooks/useProbation";
 import { useLatestUnseenRelease } from "@/hooks/useReleases";
@@ -255,23 +264,33 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const label = roleLabel(profile?.role);
   const testingActive = isTestingActive(orgSettings?.testing_until);
-  const diwali = useDiwaliDecor();
+  const christmas = useChristmasDecor();
+  const diwali = useDiwaliDecor() && !christmas;
   const testingLabel = prettyTestingDate(orgSettings?.testing_until);
 
   return (
     <div className="relative z-10 min-h-screen overflow-x-clip">
       <OfflineGate />
       {diwali ? <DiwaliPageDecor /> : null}
+      {christmas ? (
+        <>
+          <ChristmasPageDecor dark santa />
+          <SnowScene />
+          <SleighFlight />
+        </>
+      ) : null}
       <BirthdayTakeover me={profile} showTeam={orgSettings?.team_birthdays !== false} />
       {profile && (role === "hr" || role === "admin") ? (
         <ProbationAlert viewerId={profile.id} />
       ) : null}
       <header ref={headerRef} className="sticky top-0 z-40 bg-night">
         {diwali ? <DiwaliHeaderDecor /> : null}
+        {christmas ? <ChristmasHeaderDecor /> : null}
         <div
           className={cn(
             "relative z-10 mx-auto flex max-w-6xl items-center gap-1.5 px-2 py-2.5 sm:gap-3 sm:px-4 sm:py-3",
             diwali && "pt-7",
+            christmas && "pt-8 sm:pt-8",
           )}
         >
           <button
@@ -473,7 +492,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </nav>
         ) : null}
-        <div aria-hidden className="ce-nav-line" />
+        {christmas ? <ChristmasNavLines /> : <div aria-hidden className="ce-nav-line" />}
         {/* room under the line for the Diwali diyas, so they never sit on the page */}
         {diwali ? <div aria-hidden className="h-[26px] bg-night" /> : null}
 
@@ -603,7 +622,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           {isLoading && !data ? (
             <div className="ce-card p-6 text-sm text-soft">Loading your workspace…</div>
           ) : profile ? (
-            children
+            <>
+              {christmas && pathname !== "/dashboard" ? <ChristmasBanner /> : null}
+              {children}
+            </>
           ) : (
             <div className="ce-card mx-auto max-w-md p-6 text-center">
               <h2 className="font-display text-2xl text-ink">Almost there</h2>

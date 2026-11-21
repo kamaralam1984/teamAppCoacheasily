@@ -58,6 +58,12 @@ import { useMarkTourSeen, useTourSeen } from "@/hooks/useTour";
 import { meetingLabel, nextMeeting, useStrategicMeetings } from "@/hooks/useStrategicMeetings";
 import { daysBetween, timeLabel } from "@/lib/calendar";
 import { DiwaliHeroDecor, useDiwaliDecor } from "@/components/festive/DiwaliDecor";
+import {
+  ChristmasHeroDecor,
+  MeetingGifts,
+  XmasTree,
+  useChristmasDecor,
+} from "@/components/festive/ChristmasDecor";
 
 
 
@@ -151,7 +157,8 @@ function Dashboard() {
   const { data: punc } = usePunctualityMe(Boolean(profile));
   // a shifted weekly off moves the "why are you working today?" question with it
   const { data: myShifts } = useMyShifts(Boolean(profile?.weekly_off));
-  const diwali = useDiwaliDecor();
+  const christmas = useChristmasDecor();
+  const diwali = useDiwaliDecor() && !christmas;
   const { data: strategicMeetings } = useStrategicMeetings(Boolean(profile));
   const upcomingMeeting = nextMeeting(strategicMeetings, istToday());
   const meetingDays = upcomingMeeting ? daysBetween(istToday(), upcomingMeeting.meeting_date) : 0;
@@ -237,9 +244,10 @@ function Dashboard() {
         <section
           className={`ce-rise relative overflow-hidden rounded-[14px] bg-night p-6 text-white shadow-[0_10px_30px_rgba(23,17,38,0.18)] sm:p-8 ${
             diwali ? "dw-hero pt-10 pb-[310px] sm:pt-12 sm:pb-12" : ""
-          }`}
+          } ${christmas ? "xm-hero xm-frame pt-12 pb-[350px] sm:pt-12 sm:pb-[350px] md:pt-14 md:pb-14" : ""}`}
         >
           {diwali ? <DiwaliHeroDecor /> : null}
+          {christmas ? <ChristmasHeroDecor /> : null}
           {myBirthday ? (
             <span
               aria-hidden
@@ -250,12 +258,12 @@ function Dashboard() {
               }}
             />
           ) : null}
-          <div className={`relative ${diwali ? "z-10 sm:pr-[40%]" : ""}`}>
+          <div className={`relative ${diwali ? "z-10 sm:pr-[40%]" : christmas ? "z-10 md:pr-[40%]" : ""}`}>
           <div className="flex items-start justify-between gap-4">
             <p className="text-[11px] font-bold tracking-[0.16em] text-mist uppercase">
               {weekday} · {date}
             </p>
-            {diwali ? null : <Mark size={34} color="var(--ce-goldL)" />}
+            {diwali || christmas ? null : <Mark size={34} color="var(--ce-goldL)" />}
           </div>
 
           <h1 className="mt-5 flex flex-wrap items-center gap-3 font-display text-4xl leading-tight text-white sm:text-5xl">
@@ -391,10 +399,14 @@ function Dashboard() {
 
         {theme.greeting ? (
           <section
-            className="ce-rise ce-card flex items-start gap-3 p-5"
+            className={`ce-rise ce-card flex items-start gap-3 p-5 ${christmas ? "xm-parchment items-center" : ""}`}
             style={{ animationDelay: "30ms" }}
           >
-            <ThemeIcon emoji={theme.emoji} size={24} color="var(--ce-goldD)" />
+            {christmas ? (
+              <XmasTree size={30} />
+            ) : (
+              <ThemeIcon emoji={theme.emoji} size={24} color="var(--ce-goldD)" />
+            )}
             <div>
               <p className="ce-label">{theme.name}</p>
               <p className="font-display text-xl leading-snug text-ink">{theme.greeting}</p>
@@ -406,6 +418,7 @@ function Dashboard() {
         {upcomingMeeting ? (
           <Link to="/strategic-meetings" className="ce-rise ce-meeting-card">
             <span className="ce-meeting-inner flex items-center gap-4 p-5 sm:gap-5 sm:pr-40">
+              {christmas ? <MeetingGifts /> : null}
               {/* gold ribbons on the right, with a shine running along them */}
               <svg
                 aria-hidden

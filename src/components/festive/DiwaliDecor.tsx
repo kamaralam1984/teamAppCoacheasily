@@ -32,7 +32,7 @@ export function useDiwaliDecor(): boolean {
   if (!org) return false;
   const mode = org.festive_decor;
   if (mode === "diwali") return true;
-  if (mode === "off") return false;
+  if (mode === "off" || mode === "christmas") return false;
   return theme.key === "diwali";
 }
 

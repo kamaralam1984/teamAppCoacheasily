@@ -8,11 +8,12 @@ import type { Json } from "@/integrations/supabase/types";
 import { devListOrgs, devUpdateOrg } from "@/lib/developer.functions";
 import { Card, Failed, Loading } from "./shared";
 
-type Mode = "auto" | "diwali" | "off";
+type Mode = "auto" | "diwali" | "christmas" | "off";
 
 const OPTIONS: { value: Mode; label: string; help: string }[] = [
-  { value: "auto", label: "Auto", help: "Diwali decorations show by themselves on the Diwali theme's days." },
+  { value: "auto", label: "Auto", help: "Decorations show by themselves: Diwali on its theme's days, Christmas 18–31 Dec." },
   { value: "diwali", label: "Diwali on", help: "Show the Diwali decorations to everyone now." },
+  { value: "christmas", label: "Christmas on", help: "Snow on every button, Santa, lights and gold-silver lines for everyone now." },
   { value: "off", label: "Off — reset to normal", help: "No decorations; the app looks as it always does." },
 ];
 
@@ -28,7 +29,8 @@ export function DevFestive() {
   const settings = (org?.settings && typeof org.settings === "object" && !Array.isArray(org.settings)
     ? org.settings
     : {}) as { [k: string]: Json };
-  const current: Mode = settings["festive_decor"] === "diwali" ? "diwali" : settings["festive_decor"] === "off" ? "off" : "auto";
+  const raw = settings["festive_decor"];
+  const current: Mode = raw === "diwali" || raw === "christmas" || raw === "off" ? raw : "auto";
 
   const m = useMutation({
     mutationFn: (mode: Mode) => {
@@ -39,7 +41,7 @@ export function DevFestive() {
       return update({ data: { id: org.id, name: org.name, logo_url: org.logo_url, settings: next } });
     },
     onSuccess: (_d, mode) => {
-      toast.success(mode === "off" ? "Decorations off — back to normal" : mode === "diwali" ? "Diwali decorations on" : "Decorations follow the calendar");
+      toast.success(mode === "off" ? "Decorations off — back to normal" : mode === "diwali" ? "Diwali decorations on" : mode === "christmas" ? "Christmas decorations on" : "Decorations follow the calendar");
       void qc.invalidateQueries({ queryKey: ["dev-orgs"] });
       void qc.invalidateQueries({ queryKey: ["org-settings"] });
       void qc.invalidateQueries({ queryKey: ["dev-audit"] });
@@ -54,10 +56,11 @@ export function DevFestive() {
     <Card>
       <h2 className="font-display text-2xl text-ink">Festive theme</h2>
       <p className="mt-1 text-sm text-soft">
-        Diwali decorations for everyone: lights, marigolds, lanterns, diyas and rangoli. Don't like
+        Festive decorations for everyone — Diwali (lights, marigolds, diyas, rangoli) or Christmas
+        (falling snow that settles on buttons, Santa, gold and silver lines). Don't like
         them? Pick "Off" and the app goes back to its normal look straight away.
       </p>
-      <div className="mt-4 grid gap-2 sm:grid-cols-3">
+      <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {OPTIONS.map((o) => (
           <button
             key={o.value}
