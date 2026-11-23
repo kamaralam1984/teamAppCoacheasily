@@ -435,11 +435,12 @@ function StrategicMeetingsPage() {
     scope.kind === "week"
       ? `Goals for the week of ${weekView.label(scope.weekStart)}`
       : `Goals for next ${runDays} days`;
+  // the week's dates, or for the whole run the meeting day itself: "4 Jan 2027"
   const periodLine =
     scope.kind === "week"
       ? weekView.label(scope.weekStart)
-      : period
-        ? `${shortDate(period.from)} to ${shortDate(period.to)}`
+      : meeting
+        ? `${shortDate(meeting.meeting_date)} ${meeting.meeting_date.slice(0, 4)}`
         : "";
 
   /** The table as it stands on screen, downloaded as a CSV or a PDF. */

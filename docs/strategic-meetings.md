@@ -17,7 +17,8 @@ optional field **Goals start on** decides the run-up:
 | **Set** (e.g. 20 Nov, meeting 4 Jan) | From that date up to the meeting day: 20 Nov to 4 Jan (46 days) | Start on that weekday: *20 Nov to 26 Nov*, *27 Nov to 3 Dec*, … the last one is cut at the meeting day: *1 Jan to 4 Jan* |
 | **Empty** (default) | Day after the previous meeting (or 45 days before the meeting) up to the meeting day | Monday to Sunday: *16 Nov to 22 Nov*, … |
 
-The heading counts the days ("Goals for next 46 days"). "This week" is the week column today
+The heading counts the days ("Goals for next 46 days"); the line under it shows the meeting day,
+not the run: "4 Jan 2027 · Strategic Meeting 6.0 – …" (the weekly table shows that week's dates). "This week" is the week column today
 falls in. The weekly table toggle, the dropdown, the column headings, the dashboard charts and
 the CSV / PDF download all use the same week labels.
 
