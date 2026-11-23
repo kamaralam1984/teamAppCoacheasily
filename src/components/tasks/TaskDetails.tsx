@@ -11,11 +11,15 @@ import {
 import { useUpdateTask } from "@/hooks/useTasks";
 import {
   istToday,
+  PRIORITIES,
   PRIORITY_TONE,
   REPEAT_LABEL,
   REPEATS,
   shortDay,
+  SLOTS,
+  type Priority,
   type Repeats,
+  type Slot,
   type Task,
 } from "@/lib/tasks";
 import {
@@ -65,6 +69,7 @@ export function TaskDetails({
   const update = useUpdateTask();
   const [body, setBody] = useState("");
   const [evidence, setEvidence] = useState("");
+  const [editing, setEditing] = useState(false);
 
   const isOwner = task.owner_id === meId;
   const status = statusOf(task);
@@ -106,6 +111,8 @@ export function TaskDetails({
           <DialogTitle className="font-display text-2xl leading-tight">{task.title}</DialogTitle>
         </DialogHeader>
 
+        {editing ? <TaskEditForm task={task} onDone={() => setEditing(false)} /> : null}
+
         <div className="flex flex-wrap items-center gap-1.5">
           <span
             className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${STATUS_TONE[status]}`}
@@ -138,7 +145,15 @@ export function TaskDetails({
             : ` · asked by ${nameOf(task.created_by) ?? "someone"}`}
         </p>
         {task.description ? (
-          <p className="text-sm leading-relaxed text-ink">{task.description}</p>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink">{task.description}</p>
+        ) : null}
+
+        {(isOwner || isReviewer) && !editing ? (
+          <div>
+            <button type="button" className="btn3d btn3d-ghost" onClick={() => setEditing(true)}>
+              Edit task
+            </button>
+          </div>
         ) : null}
 
         {isOwner || isReviewer ? (
@@ -278,5 +293,144 @@ export function TaskDetails({
         </section>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * Change what the task is after it was made: title, details, date, time of day and priority.
+ * Date and priority changes land in the task's history (tasks_history trigger).
+ */
+function TaskEditForm({ task, onDone }: { task: Task; onDone: () => void }) {
+  const update = useUpdateTask();
+  const [title, setTitle] = useState(task.title);
+  const [description, setDescription] = useState(task.description ?? "");
+  const [due, setDue] = useState(task.due_date ?? "");
+  const [slot, setSlot] = useState<Slot>(task.slot as Slot);
+  const [priority, setPriority] = useState<Priority>(task.priority as Priority);
+  const repeating = task.repeats !== "none";
+
+  function save() {
+    if (!title.trim()) {
+      toast.error("The task needs a title.");
+      return;
+    }
+    const patch: Partial<Task> = {};
+    const nextDescription = description.trim() || null;
+    // a repeating task always has a date; clearing it means "from today"
+    const nextDue = due || (repeating ? istToday() : null);
+    if (title.trim() !== task.title) patch.title = title.trim();
+    if (nextDescription !== (task.description ?? null)) patch.description = nextDescription;
+    if (nextDue !== task.due_date) patch.due_date = nextDue;
+    if (slot !== task.slot) patch.slot = slot;
+    if (priority !== task.priority) patch.priority = priority;
+    if (Object.keys(patch).length === 0) {
+      onDone();
+      return;
+    }
+    update.mutate(
+      { id: task.id, patch },
+      {
+        onSuccess: () => {
+          toast.success("Task updated.");
+          onDone();
+        },
+        onError: (e) =>
+          toast.error(
+            /row-level security/i.test((e as Error).message)
+              ? "You can't edit this task. Ask its owner or their manager."
+              : (e as Error).message || "That didn't save.",
+          ),
+      },
+    );
+  }
+
+  return (
+    <div className="space-y-3 rounded-lg border border-line bg-cream p-3">
+      <div>
+        <label htmlFor="te-title" className="ce-label">
+          Title
+        </label>
+        <input
+          id="te-title"
+          className="ce-input"
+          maxLength={200}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+      </div>
+      <div>
+        <label htmlFor="te-desc" className="ce-label">
+          Details
+        </label>
+        <textarea
+          id="te-desc"
+          className="ce-input min-h-20"
+          placeholder="Details (optional)"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div>
+          <label htmlFor="te-due" className="ce-label">
+            {repeating ? "Next due" : "Due"}
+          </label>
+          <input
+            id="te-due"
+            type="date"
+            className="ce-input"
+            value={due}
+            onChange={(e) => setDue(e.target.value)}
+          />
+        </div>
+        <div>
+          <label htmlFor="te-slot" className="ce-label">
+            When
+          </label>
+          <select
+            id="te-slot"
+            className="ce-input"
+            value={slot}
+            onChange={(e) => setSlot(e.target.value as Slot)}
+          >
+            {SLOTS.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="te-pri" className="ce-label">
+            Priority
+          </label>
+          <select
+            id="te-pri"
+            className="ce-input"
+            value={priority}
+            onChange={(e) => setPriority(e.target.value as Priority)}
+          >
+            {PRIORITIES.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" className="btn3d" disabled={update.isPending} onClick={save}>
+          {update.isPending ? "Saving…" : "Save"}
+        </button>
+        <button
+          type="button"
+          className="btn3d btn3d-ghost"
+          disabled={update.isPending}
+          onClick={onDone}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
   );
 }

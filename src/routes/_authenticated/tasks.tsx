@@ -11,6 +11,7 @@ import { CompletedTasks } from "@/components/tasks/CompletedTasks";
 import { QuickAdd } from "@/components/tasks/QuickAdd";
 import { TodayPanel } from "@/components/tasks/TodayPanel";
 import { TaskDetails } from "@/components/tasks/TaskDetails";
+import { TaskDownload } from "@/components/tasks/TaskDownload";
 import { TaskRow } from "@/components/tasks/TaskRow";
 import { WeekCard } from "@/components/tasks/WeekCard";
 import { WhatsLeft } from "@/components/tasks/WhatsLeft";
@@ -236,6 +237,10 @@ function Page() {
             onToggle={toggle}
             onOpen={(task) => setOpenId(task.id)}
           />
+        ) : null}
+
+        {me && (tasks ?? []).length > 0 ? (
+          <TaskDownload tasks={tasks ?? []} meId={me.id} nameOf={nameOf} />
         ) : null}
 
         <CompletedTasks
