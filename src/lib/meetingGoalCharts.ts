@@ -1,11 +1,21 @@
 import { addDays } from "@/lib/calendar";
 import { dayLabel } from "@/lib/goals";
-import { mondayOf, niceTicks, type GoalChartData } from "@/lib/goalCharts";
+import { niceTicks, type GoalChartData } from "@/lib/goalCharts";
 
-/** A week, Monday to Sunday: "16 Nov to 22 Nov". */
-function rangeLabel(monday: string): string {
-  return `${dayLabel(monday)} to ${dayLabel(addDays(monday, 6))}`;
+/**
+ * How the page shows a week column: the day it starts on (a week is stored by its Monday, but a
+ * meeting with a start date runs its weeks from that weekday) and its dates as words.
+ */
+export interface WeekView {
+  firstDay: (week: string) => string;
+  label: (week: string) => string;
 }
+
+/** Plain Monday-to-Sunday weeks: "16 Nov to 22 Nov". */
+const MONDAY_WEEKS: WeekView = {
+  firstDay: (w) => w,
+  label: (w) => `${dayLabel(w)} to ${dayLabel(addDays(w, 6))}`,
+};
 
 /* Strategic meeting goals are written in words: "200+", "105% Achieved", a note each week. So these
    charts count only what can be counted without guessing: a percentage someone actually wrote, and
@@ -81,16 +91,16 @@ export function runCharts(
   weeks: string[],
   thisWeek: string | null,
   today: string,
+  view: WeekView = MONDAY_WEEKS,
 ): MeetingChartData {
   const real = goals.filter(hasTitle);
   const ids = new Set(real.map((g) => g.id));
   const countFor = (week: string) =>
     updates.filter((u) => u.week_start === week && ids.has(u.goal_id) && written(u.note)).length;
 
-  const reached = mondayOf(today);
   const line = weeks
-    .filter((w) => w <= reached)
-    .map((w) => ({ label: dayLabel(w), value: countFor(w) }));
+    .filter((w) => view.firstDay(w) <= today)
+    .map((w) => ({ label: dayLabel(view.firstDay(w)), value: countFor(w) }));
   const doneThisWeek = thisWeek ? countFor(thisWeek) : 0;
 
   return {
@@ -105,7 +115,7 @@ export function runCharts(
     donut:
       real.length > 0 && thisWeek
         ? {
-            subtitle: `Updates for the week of ${rangeLabel(thisWeek)}`,
+            subtitle: `Updates for the week of ${view.label(thisWeek)}`,
             centreValue: `${doneThisWeek}/${real.length}`,
             centreLabel: "updates written",
             slices: [
@@ -125,14 +135,14 @@ export function weekCharts(
   weeks: string[],
   weekStart: string,
   today: string,
+  view: WeekView = MONDAY_WEEKS,
 ): MeetingChartData {
   const real = goals.filter(hasTitle);
   const done = real.filter((g) => written(g.outcome)).length;
-  const reached = mondayOf(today);
   const line = weeks
-    .filter((w) => w <= reached || w === weekStart)
+    .filter((w) => view.firstDay(w) <= today || w === weekStart)
     .map((w) => ({
-      label: dayLabel(w),
+      label: dayLabel(view.firstDay(w)),
       value: allWeekGoals.filter((g) => g.week_start === w && hasTitle(g) && written(g.outcome))
         .length,
     }));
@@ -147,7 +157,7 @@ export function weekCharts(
     ),
     target: null,
     targetLabel: null,
-    roundTitle: `Week of ${rangeLabel(weekStart)}`,
+    roundTitle: `Week of ${view.label(weekStart)}`,
     roundEmpty: "No goals written for this week yet.",
     donut:
       real.length > 0
@@ -173,14 +183,14 @@ export function runProgress(
   updates: MeetingUpdateRow[],
   weeks: string[],
   today: string,
+  view: WeekView = MONDAY_WEEKS,
 ): WeekProgress[] {
   const real = goals.filter(hasTitle);
   const ids = new Set(real.map((g) => g.id));
-  const reached = mondayOf(today);
   return weeks
-    .filter((w) => w <= reached)
+    .filter((w) => view.firstDay(w) <= today)
     .map((w) => ({
-      label: rangeLabel(w),
+      label: view.label(w),
       pct: share(
         updates.filter((u) => u.week_start === w && ids.has(u.goal_id) && written(u.note)).length,
         real.length,
@@ -194,14 +204,14 @@ export function weekProgress(
   weeks: string[],
   weekStart: string,
   today: string,
+  view: WeekView = MONDAY_WEEKS,
 ): WeekProgress[] {
-  const reached = mondayOf(today);
   return weeks
-    .filter((w) => w <= reached || w === weekStart)
+    .filter((w) => view.firstDay(w) <= today || w === weekStart)
     .map((w) => {
       const rows = allWeekGoals.filter((g) => g.week_start === w && hasTitle(g));
       return {
-        label: rangeLabel(w),
+        label: view.label(w),
         pct: share(rows.filter((g) => written(g.outcome)).length, rows.length),
       };
     });

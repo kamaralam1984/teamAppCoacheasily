@@ -190,7 +190,8 @@ export function StrategicMeetingsManager({
           onChange={(e) => set("starts_on", e.target.value)}
         />
         <span className="mt-1 block text-[11px] text-soft">
-          Empty: the day after the previous meeting (or 45 days before).
+          Goals run 45 days from this date, each week starting on this day. Empty: the day
+          after the previous meeting (or 45 days before).
         </span>
       </label>
       <label className="sm:col-span-4">

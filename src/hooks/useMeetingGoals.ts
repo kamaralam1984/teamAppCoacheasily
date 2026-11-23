@@ -15,36 +15,58 @@ export type GoalUpdate = Tables<"meeting_goal_updates">;
 const DEFAULT_RUN = 45;
 
 /**
- * The run-up to a meeting: the start date HR set on the meeting, else the day after the previous
- * meeting, or 45 days before, up to the meeting itself — and the Monday of every week in it, one
- * update column each. Weekly updates are stored by that Monday, so a week keeps its data whatever
- * the start date.
+ * The run-up to a meeting, and one update column per week of it.
+ *
+ * With a start date set by HR, the goals run 45 days from that date (never past the meeting) and
+ * each week starts on that weekday: 20 Nov → "20 Nov to 26 Nov", "27 Nov to 3 Dec", …
+ * Without one: the day after the previous meeting, or 45 days before, up to the meeting itself,
+ * in Monday-to-Sunday weeks.
+ *
+ * Weekly rows are stored by a Monday (`week_start`). The n-th week column always reads and writes
+ * the n-th Monday from the start's own week, so setting or moving the start date never hides or
+ * changes saved updates: `shift` is how many days a column's first day is after its stored Monday.
  */
 export function meetingPeriod(meeting: StrategicMeeting, all: StrategicMeeting[]) {
   const prev = all
     .filter((m) => m.meeting_date < meeting.meeting_date)
     .sort((a, b) => b.meeting_date.localeCompare(a.meeting_date))[0];
-  // 45 days counting the meeting day itself, e.g. 7 Oct to 20 Nov
-  const from =
-    meeting.starts_on && meeting.starts_on <= meeting.meeting_date
-      ? meeting.starts_on
-      : prev
-        ? addDays(prev.meeting_date, 1)
-        : addDays(meeting.meeting_date, -(DEFAULT_RUN - 1));
-  const to = meeting.meeting_date;
+  const custom = Boolean(meeting.starts_on && meeting.starts_on <= meeting.meeting_date);
+  // 45 days counting the first day itself, e.g. 7 Oct to 20 Nov
+  const from = custom
+    ? meeting.starts_on!
+    : prev
+      ? addDays(prev.meeting_date, 1)
+      : addDays(meeting.meeting_date, -(DEFAULT_RUN - 1));
+  const runEnd = addDays(from, DEFAULT_RUN - 1);
+  const to = custom && runEnd < meeting.meeting_date ? runEnd : meeting.meeting_date;
   const dow = new Date(`${from}T00:00:00Z`).getUTCDay(); // 0 Sun … 6 Sat
-  let monday = addDays(from, dow === 0 ? -6 : 1 - dow);
+  const firstMonday = addDays(from, dow === 0 ? -6 : 1 - dow);
+  const shift = custom ? daysBetween(firstMonday, from) : 0;
   const weeks: string[] = [];
-  while (daysBetween(monday, to) >= 0) {
+  for (let monday = firstMonday; addDays(monday, shift) <= to; monday = addDays(monday, 7)) {
     weeks.push(monday);
-    monday = addDays(monday, 7);
   }
-  return { from, to, weeks };
+  return { from, to, weeks, shift };
 }
 
-/** A week column's dates, Monday to Sunday: "16 Nov to 22 Nov". */
-export function weekRangeLabel(monday: string): string {
-  return `${shortDate(monday)} to ${shortDate(addDays(monday, 6))}`;
+export type MeetingPeriod = ReturnType<typeof meetingPeriod>;
+
+/** The first day a week column covers (its stored Monday, moved to the start date's weekday). */
+export function weekFirstDay(period: MeetingPeriod | null, week: string): string {
+  return period ? addDays(week, period.shift) : week;
+}
+
+/** A week column's dates, cut off at the end of the run: "20 Nov to 26 Nov". */
+export function weekRangeLabel(period: MeetingPeriod | null, week: string): string {
+  const first = weekFirstDay(period, week);
+  const last = addDays(first, 6);
+  return `${shortDate(first)} to ${shortDate(period && last > period.to ? period.to : last)}`;
+}
+
+/** The week column today falls in (the latest one already started), else the first. */
+export function currentWeek(period: MeetingPeriod | null, today: string): string | null {
+  const weeks = period?.weeks ?? [];
+  return [...weeks].reverse().find((w) => weekFirstDay(period, w) <= today) ?? weeks[0] ?? null;
 }
 
 /** Which table: the whole run-up (45 days), or one week of it (its Monday). */

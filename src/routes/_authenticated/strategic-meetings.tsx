@@ -25,15 +25,23 @@ import {
   type GoalUpdate,
   type MeetingGoal,
   type NoteField,
+  currentWeek,
+  weekFirstDay,
   weekRangeLabel,
 } from "@/hooks/useMeetingGoals";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { startDrag, useTableSizes } from "@/hooks/useTableSizes";
 import { meetingLabel, useStrategicMeetings } from "@/hooks/useStrategicMeetings";
 import { useWarriors } from "@/hooks/useWarriors";
-import { addDays, daysBetween, timeLabel, todayIso } from "@/lib/calendar";
+import { daysBetween, timeLabel, todayIso } from "@/lib/calendar";
 import { buildCsv, buildPdf, downloadBytes, MIME, safeFileName } from "@/lib/exporters";
-import { runCharts, runProgress, weekCharts, weekProgress } from "@/lib/meetingGoalCharts";
+import {
+  runCharts,
+  runProgress,
+  weekCharts,
+  weekProgress,
+  type WeekView,
+} from "@/lib/meetingGoalCharts";
 import { meetingGoalTable } from "@/lib/meetingGoalExport";
 import { downlineIds, shortDate } from "@/lib/warriors";
 
@@ -225,7 +233,15 @@ function StrategicMeetingsPage() {
   const [mode, setMode] = useState<"run" | "week">("run");
   const [pickedWeek, setPickedWeek] = useState<string | null>(null);
   const weeks = period?.weeks ?? [];
-  const thisWeek = [...weeks].reverse().find((w) => w <= today) ?? weeks[0] ?? null;
+  const thisWeek = currentWeek(period, today);
+  // a week column's first day and dates: from the start date's weekday when HR set one
+  const weekView = useMemo<WeekView>(
+    () => ({
+      firstDay: (w) => weekFirstDay(period, w),
+      label: (w) => weekRangeLabel(period, w),
+    }),
+    [period],
+  );
   const weekStart = pickedWeek && weeks.includes(pickedWeek) ? pickedWeek : thisWeek;
   const scope: GoalScope =
     mode === "week" && weekStart ? { kind: "week", weekStart } : { kind: "run" };
@@ -290,15 +306,15 @@ function StrategicMeetingsPage() {
         rows,
         ...(mode === "week" && weekStart
           ? {
-              charts: weekCharts(rows, weekRows, allWeeks, weekStart, today),
-              weeks: weekProgress(weekRows, allWeeks, weekStart, today),
+              charts: weekCharts(rows, weekRows, allWeeks, weekStart, today, weekView),
+              weeks: weekProgress(weekRows, allWeeks, weekStart, today, weekView),
               note: sub
                 ? "Sub goals with an outcome written, each week"
                 : "Main goals with an outcome written, each week",
             }
           : {
-              charts: runCharts(rows, data?.updates ?? [], allWeeks, thisWeek, today),
-              weeks: runProgress(rows, data?.updates ?? [], allWeeks, today),
+              charts: runCharts(rows, data?.updates ?? [], allWeeks, thisWeek, today, weekView),
+              weeks: runProgress(rows, data?.updates ?? [], allWeeks, today, weekView),
               note: sub
                 ? "Sub goals with an update written, each week"
                 : "Main goals with an update written, each week",
@@ -306,7 +322,7 @@ function StrategicMeetingsPage() {
       };
     };
     return { main: build(false), sub: build(true) };
-  }, [data, weekGoals, mode, weekStart, period, thisWeek, today]);
+  }, [data, weekGoals, mode, weekStart, period, thisWeek, today, weekView]);
 
   // every cell's unsaved typing: saved by the Save button, and before the page is hidden or left
   const [dirtyCount, setDirtyCount] = useState(0);
@@ -417,11 +433,11 @@ function StrategicMeetingsPage() {
 
   const heading =
     scope.kind === "week"
-      ? `Goals for the week of ${weekRangeLabel(scope.weekStart)}`
+      ? `Goals for the week of ${weekView.label(scope.weekStart)}`
       : `Goals for next ${runDays} days`;
   const periodLine =
     scope.kind === "week"
-      ? `${shortDate(scope.weekStart)} to ${shortDate(addDays(scope.weekStart, 6))}`
+      ? weekView.label(scope.weekStart)
       : period
         ? `${shortDate(period.from)} to ${shortDate(period.to)}`
         : "";
@@ -436,7 +452,7 @@ function StrategicMeetingsPage() {
       goals,
       updates: data?.updates ?? [],
       weeks: weekColumns,
-      weekLabel: weekRangeLabel,
+      weekLabel: weekView.label,
       dateLabel: shortDate,
       columnsAdded: boxes.map((b) => b.field),
     });
@@ -560,7 +576,7 @@ function StrategicMeetingsPage() {
                   >
                     {weeks.map((w) => (
                       <option key={w} value={w}>
-                        Week of {weekRangeLabel(w)}
+                        Week of {weekView.label(w)}
                         {w === thisWeek ? " · this week" : ""}
                       </option>
                     ))}
@@ -683,7 +699,7 @@ function StrategicMeetingsPage() {
                             className="relative min-w-[170px] border border-line bg-emer/15 px-2 py-2"
                             style={colStyle(`week:${w}`)}
                           >
-                            Week of {weekRangeLabel(w)}
+                            Week of {weekView.label(w)}
                             {colGrip(`week:${w}`)}
                           </th>
                         ))}
