@@ -14,10 +14,10 @@ optional field **Goals start on** decides the run-up:
 
 | Goals start on | Run-up | Week columns |
 |---|---|---|
-| **Set** (e.g. 20 Nov, meeting 4 Jan) | 45 days from that date, never past the meeting: 20 Nov to 3 Jan | Start on that weekday: *20 Nov to 26 Nov*, *27 Nov to 3 Dec*, … the last one is cut at the end: *1 Jan to 3 Jan* |
+| **Set** (e.g. 20 Nov, meeting 4 Jan) | From that date up to the meeting day: 20 Nov to 4 Jan (46 days) | Start on that weekday: *20 Nov to 26 Nov*, *27 Nov to 3 Dec*, … the last one is cut at the meeting day: *1 Jan to 4 Jan* |
 | **Empty** (default) | Day after the previous meeting (or 45 days before the meeting) up to the meeting day | Monday to Sunday: *16 Nov to 22 Nov*, … |
 
-The heading counts the days ("Goals for next 45 days"). "This week" is the week column today
+The heading counts the days ("Goals for next 46 days"). "This week" is the week column today
 falls in. The weekly table toggle, the dropdown, the column headings, the dashboard charts and
 the CSV / PDF download all use the same week labels.
 
@@ -86,7 +86,7 @@ copy, then live) → `team-deploy`.
 
 ## 6. Known choices (ask before changing)
 
-- With a start date the run is exactly 45 days, even if the meeting is later (20 Nov → 3 Jan for
-  a 4 Jan meeting). Without one, the run ends on the meeting day.
+- The run always ends on the meeting day; the start date only moves its first day (20 Nov → 4 Jan
+  for a 4 Jan meeting is 46 days, and the heading says so).
 - Weekly data stays keyed by Monday (see §1); the start date only changes how columns are shown.
 - Main Goal / Sub Goal is only a label — no parent/child goal tree.

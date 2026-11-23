@@ -17,10 +17,9 @@ const DEFAULT_RUN = 45;
 /**
  * The run-up to a meeting, and one update column per week of it.
  *
- * With a start date set by HR, the goals run 45 days from that date (never past the meeting) and
- * each week starts on that weekday: 20 Nov → "20 Nov to 26 Nov", "27 Nov to 3 Dec", …
- * Without one: the day after the previous meeting, or 45 days before, up to the meeting itself,
- * in Monday-to-Sunday weeks.
+ * The run ends on the meeting day. It starts on the start date HR set (each week then starts on
+ * that weekday: 20 Nov → "20 Nov to 26 Nov", "27 Nov to 3 Dec", … "1 Jan to 4 Jan"), else the day
+ * after the previous meeting, or 45 days before, in Monday-to-Sunday weeks.
  *
  * Weekly rows are stored by a Monday (`week_start`). The n-th week column always reads and writes
  * the n-th Monday from the start's own week, so setting or moving the start date never hides or
@@ -37,8 +36,7 @@ export function meetingPeriod(meeting: StrategicMeeting, all: StrategicMeeting[]
     : prev
       ? addDays(prev.meeting_date, 1)
       : addDays(meeting.meeting_date, -(DEFAULT_RUN - 1));
-  const runEnd = addDays(from, DEFAULT_RUN - 1);
-  const to = custom && runEnd < meeting.meeting_date ? runEnd : meeting.meeting_date;
+  const to = meeting.meeting_date;
   const dow = new Date(`${from}T00:00:00Z`).getUTCDay(); // 0 Sun … 6 Sat
   const firstMonday = addDays(from, dow === 0 ? -6 : 1 - dow);
   const shift = custom ? daysBetween(firstMonday, from) : 0;
