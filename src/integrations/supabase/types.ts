@@ -3758,6 +3758,7 @@ export type Database = {
           id: string
           location: string | null
           meeting_date: string
+          starts_on: string | null
           org_id: string
           tagline: string | null
           title: string
@@ -3773,6 +3774,7 @@ export type Database = {
           id?: string
           location?: string | null
           meeting_date: string
+          starts_on?: string | null
           org_id: string
           tagline?: string | null
           title: string
@@ -3788,6 +3790,7 @@ export type Database = {
           id?: string
           location?: string | null
           meeting_date?: string
+          starts_on?: string | null
           org_id?: string
           tagline?: string | null
           title?: string

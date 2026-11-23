@@ -14,6 +14,7 @@ const EMPTY = {
   title: "",
   tagline: "",
   meeting_date: "",
+  starts_on: "",
   from_time: "",
   to_time: "",
   location: "",
@@ -27,6 +28,7 @@ function toForm(m: StrategicMeeting): Form {
     title: m.title,
     tagline: m.tagline ?? "",
     meeting_date: m.meeting_date,
+    starts_on: m.starts_on ?? "",
     from_time: m.from_time?.slice(0, 5) ?? "",
     to_time: m.to_time?.slice(0, 5) ?? "",
     location: m.location ?? "",
@@ -41,6 +43,7 @@ function toInput(f: Form): MeetingInput {
     title: f.title.trim(),
     tagline: t(f.tagline),
     meeting_date: f.meeting_date,
+    starts_on: f.starts_on || null,
     from_time: f.from_time || null,
     to_time: f.to_time || null,
     location: t(f.location),
@@ -76,6 +79,9 @@ export function StrategicMeetingsManager({
   async function save() {
     if (!form.title.trim()) return void toast.error("Give the meeting a name");
     if (!form.meeting_date) return void toast.error("Pick the date");
+    if (form.starts_on && form.starts_on > form.meeting_date) {
+      return void toast.error("Goals have to start on or before the meeting date");
+    }
     if (form.from_time && form.to_time && form.to_time <= form.from_time) {
       return void toast.error("The end time has to be after the start time");
     }
@@ -174,6 +180,19 @@ export function StrategicMeetingsManager({
           onChange={(e) => set("location", e.target.value)}
         />
       </label>
+      <label className="sm:col-span-2">
+        <span className="ce-label">Goals start on (optional)</span>
+        <input
+          type="date"
+          className="ce-input"
+          max={form.meeting_date || undefined}
+          value={form.starts_on}
+          onChange={(e) => set("starts_on", e.target.value)}
+        />
+        <span className="mt-1 block text-[11px] text-soft">
+          Empty: the day after the previous meeting (or 45 days before).
+        </span>
+      </label>
       <label className="sm:col-span-4">
         <span className="ce-label">Agenda (optional)</span>
         <textarea
@@ -217,6 +236,7 @@ export function StrategicMeetingsManager({
           <p className="text-[12px] text-soft">
             {[
               shortDate(m.meeting_date),
+              m.starts_on ? `goals from ${shortDate(m.starts_on)}` : null,
               m.from_time
                 ? `${timeLabel(m.from_time)}${m.to_time ? ` – ${timeLabel(m.to_time)}` : ""}`
                 : null,

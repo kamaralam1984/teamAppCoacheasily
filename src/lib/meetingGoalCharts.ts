@@ -1,5 +1,11 @@
+import { addDays } from "@/lib/calendar";
 import { dayLabel } from "@/lib/goals";
 import { mondayOf, niceTicks, type GoalChartData } from "@/lib/goalCharts";
+
+/** A week, Monday to Sunday: "16 Nov to 22 Nov". */
+function rangeLabel(monday: string): string {
+  return `${dayLabel(monday)} to ${dayLabel(addDays(monday, 6))}`;
+}
 
 /* Strategic meeting goals are written in words: "200+", "105% Achieved", a note each week. So these
    charts count only what can be counted without guessing: a percentage someone actually wrote, and
@@ -99,7 +105,7 @@ export function runCharts(
     donut:
       real.length > 0 && thisWeek
         ? {
-            subtitle: `Updates for the week of ${dayLabel(thisWeek)}`,
+            subtitle: `Updates for the week of ${rangeLabel(thisWeek)}`,
             centreValue: `${doneThisWeek}/${real.length}`,
             centreLabel: "updates written",
             slices: [
@@ -141,7 +147,7 @@ export function weekCharts(
     ),
     target: null,
     targetLabel: null,
-    roundTitle: `Week of ${dayLabel(weekStart)}`,
+    roundTitle: `Week of ${rangeLabel(weekStart)}`,
     roundEmpty: "No goals written for this week yet.",
     donut:
       real.length > 0
@@ -174,7 +180,7 @@ export function runProgress(
   return weeks
     .filter((w) => w <= reached)
     .map((w) => ({
-      label: dayLabel(w),
+      label: rangeLabel(w),
       pct: share(
         updates.filter((u) => u.week_start === w && ids.has(u.goal_id) && written(u.note)).length,
         real.length,
@@ -195,7 +201,7 @@ export function weekProgress(
     .map((w) => {
       const rows = allWeekGoals.filter((g) => g.week_start === w && hasTitle(g));
       return {
-        label: dayLabel(w),
+        label: rangeLabel(w),
         pct: share(rows.filter((g) => written(g.outcome)).length, rows.length),
       };
     });

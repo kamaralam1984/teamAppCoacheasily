@@ -6,6 +6,7 @@ import type { Json, Tables } from "@/integrations/supabase/types";
 import { addDays, daysBetween } from "@/lib/calendar";
 import { devMeetingGoals, devWriteRow } from "@/lib/developer.functions";
 import type { StrategicMeeting } from "@/hooks/useStrategicMeetings";
+import { shortDate } from "@/lib/warriors";
 
 export type MeetingGoal = Tables<"meeting_goals">;
 export type GoalUpdate = Tables<"meeting_goal_updates">;
@@ -14,17 +15,22 @@ export type GoalUpdate = Tables<"meeting_goal_updates">;
 const DEFAULT_RUN = 45;
 
 /**
- * The run-up to a meeting: the day after the previous meeting, or 45 days before, up to the
- * meeting itself — and the Monday of every week in it, one update column each.
+ * The run-up to a meeting: the start date HR set on the meeting, else the day after the previous
+ * meeting, or 45 days before, up to the meeting itself — and the Monday of every week in it, one
+ * update column each. Weekly updates are stored by that Monday, so a week keeps its data whatever
+ * the start date.
  */
 export function meetingPeriod(meeting: StrategicMeeting, all: StrategicMeeting[]) {
   const prev = all
     .filter((m) => m.meeting_date < meeting.meeting_date)
     .sort((a, b) => b.meeting_date.localeCompare(a.meeting_date))[0];
   // 45 days counting the meeting day itself, e.g. 7 Oct to 20 Nov
-  const from = prev
-    ? addDays(prev.meeting_date, 1)
-    : addDays(meeting.meeting_date, -(DEFAULT_RUN - 1));
+  const from =
+    meeting.starts_on && meeting.starts_on <= meeting.meeting_date
+      ? meeting.starts_on
+      : prev
+        ? addDays(prev.meeting_date, 1)
+        : addDays(meeting.meeting_date, -(DEFAULT_RUN - 1));
   const to = meeting.meeting_date;
   const dow = new Date(`${from}T00:00:00Z`).getUTCDay(); // 0 Sun … 6 Sat
   let monday = addDays(from, dow === 0 ? -6 : 1 - dow);
@@ -34,6 +40,11 @@ export function meetingPeriod(meeting: StrategicMeeting, all: StrategicMeeting[]
     monday = addDays(monday, 7);
   }
   return { from, to, weeks };
+}
+
+/** A week column's dates, Monday to Sunday: "16 Nov to 22 Nov". */
+export function weekRangeLabel(monday: string): string {
+  return `${shortDate(monday)} to ${shortDate(addDays(monday, 6))}`;
 }
 
 /** Which table: the whole run-up (45 days), or one week of it (its Monday). */

@@ -25,6 +25,7 @@ import {
   type GoalUpdate,
   type MeetingGoal,
   type NoteField,
+  weekRangeLabel,
 } from "@/hooks/useMeetingGoals";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { startDrag, useTableSizes } from "@/hooks/useTableSizes";
@@ -416,7 +417,7 @@ function StrategicMeetingsPage() {
 
   const heading =
     scope.kind === "week"
-      ? `Goals for the week of ${shortDate(scope.weekStart)}`
+      ? `Goals for the week of ${weekRangeLabel(scope.weekStart)}`
       : `Goals for next ${runDays} days`;
   const periodLine =
     scope.kind === "week"
@@ -435,7 +436,7 @@ function StrategicMeetingsPage() {
       goals,
       updates: data?.updates ?? [],
       weeks: weekColumns,
-      weekLabel: shortDate,
+      weekLabel: weekRangeLabel,
       dateLabel: shortDate,
       columnsAdded: boxes.map((b) => b.field),
     });
@@ -559,7 +560,7 @@ function StrategicMeetingsPage() {
                   >
                     {weeks.map((w) => (
                       <option key={w} value={w}>
-                        Week of {shortDate(w)} ({shortDate(w)} – {shortDate(addDays(w, 6))})
+                        Week of {weekRangeLabel(w)}
                         {w === thisWeek ? " · this week" : ""}
                       </option>
                     ))}
@@ -682,7 +683,7 @@ function StrategicMeetingsPage() {
                             className="relative min-w-[170px] border border-line bg-emer/15 px-2 py-2"
                             style={colStyle(`week:${w}`)}
                           >
-                            Week of {shortDate(w)}
+                            Week of {weekRangeLabel(w)}
                             {colGrip(`week:${w}`)}
                           </th>
                         ))}

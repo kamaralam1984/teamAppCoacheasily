@@ -11,6 +11,8 @@ export interface MeetingInput {
   title: string;
   tagline: string | null;
   meeting_date: string;
+  /** first day of the goals; null = the day after the previous meeting (or 45 days before) */
+  starts_on: string | null;
   from_time: string | null;
   to_time: string | null;
   location: string | null;

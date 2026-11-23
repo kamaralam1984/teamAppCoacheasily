@@ -563,7 +563,7 @@ function Overview({ weeks }: { weeks: WeekProgress[] }) {
       {weeks.map((w, i) => (
         <li key={w.label} className="flex items-center gap-3 text-[14px]">
           <CalendarDays size={18} className="shrink-0 text-night2" aria-hidden />
-          <span className="w-[6.5rem] shrink-0 font-medium text-ink">Week of {w.label}</span>
+          <span className="w-[11.5rem] shrink-0 font-medium text-ink">Week of {w.label}</span>
           <Meter pct={w.pct} colour={WEEK_COLOURS[i % WEEK_COLOURS.length]!} />
           <span className="w-11 shrink-0 text-right font-semibold text-ink">{w.pct}%</span>
         </li>
