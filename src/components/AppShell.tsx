@@ -124,8 +124,8 @@ const MOBILE_STRIP_PAD = 16; // px of horizontal padding in the phone top strip 
 
 const SIR_AVAILABILITY_URL =
   "https://n8n.srv1623478.hstgr.cloud/webhook/ph-availability?k=M84hry9rj5R9dHk6O2wT8X_A";
-// People (by first name) who see the PH Sir Availability link besides HR and Admin.
-const SIR_AVAILABILITY_PEOPLE = ["shubhangi", "supriya", "prachi", "saurabh", "pranjal", "sapana"];
+// PH Sir's profile. The availability link is for him and the people who report directly to him.
+const SIR_PROFILE_ID = "22222222-2222-4222-8222-222222222222";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { data, isLoading } = useMyProfile();
@@ -222,9 +222,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     { title: "Developer", items: devTabs.filter((t) => !inStrip.has(t.to)) },
   ].filter((sec) => sec.items.length > 0);
   const mobileTabKey = mobileTabs.map((t) => t.to).join("|");
-  const firstName = (profile?.full_name ?? "").trim().split(/\s+/)[0]?.toLowerCase() ?? "";
   const showAvailability =
-    role === "hr" || role === "admin" || SIR_AVAILABILITY_PEOPLE.includes(firstName);
+    profile?.manager_id === SIR_PROFILE_ID || profile?.id === SIR_PROFILE_ID;
   const hasReports = tabs.some((t) => t.label === "Reports");
 
   useEffect(() => {
