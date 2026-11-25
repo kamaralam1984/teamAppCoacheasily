@@ -1931,9 +1931,11 @@ export type Database = {
           decision_note: string | null
           from_date: string
           half_day: boolean
+          half_part: string | null
           handover_task_ids: string[] | null
           handover_to: string | null
           id: string
+          nudged_at: string | null
           org_id: string
           profile_id: string
           reason: string | null
@@ -1952,9 +1954,11 @@ export type Database = {
           decision_note?: string | null
           from_date: string
           half_day?: boolean
+          half_part?: string | null
           handover_task_ids?: string[] | null
           handover_to?: string | null
           id?: string
+          nudged_at?: string | null
           org_id: string
           profile_id: string
           reason?: string | null
@@ -1973,9 +1977,11 @@ export type Database = {
           decision_note?: string | null
           from_date?: string
           half_day?: boolean
+          half_part?: string | null
           handover_task_ids?: string[] | null
           handover_to?: string | null
           id?: string
+          nudged_at?: string | null
           org_id?: string
           profile_id?: string
           reason?: string | null
@@ -4500,8 +4506,10 @@ export type Database = {
       latest_unseen_release: { Args: never; Returns: Json }
       leave_approver_for: { Args: { p_profile_id: string }; Returns: string }
       leave_balances: { Args: { p_profile_id?: string }; Returns: Json }
+      leave_cancel: { Args: { p_id: string }; Returns: undefined }
       leave_check: {
         Args: {
+          p_exclude?: string
           p_from: string
           p_half?: boolean
           p_profile_id?: string
@@ -4530,7 +4538,21 @@ export type Database = {
         Returns: Json
       }
       leave_ledger: { Args: never; Returns: Json }
+      leave_edit: {
+        Args: {
+          p_from: string
+          p_half?: boolean
+          p_half_part?: string
+          p_id: string
+          p_reason?: string
+          p_to: string
+          p_type: string
+        }
+        Returns: Json
+      }
+      leave_extras_on: { Args: never; Returns: boolean }
       leave_remind_approvers: { Args: never; Returns: number }
+      leave_send_reminder: { Args: { p_id: string }; Returns: string }
       leave_sandwich_conflict: {
         Args: {
           p_exclude?: string

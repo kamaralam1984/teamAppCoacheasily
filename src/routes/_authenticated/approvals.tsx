@@ -5,6 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { HelpLink } from "@/components/help/HelpLink";
 import {
   TYPE_LABEL,
+  halfLabel,
   useDecideLeave,
   useLeaveBalances,
   usePendingApprovals,
@@ -165,7 +166,7 @@ function RequestCard({
         {shortDate(request.from_date)}
         {request.from_date !== request.to_date ? ` → ${shortDate(request.to_date)}` : ""} ·{" "}
         {request.days} day{request.days === 1 ? "" : "s"}
-        {request.half_day ? " (half day)" : ""}
+        {request.half_day ? ` (${halfLabel(request)})` : ""}
       </p>
       {request.reason ? (
         <p className="mt-1 text-[13px] leading-relaxed text-soft">“{request.reason}”</p>
@@ -196,7 +197,7 @@ function RequestCard({
             className="btn3d w-full sm:w-auto"
             disabled={decide.isPending}
             onClick={() => decide.mutate(
-                { id: request.id, status: "approved" },
+                { request, status: "approved" },
                 { onSuccess: () => toast.success("Approved. They have been told.") },
               )}
           >
@@ -207,7 +208,7 @@ function RequestCard({
             className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-line bg-white px-5 text-[15px] font-bold text-ink sm:w-auto"
             disabled={decide.isPending}
             onClick={() => decide.mutate(
-                { id: request.id, status: "rejected" },
+                { request, status: "rejected" },
                 { onSuccess: () => toast.success("Declined. They have been told.") },
               )}
           >
@@ -218,8 +219,8 @@ function RequestCard({
 
       {decide.isError ? (
         <p className="mt-3 text-[13px] font-semibold text-red">
-          That decision wasn't allowed. A leave request has to be decided by somebody other than
-          the person who applied.
+          {(decide.error as { message?: string } | null)?.message ??
+            "That decision wasn't allowed."}
         </p>
       ) : null}
     </li>

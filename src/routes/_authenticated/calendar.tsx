@@ -19,7 +19,7 @@ import {
   useSaveEvent,
   useSaveProgram,
 } from "@/hooks/useCalendar";
-import { TYPE_LABEL } from "@/hooks/useLeave";
+import { halfLabel, TYPE_LABEL } from "@/hooks/useLeave";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useMyShifts } from "@/hooks/useWeeklyOffShift";
 import { useOrgSettings } from "@/hooks/useOrg";
@@ -520,7 +520,7 @@ function CalendarPage() {
                   <span className="text-sm font-bold text-ink">{l.full_name}</span>
                   <span className="text-[12px] text-soft">
                     {rangeLabel(l.from_date, l.to_date)}
-                    {l.half_day ? " · half day" : ""}
+                    {l.half_day ? ` · ${halfLabel(l)}` : ""}
                   </span>
                   <span className="ml-auto rounded-full border border-line bg-cream px-2.5 py-0.5 text-[11px] font-bold text-goldD">
                     {TYPE_LABEL[l.type] ?? l.type}

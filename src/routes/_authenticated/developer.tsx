@@ -10,6 +10,7 @@ import { DevOrganisation } from "@/components/developer/DevOrganisation";
 import { DevAudit } from "@/components/developer/DevAudit";
 import { DevTeamOrder } from "@/components/developer/DevTeamOrder";
 import { DevStrategicMeetings } from "@/components/developer/DevStrategicMeetings";
+import { DevFeatures } from "@/components/developer/DevFeatures";
 import { DevFestive } from "@/components/developer/DevFestive";
 import { errMsg, useDeveloperAccess } from "@/hooks/useDeveloper";
 
@@ -36,6 +37,7 @@ const SECTIONS = [
   "Team order",
   "Strategic meetings",
   "Festive theme",
+  "Features",
   "Audit log",
 ] as const;
 type Section = (typeof SECTIONS)[number];
@@ -82,6 +84,7 @@ function Page() {
             {section === "Team order" && <DevTeamOrder />}
             {section === "Strategic meetings" && <DevStrategicMeetings />}
             {section === "Festive theme" && <DevFestive />}
+            {section === "Features" && <DevFeatures />}
             {section === "Audit log" && <DevAudit />}
           </div>
         </>

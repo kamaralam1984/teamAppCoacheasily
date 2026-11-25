@@ -18,6 +18,7 @@ export interface LeaveDay {
   from_date: string;
   to_date: string;
   half_day: boolean;
+  half_part?: string | null;
 }
 
 export interface CalendarData {

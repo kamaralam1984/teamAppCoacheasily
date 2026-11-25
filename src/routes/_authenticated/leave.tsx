@@ -9,16 +9,21 @@ import { useAttendanceSummary } from "@/hooks/useAttendance";
 import {
   LEAVE_TYPES,
   TYPE_LABEL,
+  halfLabel,
   useApplyLeave,
   useFlexiHolidays,
   useLeaveBalances,
   useLeaveCheck,
+  useLeaveExtras,
   useMyLeave,
+  type HalfPart,
   type LeaveType,
 } from "@/hooks/useLeave";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useWarriors } from "@/hooks/useWarriors";
 import { EarnedLeaveLedger } from "@/components/leave/EarnedLeaveLedger";
+import { HalfPartPicker } from "@/components/leave/HalfPartPicker";
+import { PendingLeaveActions } from "@/components/leave/PendingLeaveActions";
 import { WeeklyOffShiftCard } from "@/components/leave/WeeklyOffShiftCard";
 import { useOrgSettings } from "@/hooks/useOrg";
 import { useTasksInWindow } from "@/hooks/useTasks";
@@ -64,6 +69,7 @@ const STATUS_STYLE: Record<string, string> = {
   pending: "bg-cream text-goldD border-gold/40",
   approved: "bg-emer/10 text-emer border-emer/30",
   rejected: "bg-red/10 text-red border-red/30",
+  cancelled: "bg-pearl text-soft border-line",
 };
 
 function LeavePage() {
@@ -73,6 +79,7 @@ function LeavePage() {
   const { data: summary } = useAttendanceSummary(profile ? undefined : null);
   const { data: balances } = useLeaveBalances(profile ? undefined : null);
   const { data: history } = useMyLeave(profile?.id ?? null);
+  const { data: extras } = useLeaveExtras(profile?.id ?? null);
   const { data: warriors } = useWarriors();
   const { data: orgSettings } = useOrgSettings(Boolean(profile));
   const testingActive = isTestingActive(orgSettings?.testing_until);
@@ -83,6 +90,7 @@ function LeavePage() {
   const [from, setFrom] = useState(today);
   const [to, setTo] = useState(today);
   const [halfDay, setHalfDay] = useState(false);
+  const [halfPart, setHalfPart] = useState<HalfPart>("first");
   const [reason, setReason] = useState("");
   const [handover, setHandover] = useState("");
   const [handoverTasks, setHandoverTasks] = useState<string[]>([]);
@@ -155,6 +163,7 @@ function LeavePage() {
         from_date: from,
         to_date: effectiveTo,
         half_day: halfDay,
+        half_part: extras && halfDay ? halfPart : null,
         reason,
         handover_to: handover || null,
         handover_task_ids: handoverTasks,
@@ -366,6 +375,9 @@ function LeavePage() {
                 Half day (counts as 0.5)
               </label>
             )}
+            {extras && halfDay && !isFlexi ? (
+              <HalfPartPicker name="lv-half" value={halfPart} onChange={setHalfPart} />
+            ) : null}
 
             <div>
               <label htmlFor="lv-handover" className="ce-label">
@@ -513,7 +525,7 @@ function LeavePage() {
                     <p className="text-[13px] text-soft">
                       {shortDate(r.from_date)}
                       {r.from_date !== r.to_date ? ` → ${shortDate(r.to_date)}` : ""}
-                      {r.half_day ? " · half day" : ""}
+                      {r.half_day ? ` · ${halfLabel(r)}` : ""}
                       {nameOf(r.handover_to) ? ` · handover to ${nameOf(r.handover_to)}` : ""}
                     </p>
                     {r.status === "rejected" && r.decision_note ? (
@@ -533,6 +545,16 @@ function LeavePage() {
                   >
                     {r.status}
                   </span>
+                  {extras &&
+                  r.status === "pending" &&
+                  !(r.from_date <= today && r.created_at.slice(0, 10) < r.from_date) ? (
+                    <PendingLeaveActions
+                      request={r}
+                      today={today}
+                      types={leaveTypes}
+                      myName={profile?.full_name ?? null}
+                    />
+                  ) : null}
                 </li>
               ))}
             </ul>

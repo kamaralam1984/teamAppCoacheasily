@@ -1,5 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 
+import { leaveExtrasPreview } from "@/lib/leaveExtras.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyByEmail } from "@/lib/notify";
 import type { Tables } from "@/integrations/supabase/types";
@@ -21,6 +24,40 @@ export const LEAVE_TYPES: { value: LeaveType; label: string; note?: string }[] =
 export const TYPE_LABEL: Record<string, string> = Object.fromEntries(
   LEAVE_TYPES.map((t) => [t.value, t.label]),
 );
+
+export type HalfPart = "first" | "second";
+
+/** "half day", or which half when it is known. */
+export function halfLabel(r: { half_day: boolean; half_part?: string | null }): string {
+  if (!r.half_day) return "";
+  if (r.half_part === "first") return "first half";
+  if (r.half_part === "second") return "second half";
+  return "half day";
+}
+
+/**
+ * Edit, cancel, half of the day and reminders. Until a developer approves the release only HR and
+ * developers have them; the database refuses everybody else too. Any doubt means off.
+ */
+export function useLeaveExtras(profileId?: string | null) {
+  const preview = useServerFn(leaveExtrasPreview);
+  return useQuery({
+    queryKey: ["leave-extras", profileId ?? "none"],
+    enabled: Boolean(profileId),
+    staleTime: 5 * 60_000,
+    retry: false,
+    queryFn: async (): Promise<boolean> => {
+      const { data, error } = await supabase.rpc("leave_extras_on");
+      if (error) return false;
+      if (data) return true;
+      try {
+        return (await preview()).on;
+      } catch {
+        return false;
+      }
+    },
+  });
+}
 
 /** The order the plaques must always render in. */
 export const BALANCE_ORDER: LeaveType[] = ["casual", "sick", "earned", "comp_off"];
@@ -64,10 +101,12 @@ export function useLeaveCheck(args: {
   from: string;
   to: string;
   halfDay: boolean;
+  /** the request being edited, so its own days are not counted against it */
+  exclude?: string | undefined;
   enabled: boolean;
 }) {
   return useQuery({
-    queryKey: ["leave-check", args.type, args.from, args.to, args.halfDay],
+    queryKey: ["leave-check", args.type, args.from, args.to, args.halfDay, args.exclude ?? null],
     enabled: args.enabled,
     queryFn: async (): Promise<LeaveCheck> => {
       const { data, error } = await supabase.rpc("leave_check", {
@@ -75,6 +114,7 @@ export function useLeaveCheck(args: {
         p_from: args.from,
         p_to: args.to,
         p_half: args.halfDay,
+        ...(args.exclude ? { p_exclude: args.exclude } : {}),
       });
       if (error) throw error;
       return (data as unknown as LeaveCheck) ?? { errors: [], warnings: [], days: 0 };
@@ -140,6 +180,7 @@ export interface ApplyInput {
   from_date: string;
   to_date: string;
   half_day: boolean;
+  half_part?: HalfPart | null;
   reason: string;
   handover_to: string | null;
   /** Exactly which open tasks move across. Empty means none. */
@@ -160,6 +201,7 @@ export function useApplyLeave(profileId?: string | null, orgId?: string | null) 
           from_date: input.from_date,
           to_date: input.to_date,
           half_day: input.half_day,
+          ...(input.half_day && input.half_part ? { half_part: input.half_part } : {}),
           reason: input.reason || null,
           handover_to: input.handover_to,
           handover_task_ids: input.handover_to ? (input.handover_task_ids ?? []) : [],
@@ -195,6 +237,91 @@ export function useApplyLeave(profileId?: string | null, orgId?: string | null) 
   });
 }
 
+function refreshLeave(qc: QueryClient) {
+  for (const key of [
+    "leave-balances",
+    "leave-history",
+    "leave-pending",
+    "flexi-holidays",
+    "leave-check",
+  ])
+    void qc.invalidateQueries({ queryKey: [key] });
+}
+
+export interface EditInput {
+  id: string;
+  type: LeaveType;
+  from_date: string;
+  to_date: string;
+  half_day: boolean;
+  half_part: HalfPart | null;
+  reason: string;
+}
+
+/** Change my own pending request. The approver is told. */
+export function useEditLeave(myName?: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: EditInput) => {
+      const { data, error } = await supabase.rpc("leave_edit", {
+        p_id: input.id,
+        p_type: input.type,
+        p_from: input.from_date,
+        p_to: input.to_date,
+        p_half: input.half_day,
+        ...(input.half_day && input.half_part ? { p_half_part: input.half_part } : {}),
+        p_reason: input.reason,
+      });
+      if (error) throw error;
+      const r = data as unknown as { changed: boolean; approver_id: string | null };
+      if (r.changed && r.approver_id) {
+        notifyByEmail({
+          kind: "leave_raised",
+          profileIds: [r.approver_id],
+          title: `${myName ?? "Somebody"} changed a leave request`,
+          body: `It is now ${TYPE_LABEL[input.type] ?? input.type} from ${input.from_date} to ${input.to_date}. It's waiting for your decision.`,
+          link: "/approvals",
+        });
+      }
+      return r;
+    },
+    onSettled: () => refreshLeave(qc),
+  });
+}
+
+/** Cancel my own pending request. It stays in the history as cancelled. */
+export function useCancelLeave() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.rpc("leave_cancel", { p_id: id });
+      if (error) throw error;
+    },
+    onSettled: () => refreshLeave(qc),
+  });
+}
+
+/** Remind the approver, at most once in 24 hours. */
+export function useRemindLeave(myName?: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (r: LeaveRequest) => {
+      const { data, error } = await supabase.rpc("leave_send_reminder", { p_id: r.id });
+      if (error) throw error;
+      if (data) {
+        notifyByEmail({
+          kind: "leave_raised",
+          profileIds: [data],
+          title: `Reminder: ${myName ?? "Somebody"}'s leave request is waiting`,
+          body: `${TYPE_LABEL[r.type] ?? r.type} from ${r.from_date} to ${r.to_date}. Please approve or reject it.`,
+          link: "/approvals",
+        });
+      }
+    },
+    onSettled: () => refreshLeave(qc),
+  });
+}
+
 export interface PendingRequest extends LeaveRequest {
   applicant: { id: string; full_name: string; title: string | null; department: string | null };
 }
@@ -222,7 +349,7 @@ export function usePendingApprovals(enabled: boolean) {
 export function useDecideLeave(deciderId?: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (args: { id: string; status: "approved" | "rejected" }) => {
+    mutationFn: async (args: { request: LeaveRequest; status: "approved" | "rejected" }) => {
       const { data: row, error } = await supabase
         .from("leave_requests")
         .update({
@@ -230,19 +357,28 @@ export function useDecideLeave(deciderId?: string | null) {
           decided_at: new Date().toISOString(),
           decided_by: deciderId ?? null,
         })
-        .eq("id", args.id)
+        .eq("id", args.request.id)
+        // decide exactly what was on the screen: it may have been edited or cancelled since
+        .eq("status", "pending")
+        .eq("type", args.request.type)
+        .eq("from_date", args.request.from_date)
+        .eq("to_date", args.request.to_date)
+        .eq("half_day", args.request.half_day)
         .select("profile_id, type, from_date, to_date")
         .maybeSingle();
       if (error) throw error;
-      if (row) {
-        notifyByEmail({
-          kind: "leave_decided",
-          profileIds: [row.profile_id],
-          title: `Your leave was ${args.status}`,
-          body: `${TYPE_LABEL[row.type] ?? row.type} from ${row.from_date} to ${row.to_date} was ${args.status}.`,
-          link: "/leave",
-        });
+      if (!row) {
+        throw new Error(
+          "This request was changed, cancelled or already decided. Look at it again before deciding.",
+        );
       }
+      notifyByEmail({
+        kind: "leave_decided",
+        profileIds: [row.profile_id],
+        title: `Your leave was ${args.status}`,
+        body: `${TYPE_LABEL[row.type] ?? row.type} from ${row.from_date} to ${row.to_date} was ${args.status}.`,
+        link: "/leave",
+      });
     },
     // The decision is final the moment it is pressed — drop it off the list now.
     onMutate: async (args) => {
@@ -252,13 +388,16 @@ export function useDecideLeave(deciderId?: string | null) {
         if (!rows) continue;
         qc.setQueryData<PendingRequest[]>(
           key,
-          rows.filter((r) => r.id !== args.id),
+          rows.filter((r) => r.id !== args.request.id),
         );
       }
       return { snapshot };
     },
-    onError: (_error, _vars, context) => {
+    onError: (error, _vars, context) => {
+      // said here, not on the card: the card may already be gone from the list
+      toast.error((error as { message?: string }).message ?? "That decision wasn't allowed.");
       for (const [key, rows] of context?.snapshot ?? []) qc.setQueryData(key, rows);
+      void qc.invalidateQueries({ queryKey: ["leave-pending"] });
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["leave-pending"] });
