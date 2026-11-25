@@ -67,11 +67,11 @@ SELECT pg_temp.fails('person cannot fill before the cycle opens',
 
 SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'hr'));
 SELECT self_eval_open_cycle(2026, DATE '2027-01-15');
-SELECT pg_temp.eq('everyone active is told once',
-  (SELECT count(*) FROM notifications WHERE link = '/self-evaluation?year=2026')::int, 5);
+SELECT pg_temp.eq('everyone active except HR and admin is told once',
+  (SELECT count(*) FROM notifications WHERE link = '/self-evaluation?year=2026')::int, 3);
 SELECT self_eval_open_cycle(2026, DATE '2027-01-20');
 SELECT pg_temp.eq('opening again does not tell again',
-  (SELECT count(*) FROM notifications WHERE link = '/self-evaluation?year=2026')::int, 5);
+  (SELECT count(*) FROM notifications WHERE link = '/self-evaluation?year=2026')::int, 3);
 
 -- ───────── the person fills the form ─────────
 SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'emp'));
@@ -331,5 +331,58 @@ SELECT self_eval_reopen((SELECT v FROM ids WHERE k = 'emp3'), 2026, 'manager');
 SELECT pg_temp.eq('HR reopens a completed manager evaluation',
   (SELECT (finalized_at IS NULL AND mgr_submitted_at IS NULL AND emp_submitted_at IS NOT NULL)
      FROM self_evaluations WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp3')), true);
+
+-- ───────── HR and admin have no form of their own (migration 20261125090000) ─────────
+RESET ROLE;
+INSERT INTO ids VALUES ('emp4', gen_random_uuid());
+INSERT INTO profiles (id, org_id, auth_user_id, full_name, role, manager_id, status)
+VALUES ((SELECT v FROM ids WHERE k = 'emp4'), (SELECT v FROM ids WHERE k = 'org'), gen_random_uuid(), 'Fourth Person', 'member',
+        (SELECT v FROM ids WHERE k = 'hr'), 'active');
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'hr'));
+SELECT pg_temp.fails('HR cannot start their own form', 'SELECT self_eval_start(2026)', 'HR and admin do not fill');
+SELECT pg_temp.fails('HR cannot fill their own form',
+  format('SELECT self_eval_save(%L, 2026, ''reflection'', ARRAY[''proud''], to_jsonb(''x''::text))',
+         (SELECT v FROM ids WHERE k = 'hr')), 'HR and admin do not fill');
+SELECT pg_temp.fails('HR cannot fill an admin''s form',
+  format('SELECT self_eval_save(%L, 2026, ''reflection'', ARRAY[''proud''], to_jsonb(''x''::text))',
+         (SELECT v FROM ids WHERE k = 'admin')), 'HR and admin do not fill');
+SELECT pg_temp.fails('HR cannot record a file on their own form',
+  format('SELECT self_eval_file_add(%L, 2026, ''form'', NULL, %L, ''a.pdf'', ''application/pdf'', 1)',
+         (SELECT v FROM ids WHERE k = 'hr'), (SELECT v FROM ids WHERE k = 'hr')::text || '/2026/a.pdf'), 'HR and admin do not fill');
+SELECT pg_temp.eq('HR cannot upload to their own folder',
+  self_eval_storage_ok((SELECT v FROM ids WHERE k = 'hr')::text || '/2026/a.pdf', true), false);
+SELECT self_eval_save((SELECT v FROM ids WHERE k = 'emp4'), 2026, 'reflection', ARRAY['proud'], to_jsonb('By HR'::text));
+SELECT pg_temp.eq('HR still fills for someone else',
+  (SELECT reflection ->> 'proud' FROM self_evaluations WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp4')), 'By HR');
+SELECT pg_temp.eq('HR still uploads for someone else',
+  self_eval_storage_ok((SELECT v FROM ids WHERE k = 'emp4')::text || '/2026/a.pdf', true), true);
+SELECT self_eval_file_add((SELECT v FROM ids WHERE k = 'emp4'), 2026, 'form', NULL,
+  (SELECT v FROM ids WHERE k = 'emp4')::text || '/2026/a.pdf', 'a.pdf', 'application/pdf', 1);
+SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'admin'));
+SELECT pg_temp.fails('admin cannot start their own form', 'SELECT self_eval_start(2026)', 'HR and admin do not fill');
+SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'emp4'));
+SELECT self_eval_submit((SELECT v FROM ids WHERE k = 'emp4'), 2026, 'employee', 'Fourth Person');
+SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'hr'));
+SELECT self_eval_manager_save((SELECT v FROM ids WHERE k = 'emp4'), 2026, ARRAY['overall', 'goals', 'rating'], to_jsonb('EE'::text));
+SELECT self_eval_manager_save((SELECT v FROM ids WHERE k = 'emp4'), 2026, ARRAY['overall', 'values', 'rating'], to_jsonb('EE'::text));
+SELECT self_eval_submit((SELECT v FROM ids WHERE k = 'emp4'), 2026, 'manager', 'Test HR');
+SELECT pg_temp.eq('HR still evaluates someone who reports to them',
+  (SELECT final_rating FROM self_evaluations WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp4')), 'EE');
+SELECT self_eval_reopen((SELECT v FROM ids WHERE k = 'emp4'), 2026, 'employee');
+RESET ROLE;
+SET LOCAL ROLE service_role;
+SELECT pg_temp.fails('a developer cannot fill an admin''s form',
+  format('SELECT self_eval_dev_save(%L, %L, 2026, ''reflection'', ARRAY[''proud''], to_jsonb(''x''::text))',
+         (SELECT v FROM ids WHERE k = 'dev'), (SELECT v FROM ids WHERE k = 'admin')), 'HR and admin do not fill');
+RESET ROLE;
+-- someone who becomes HR: what they saved is kept, but cannot be changed or submitted
+UPDATE profiles SET role = 'hr' WHERE id = (SELECT v FROM ids WHERE k = 'emp4');
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.as_user((SELECT v FROM ids WHERE k = 'emp4'));
+SELECT pg_temp.fails('a new HR cannot submit their earlier form',
+  format('SELECT self_eval_submit(%L, 2026, ''employee'', ''Fourth Person'')', (SELECT v FROM ids WHERE k = 'emp4')), 'HR and admin do not fill');
+SELECT pg_temp.eq('their earlier answers are kept',
+  (SELECT reflection ->> 'proud' FROM self_evaluations WHERE profile_id = (SELECT v FROM ids WHERE k = 'emp4')), 'By HR');
 
 ROLLBACK;

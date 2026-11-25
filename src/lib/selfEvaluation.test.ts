@@ -9,6 +9,7 @@ import {
   canWriteReview,
   defaultYear,
   docxXmlToText,
+  fillsSelfEval,
   mergeReadForm,
   normalizePotential,
   normalizeRating,
@@ -69,6 +70,9 @@ describe("steps and who rates", () => {
       "feedback",
     );
     equal(stageOf({ emp_submitted_at: "x", mgr_submitted_at: "y", finalized_at: "z" }), "final");
+  });
+  test("HR and admin do not fill a self-evaluation; everyone else does", () => {
+    deepEqual(["member", "manager", "hr", "admin"].map(fillsSelfEval), [true, true, false, false]);
   });
   test("reviewer kinds", () => {
     deepEqual(reviewKindsFor("manager", true, false), ["manager"]);

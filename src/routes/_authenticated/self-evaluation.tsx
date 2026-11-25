@@ -33,6 +33,7 @@ import {
   canWriteManagerEval,
   defaultYear,
   errorText,
+  fillsSelfEval,
   hasStarted,
   MAX_GOALS,
   mergeReadForm,
@@ -117,10 +118,10 @@ function SelfEvaluationPage() {
     [warriors, viewer],
   );
   // the people whose form the viewer may open: themselves, their direct team, or everyone for
-  // HR / admin (and developers)
+  // HR / admin (and developers); HR and admin have no form of their own
   const people = useMemo(() => {
     if (!viewer) return [];
-    const active = (warriors ?? []).filter((w) => w.status === "active");
+    const active = (warriors ?? []).filter((w) => w.status === "active" && fillsSelfEval(w.role));
     const mine =
       isHrAdmin || isDev ? active : active.filter((w) => w.id === viewer.id || team.has(w.id));
     const byId = new Map((list ?? []).map((r) => [r.profile_id, r]));
@@ -136,7 +137,8 @@ function SelfEvaluationPage() {
     viewer?.id ??
     null;
   const selected = people.find((p) => p.id === selectedId) ?? null;
-  const showList = people.length > 1;
+  const ownForm = Boolean(viewer && fillsSelfEval(viewer.role));
+  const showList = people.length > (ownForm ? 1 : 0);
   const years = useMemo(() => {
     const ys = new Set<number>((cycles ?? []).map((c) => c.year));
     ys.add(new Date().getFullYear());
@@ -226,6 +228,12 @@ function SelfEvaluationPage() {
           </section>
         ) : null}
 
+        {viewer && !ownForm && !selected && people.length > 0 ? (
+          <div className="ce-card p-4 text-sm text-soft">
+            HR and admin do not fill a self-evaluation. Choose a person above to open their form.
+          </div>
+        ) : null}
+
         {selected && viewer ? (
           <EvaluationSheet
             key={`${selected.id}-${year}`}
@@ -268,10 +276,10 @@ function CyclePanel({
         </p>
         <p className="text-sm text-ink">
           {open
-            ? `Open${cycle?.due_date ? `, last date ${niceDate(cycle.due_date)}` : ""}. Everyone can fill their form.`
+            ? `Open${cycle?.due_date ? `, last date ${niceDate(cycle.due_date)}` : ""}. Everyone except HR and admin can fill their form.`
             : cycle?.closed_at
               ? "Closed. Nobody can fill or submit until you open it again."
-              : "Not open yet. Opening it tells everyone active to fill their form."}
+              : "Not open yet. Opening it tells everyone active (except HR and admin) to fill their form."}
         </p>
       </div>
       <label>

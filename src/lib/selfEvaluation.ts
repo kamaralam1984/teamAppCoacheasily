@@ -187,6 +187,11 @@ export const STAGE_LABEL: Record<Stage, string> = {
   final: "Complete",
 };
 
+/** HR and admin have no self-evaluation of their own. Mirrors self_eval_exempt(). */
+export function fillsSelfEval(role: string | null | undefined): boolean {
+  return role !== "hr" && role !== "admin";
+}
+
 /** The reviewer boxes the viewer writes: managers 'manager', HR 'hr', admin 'sir'. */
 export function reviewKindsFor(
   role: string | null | undefined,

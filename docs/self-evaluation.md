@@ -16,13 +16,17 @@ The Probation page is a separate feature and was not changed by any of this.
 
 | Step | Who | What happens |
 |---|---|---|
-| 0. Open the year | HR / admin / developer | *2026 cycle* panel → last date → **Open 2026**. Everyone active gets a notification. **Close** stops filling; **Open again** reopens. |
+| 0. Open the year | HR / admin / developer | *2026 cycle* panel → last date → **Open 2026**. Everyone active except HR and admin gets a notification. **Close** stops filling; **Open again** reopens. |
 | 1. Self-evaluation | The employee | Fills About you, Part A (goals), Part B (12 values), Part C (reflection), Part D (potential). Can **upload** the filled form (PDF / Word / photo) and the boxes fill themselves (AI). Attaches evidence per goal. Types their name and **Submit self-evaluation**. Their direct manager is notified. |
 | 2. Manager evaluation | **Only the direct manager** (`profiles.manager_id`) | Below the employee form: the manager form — About this review, Part A + summary, Part B + summary, Part C, Part D, Part E, Recommendation. Types their name and **Sign off**. |
 | 3. Complete | — | Sign-off completes it. Final rating = Part C manager ratings A and B at 50% each, rounded to the nearest rating (O 5 · EE 4 · FME 3 · PME 2 · DNME 1). The employee is notified, sees the manager form and can add *Comments on this evaluation*. |
 
 HR / admin can **Reopen self-evaluation** (also reopens the manager part) or **Reopen manager
 evaluation** at any time, including after it is complete.
+
+**HR and admin (role `hr` / `admin`) do not fill a self-evaluation.** They are not in the list and
+nobody can fill or upload one for them; anything they saved earlier is kept but not shown. They
+still fill and upload for other people, and evaluate people who report to them.
 
 Someone with **no manager** (`manager_id` empty): HR / admin fill and sign off their manager form.
 
@@ -33,7 +37,7 @@ Someone with **no manager** (`manager_id` empty): HR / admin fill and sign off t
 | Member | Only their own form | Their own form and uploads, until they submit; their comment after completion |
 | Manager | Own form + people who report to them **directly** (not the whole chain) | The manager form of their direct team, until sign-off |
 | Manager above the manager | Not the forms of their manager's team | — |
-| HR / admin | Everyone | Open/close the year, reopen steps, fill the employee form on someone's behalf (before submit). **No ratings.** |
+| HR / admin | Everyone except HR / admin (they have no form of their own) | Open/close the year, reopen steps, fill the employee form on someone's behalf (before submit). **No ratings.** |
 | Developer (email allowlist) | Everyone | Open/close the year; fill/correct anyone's employee form until complete (also after submit); upload / delete files on anyone's form. **No ratings.** Every action goes to `dev_audit_log`. |
 
 The manager form is shown to the employee **only after sign-off**. Internal notes (old feature)
@@ -74,6 +78,7 @@ Migrations (in order; never edit an applied one — add a new migration instead)
 | `20261117170000_self_eval_direct_manager.sql` | `is_direct_manager_of()`; only the direct manager sees/rates |
 | `20261117190000_self_eval_manager_form.sql` | Manager form: `self_eval_reviews.extra`, `self_evaluations.member_comment`, `self_eval_manager_save`, `self_eval_member_comment`, sign-off completes it, HR/admin no longer rate |
 | `20261121090000_self_eval_value_practice.sql` | Part B practice box: `self_eval_save`, `self_eval_dev_save` and `self_eval_section_ok` accept `practice` |
+| `20261125090000_self_eval_hr_admin_exempt.sql` | HR / admin have no form: `self_eval_exempt()` + triggers on `self_evaluations` and `self_eval_files`; not notified on opening |
 
 Tables:
 
@@ -98,7 +103,7 @@ it), `self_eval_submit` (employee submit / manager sign-off), `self_eval_reopen`
 Who-checks: `can_view_self_eval()`, `is_direct_manager_of()`, `self_eval_is_rater()`,
 `can_write_self_eval_review()`.
 
-Tests: `supabase/tests/self_evaluations.sql` (65 checks; run against a database with all
+Tests: `supabase/tests/self_evaluations.sql` (77 checks; run against a database with all
 migrations applied — it rolls back). Code tests: `bun test src/lib`.
 
 ## 5. Uploads and autofill
