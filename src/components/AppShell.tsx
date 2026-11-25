@@ -126,6 +126,9 @@ const SIR_AVAILABILITY_URL =
   "https://n8n.srv1623478.hstgr.cloud/webhook/ph-availability?k=M84hry9rj5R9dHk6O2wT8X_A";
 // PH Sir's profile. The availability link is for him and the people who report directly to him.
 const SIR_PROFILE_ID = "22222222-2222-4222-8222-222222222222";
+// Exceptions, by profile id.
+const SIR_AVAILABILITY_ALSO = ["33333333-0000-4000-8000-000000000002"]; // Supriya
+const SIR_AVAILABILITY_NOT = ["33333333-0000-4000-8000-000000000003"]; // Kirti
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { data, isLoading } = useMyProfile();
@@ -223,7 +226,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   ].filter((sec) => sec.items.length > 0);
   const mobileTabKey = mobileTabs.map((t) => t.to).join("|");
   const showAvailability =
-    profile?.manager_id === SIR_PROFILE_ID || profile?.id === SIR_PROFILE_ID;
+    profile !== null &&
+    !SIR_AVAILABILITY_NOT.includes(profile.id) &&
+    (profile.id === SIR_PROFILE_ID ||
+      profile.manager_id === SIR_PROFILE_ID ||
+      SIR_AVAILABILITY_ALSO.includes(profile.id));
   const hasReports = tabs.some((t) => t.label === "Reports");
 
   useEffect(() => {
