@@ -78,7 +78,10 @@ async function gzip(file: File): Promise<Blob | null> {
   if (typeof CompressionStream !== "function") return null;
   try {
     const stream = file.stream().pipeThrough(new CompressionStream("gzip"));
-    return await new Response(stream).blob();
+    // The type must be set: storage uploads a Blob with its own type, and an empty one is sent
+    // as application/octet-stream, which the bucket refuses.
+    const raw = await new Response(stream).blob();
+    return new Blob([raw], { type: "application/gzip" });
   } catch {
     return null;
   }

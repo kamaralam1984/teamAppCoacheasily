@@ -24,6 +24,8 @@ describe("shrinking uploads", () => {
     const s = await shrinkForUpload(f, "text/plain");
     equal(s.encoding, "gzip");
     equal(s.storedMime, "application/gzip");
+    // storage sends a Blob with its own type; an empty type is refused by the bucket
+    equal(s.blob.type, "application/gzip");
     ok(s.blob.size < f.size / 10);
     const back = await unshrink(s.blob, s.encoding, s.mime);
     ok(back.type.startsWith("text/plain"));
