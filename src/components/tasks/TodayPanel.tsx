@@ -32,6 +32,7 @@ export function TodayPanel({
   const [picked, setPicked] = useState<string[]>([]);
   const [newTitle, setNewTitle] = useState("");
   const [closing, setClosing] = useState(false);
+  const [addingMore, setAddingMore] = useState(false);
   const [carryNote, setCarryNote] = useState("");
   const [result, setResult] = useState<{ done: number; total: number; pct: number; carried: number } | null>(
     null,
@@ -151,6 +152,60 @@ export function TodayPanel({
               </li>
             ))}
           </ul>
+
+          {day.available.length > 0 ? (
+            <div className="mt-4">
+              <button
+                type="button"
+                className="min-h-11 rounded-full border border-line bg-ivory px-4 text-[13px] font-bold text-ink"
+                aria-expanded={addingMore}
+                onClick={() => setAddingMore((v) => !v)}
+              >
+                {addingMore ? "Done adding" : "+ Add to today"}
+              </button>
+              {addingMore ? (
+                <div className="mt-3">
+                  <p className="text-[12px] text-soft">
+                    {day.total >= cap
+                      ? `Today already has ${cap}, the most it can hold. Finish one before adding more.`
+                      : `You can add ${cap - day.total} more today.`}
+                  </p>
+                  <ul className="mt-2 space-y-2">
+                    {day.available.map((t) => (
+                      <li
+                        key={t.id}
+                        className="flex items-center gap-3 rounded-[12px] border border-line bg-ivory p-3"
+                      >
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[14px] leading-snug font-semibold text-ink">
+                            {t.title}
+                          </span>
+                          {t.due_date ? (
+                            <span className="text-[11px] font-semibold text-soft">
+                              due {niceDue(t.due_date)}
+                            </span>
+                          ) : null}
+                        </span>
+                        <button
+                          type="button"
+                          className="min-h-9 shrink-0 rounded-full border border-gold bg-cream px-3 text-[12px] font-bold text-ink disabled:opacity-50"
+                          disabled={commit.isPending || day.total >= cap}
+                          onClick={() => commit.mutate([t.id])}
+                        >
+                          Add
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  {commit.isError ? (
+                    <p className="mt-2 text-[13px] font-bold" style={{ color: "var(--ce-red)" }}>
+                      Could not add it — try again.
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
 
           {closing ? (
             <div className="mt-4 space-y-3">
@@ -505,4 +560,13 @@ function Poster({
       </p>
     </div>
   );
+}
+
+/** "27 Nov" from "2026-11-27". */
+function niceDue(iso: string): string {
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  });
 }

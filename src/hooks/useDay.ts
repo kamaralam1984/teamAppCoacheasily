@@ -28,8 +28,9 @@ export function useCommitDay() {
       await qc.cancelQueries({ queryKey: ["my-day"] });
       const previous = qc.getQueryData<MyDay | null>(["my-day"]);
       if (previous) {
+        // what is already on today stays; the picked ones are added (also after the morning commit)
         const chosen = [
-          ...previous.tasks.filter((t) => taskIds.includes(t.id)),
+          ...previous.tasks,
           ...previous.available
             .filter((a) => taskIds.includes(a.id) && !previous.tasks.some((t) => t.id === a.id))
             .map((a) => ({ ...a, done: false, goal_name: a.goal_name })),
@@ -38,6 +39,7 @@ export function useCommitDay() {
           ...previous,
           committed_at: previous.committed_at ?? new Date().toISOString(),
           tasks: chosen,
+          available: previous.available.filter((a) => !taskIds.includes(a.id)),
           total: chosen.length,
           done: chosen.filter((t) => t.done).length,
         });
