@@ -46,7 +46,7 @@ describe("The downloaded goals table matches the page", () => {
         "Type",
         "No",
         "Goal / Task",
-        "Measure",
+        "Measure/Target",
         "Timeline",
         "Outcome",
         "Week of 11-02",

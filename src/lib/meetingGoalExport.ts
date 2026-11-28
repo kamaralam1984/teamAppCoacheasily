@@ -51,7 +51,7 @@ export function meetingGoalTable(args: {
     { key: "type", label: "Type" },
     { key: "no", label: "No" },
     { key: "title", label: "Goal / Task" },
-    { key: "measure", label: "Measure" },
+    { key: "measure", label: "Measure/Target" },
     { key: "timeline", label: "Timeline" },
     { key: "outcome", label: "Outcome" },
     ...args.weeks.map((w) => ({ key: weekKey(w), label: `Week of ${args.weekLabel(w)}` })),

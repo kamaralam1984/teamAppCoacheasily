@@ -677,7 +677,7 @@ function StrategicMeetingsPage() {
                           className="relative min-w-[120px] border border-line px-2 py-2"
                           style={colStyle("measure")}
                         >
-                          Measure
+                          Measure/Target
                           {colGrip("measure")}
                         </th>
                         <th
